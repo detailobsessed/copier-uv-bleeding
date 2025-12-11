@@ -15,7 +15,7 @@ authors = [{name = "{{ author_fullname }}", email = "{{ author_email }}"}]
 license = "{{ copyright_license }}"
 license-files = ["LICENSE"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 keywords = []
 version = "0.0.0"
 classifiers = [
@@ -24,17 +24,17 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Documentation",
     "Topic :: Software Development",
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+    "prek",
+]
 
 [project.urls]
 Homepage = "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
@@ -101,7 +101,7 @@ format = "ruff format src tests duties.py scripts --config config/ruff.toml"
 typecheck = "ty check src tests duties.py scripts"
 security = "bandit -r src -c config/bandit.toml"
 deadcode = "vulture src tests"
-upgrade = "pyupgrade --py310-plus src/**/*.py tests/**/*.py"
+upgrade = "pyupgrade --py313-plus src/**/*.py tests/**/*.py"
 
 # Testing
 test = "pytest tests -c config/pytest.ini"
@@ -114,7 +114,6 @@ fix = ["format", "upgrade"]
 # Pre-commit
 pre-commit = "prek run --all-files"
 
-{%- if publish_to_pypi %}
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
@@ -130,20 +129,3 @@ changelog_file = "CHANGELOG.md"
 allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
-{%- else %}
-# [tool.semantic_release]
-# version_toml = ["pyproject.toml:project.version"]
-# branch = "main"
-# build_command = "uv build"
-# commit_message = "chore(release): {version}"
-# tag_format = "{version}"
-#
-# [tool.semantic_release.changelog]
-# template_dir = "templates"
-# changelog_file = "CHANGELOG.md"
-#
-# [tool.semantic_release.commit_parser_options]
-# allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
-# minor_tags = ["feat"]
-# patch_tags = ["fix", "perf"]
-{%- endif %}

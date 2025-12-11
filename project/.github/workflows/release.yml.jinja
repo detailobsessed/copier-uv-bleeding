@@ -44,7 +44,7 @@ jobs:
 {%- if publish_to_pypi %}
 
     - name: Publish to PyPI
-      if: steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != ''
+      if: {% raw %}steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != ''{% endraw %}
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
@@ -52,14 +52,14 @@ jobs:
 
     # Uncomment to publish to PyPI:
     # - name: Publish to PyPI
-    #   if: steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != ''
+    #   if: {% raw %}${{ steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != '' }}{% endraw %}
     #   uses: pypa/gh-action-pypi-publish@release/v1
     #   with:
-    #     password: ${{ secrets.PYPI_TOKEN }}
+    #     password: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
 {%- endif %}
 
     - name: Publish to GitHub Releases
-      if: steps.release.outputs.released == 'true'
+      if: {% raw %}steps.release.outputs.released == 'true'{% endraw %}
       uses: python-semantic-release/publish-action@v9
       with:
         github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}

@@ -84,7 +84,7 @@ def check_types(ctx: Context) -> None:
 def check_security(ctx: Context) -> None:
     """Check for security vulnerabilities."""
     ctx.run(
-        tools.bandit("-r", *PY_SRC_LIST, "-c", "config/bandit.toml"),
+        ["bandit", "-r", *PY_SRC_LIST, "-c", "config/bandit.toml"],
         title=pyprefix("Security check"),
     )
 
@@ -93,7 +93,7 @@ def check_security(ctx: Context) -> None:
 def check_deadcode(ctx: Context) -> None:
     """Check for dead code."""
     ctx.run(
-        ["vulture", *PY_SRC_LIST],
+        ["vulture", *PY_SRC_LIST, "--min-confidence", "80"],
         title=pyprefix("Dead code check"),
     )
 

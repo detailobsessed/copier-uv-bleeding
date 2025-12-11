@@ -1,6 +1,9 @@
 name: release
 
-on: push
+on:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -8,7 +11,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    concurrency: release
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -16,14 +19,14 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
     - name: Setup Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v5
       with:
         python-version: "3.13"
     - name: Setup uv
       uses: astral-sh/setup-uv@v5
-    - name: Prepare release notes
-      run: uv tool run git-changelog --release-notes > release-notes.md
-    - name: Create release
-      uses: softprops/action-gh-release@v2
-      with:
-        body_path: release-notes.md
+    - name: Install dependencies
+      run: uv sync
+    - name: Semantic Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: uv run semantic-release version --changelog --push --tag --vcs-release

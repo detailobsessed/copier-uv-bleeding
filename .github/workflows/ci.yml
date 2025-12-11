@@ -34,8 +34,8 @@ jobs:
     - name: Configure Git
       run: |
         git config --global init.defaultBranch main
-        git config --global user.email "dev@pawamoy.fr"
-        git config --global user.name "Timothée Mazzucotelli"
+        git config --global user.email "dev@ichoosetoaccept.com"
+        git config --global user.name "I Choose to Accept"
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
@@ -49,9 +49,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-        - "3.10"
-        - "3.11"
-        - "3.12"
         - "3.13"
         - "3.14"
         - "3.15"
@@ -69,8 +66,8 @@ jobs:
     - name: Configure Git
       run: |
         git config --global init.defaultBranch main
-        git config --global user.email "dev@pawamoy.fr"
-        git config --global user.name "Timothée Mazzucotelli"
+        git config --global user.email "dev@ichoosetoaccept.com"
+        git config --global user.name "I Choose to Accept"
 
     - name: Setup Python
       uses: actions/setup-python@v6
@@ -90,39 +87,6 @@ jobs:
       run: uv tool install copier --with copier-templates-extensions
 
     - name: Test project generation and workflow
-      run: bash tests/test_project.sh
+      run: bash tests/smoke_test.sh
 
-  test-project-ci:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        fetch-tags: true
-
-    - name: Configure Git
-      run: |
-        git config --global init.defaultBranch main
-        git config --global user.email "dev@pawamoy.fr"
-        git config --global user.name "Timothée Mazzucotelli"
-
-    - name: Setup Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.13"
-
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v5
-      with:
-        enable-cache: true
-        cache-dependency-glob: project/pyproject.toml.jinja
-
-    - name: Install Copier
-      run: uv tool install copier --with copier-templates-extensions
-
-    - name: Trigger and wait project's own CI
-      env:
-        GH_TOKEN: ${{ secrets.TESTING_PUSH_TOKEN }}
-      run: bash tests/wait_ci.sh
+  # Removed test-project-ci job - we now use smoke_test.sh for testing

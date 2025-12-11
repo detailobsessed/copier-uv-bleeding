@@ -141,5 +141,5 @@ publish_to_pypi:
 
 # TASKS --------------------------------
 _tasks:
-  - "prek autoupdate"
   - "uv sync"
+  - "echo '🎉 Project scaffolded successfully! After initializing git, run: prek autoupdate'"

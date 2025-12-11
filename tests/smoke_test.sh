@@ -51,11 +51,11 @@ uv sync
 
 echo
 echo ">>> Running quality checks"
-./scripts/make check
+./scripts/make run duty check
 
 echo
 echo ">>> Running tests"
-./scripts/make test
+./scripts/make run duty test
 
 echo
 echo "==========================================="

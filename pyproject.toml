@@ -13,9 +13,24 @@ dev = [
     "markdown-callouts",
     "mkdocs",
     "mkdocs-material",
+    "python-semantic-release>=10.5.2",
     "reuse",
     "ruff",
 ]
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+commit_message = "chore(release): {version}"
+tag_format = "{version}"
+
+[tool.semantic_release.changelog]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]

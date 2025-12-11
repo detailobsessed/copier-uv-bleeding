@@ -38,6 +38,9 @@ setup:
 	@uv venv --seed
 	@uv pip install -r requirements.txt
 
+smoke-test:
+	@bash tests/smoke_test.sh
+
 test: cleantests
 	@bash tests/test_filenames.sh
 	@bash tests/test_project.sh
