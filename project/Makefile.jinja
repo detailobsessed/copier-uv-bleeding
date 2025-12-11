@@ -14,8 +14,10 @@ actions = \
 	changelog \
 	check \
 	check-api \
+	check-deadcode \
 	check-docs \
 	check-quality \
+	check-security \
 	check-types \
 	clean \
 	coverage \

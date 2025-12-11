@@ -1,0 +1,21 @@
+[project]
+name = "copier-uv-bleeding"
+version = "0.0.0"
+description = "Copier template for Python projects managed by uv (bleeding edge fork)"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[dependency-groups]
+dev = [
+    "copier",
+    "copier-templates-extensions",
+    "jinja2",
+    "markdown-callouts",
+    "mkdocs",
+    "mkdocs-material",
+    "reuse",
+    "ruff",
+]
+
+[tool.uv]
+default-groups = ["dev"]

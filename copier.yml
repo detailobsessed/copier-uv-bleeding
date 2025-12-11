@@ -124,3 +124,13 @@ python_package_command_line_name:
   type: str
   help: Your CLI name if any (for use in the shell)
   default: "{{ project_name | slugify }}"
+
+publish_to_pypi:
+  type: bool
+  help: Will you publish this package to PyPI?
+  default: true
+
+# TASKS --------------------------------
+_tasks:
+  - "prek autoupdate"
+  - "uv sync"

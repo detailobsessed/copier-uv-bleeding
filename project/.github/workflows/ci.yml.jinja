@@ -76,6 +76,12 @@ jobs:
     - name: Check if the code is correctly typed
       run: make check-types
 
+    - name: Check for security vulnerabilities
+      run: make check-security
+
+    - name: Check for dead code
+      run: make check-deadcode
+
     - name: Check for breaking changes in the API
       run: make check-api
 

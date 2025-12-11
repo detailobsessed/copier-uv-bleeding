@@ -39,17 +39,13 @@ def _get_changelog_version() -> str:
 
 
 @duty
-def changelog(ctx: Context, bump: str = "") -> None:
-    """Update the changelog in-place with latest commits.
-
-    Parameters:
-        bump: Bump option passed to git-changelog.
-    """
-    ctx.run(tools.git_changelog(bump=bump or None), title="Updating changelog")
-    ctx.run(tools.yore.check(bump=bump or _get_changelog_version()), title="Checking legacy code")
+def changelog(ctx: Context) -> None:
+    """Update the changelog in-place with latest commits (via semantic-release dry-run)."""
+    ctx.run(["semantic-release", "changelog"], title="Updating changelog")
+    ctx.run(tools.yore.check(bump=_get_changelog_version()), title="Checking legacy code")
 
 
-@duty(pre=["check-quality", "check-types", "check-docs", "check-api"])
+@duty(pre=["check-quality", "check-types", "check-security", "check-deadcode", "check-docs", "check-api"])
 def check(ctx: Context) -> None:
     """Check it all!"""
 
@@ -79,8 +75,26 @@ def check_types(ctx: Context) -> None:
     """Check that the code is correctly typed."""
     os.environ["FORCE_COLOR"] = "1"
     ctx.run(
-        tools.mypy(*PY_SRC_LIST, config_file="config/mypy.ini"),
+        ["ty", "check", *PY_SRC_LIST],
         title=pyprefix("Type-checking"),
+    )
+
+
+@duty(nofail=PY_VERSION == PY_DEV)
+def check_security(ctx: Context) -> None:
+    """Check for security vulnerabilities."""
+    ctx.run(
+        tools.bandit("-r", *PY_SRC_LIST, "-c", "config/bandit.toml"),
+        title=pyprefix("Security check"),
+    )
+
+
+@duty
+def check_deadcode(ctx: Context) -> None:
+    """Check for dead code."""
+    ctx.run(
+        ["vulture", *PY_SRC_LIST],
+        title=pyprefix("Dead code check"),
     )
 
 
