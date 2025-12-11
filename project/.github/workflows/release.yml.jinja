@@ -1,29 +1,66 @@
 name: release
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 permissions:
   contents: write
+{%- if publish_to_pypi %}
+  id-token: write
+{%- endif %}
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    concurrency: release
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
         fetch-tags: true
+
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
         python-version: "3.13"
+
     - name: Setup uv
       uses: astral-sh/setup-uv@v5
-    - name: Prepare release notes
-      run: uv tool run git-changelog --release-notes > release-notes.md
-    - name: Create release
-      uses: softprops/action-gh-release@v2
-      with:
-        body_path: release-notes.md
 
+    - name: Install dependencies
+      run: uv sync --group maintain
+
+    - name: Python Semantic Release
+      id: release
+      uses: python-semantic-release/python-semantic-release@v9
+      with:
+        github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+
+{%- if publish_to_pypi %}
+
+    - name: Publish to PyPI
+      if: steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != ''
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
+{%- else %}
+
+    # Uncomment to publish to PyPI:
+    # - name: Publish to PyPI
+    #   if: steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != ''
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     password: ${{ secrets.PYPI_TOKEN }}
+{%- endif %}
+
+    - name: Publish to GitHub Releases
+      if: steps.release.outputs.released == 'true'
+      uses: python-semantic-release/publish-action@v9
+      with:
+        github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+        tag: {% raw %}${{ steps.release.outputs.tag }}{% endraw %}

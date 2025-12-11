@@ -151,18 +151,18 @@ Available tasks:
 - `docs`: Serve the documentation (localhost:8000).
   See [the Documentation section](#documentation).
   Arguments:
-    - `host="127.0.0.1"`: The host to serve the docs from.
-    - `port=8000`: The port to serve the docs on.
+  - `host="127.0.0.1"`: The host to serve the docs from.
+  - `port=8000`: The port to serve the docs on.
 - `format`: Run formatting tools on the code.
 - `publish`: Publish source and wheel distributions to PyPI.
 - `release`: Release a new Python package.
   See [the Releases section](#releases).
   Arguments:
-    - `version` The Python package version.
+  - `version` The Python package version.
 - `test`: Run the test suite.
   See [the Tests section](#tests).
   Arguments:
-    - `match=""`: A pytest expression to filter selected tests.
+  - `match=""`: A pytest expression to filter selected tests.
 - `vscode`: Configure VSCode for the project.
   See [VSCode setup](#vscode-setup).
 

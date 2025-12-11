@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: ruff
+        args: [--config, config/ruff.toml, --fix]
+      - id: ruff-format
+        args: [--config, config/ruff.toml]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: uv-lock
+
+  - repo: https://github.com/astral-sh/ty
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: ty
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional"]
