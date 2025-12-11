@@ -623,7 +623,7 @@ The template expects that all the API be exposed at the top-level. If you expose
 add a new page for each one of these submodules.
 
 For more information about `mkdocstrings`,
-check [its documentation](https://pawamoy.github.io/mkdocstrings).
+check [its documentation](https://mkdocstrings.github.io).
 
 ### Serving
 

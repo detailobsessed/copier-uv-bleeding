@@ -36,13 +36,13 @@ And the file looks like this:
 ```yaml
 # Changes here will be overwritten by Copier
 _commit: 0.1.10
-_src_path: gh:pawamoy/copier-uv
-author_email: dev@pawamoy.fr
-author_fullname: "Timothée Mazzucotelli"
-author_username: pawamoy
+_src_path: gh:ichoosetoaccept/copier-uv-bleeding
+author_email: ismar@gmail.com
+author_fullname: Ismar Iljazovic
+author_username: ichoosetoaccept
 copyright_date: '2020'
-copyright_holder: "Timothée Mazzucotelli"
-copyright_holder_email: dev@pawamoy.fr
+copyright_holder: Ismar Iljazovic
+copyright_holder_email: ismar@gmail.com
 copyright_license: ISC License
 project_description: Automatic documentation from sources, for MkDocs.
 project_name: mkdocstrings
