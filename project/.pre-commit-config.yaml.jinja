@@ -23,10 +23,14 @@ repos:
     hooks:
       - id: uv-lock
 
-  - repo: https://github.com/astral-sh/ty
-    rev: ""  # prek autoupdate will fill this
+  - repo: local
     hooks:
       - id: ty
+        name: ty type checker
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: false
 
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: ""  # prek autoupdate will fill this
