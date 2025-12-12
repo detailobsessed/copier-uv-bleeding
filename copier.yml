@@ -143,4 +143,5 @@ publish_to_pypi:
 _tasks:
   - "uv sync"
   - "test -d .git && uv run prek install || true"
+  - "test -f .copier-answers.yml && rm -f duties.py Makefile scripts/make scripts/make.py || true"
   - "echo '🎉 Project scaffolded successfully! Run: prek autoupdate'"
