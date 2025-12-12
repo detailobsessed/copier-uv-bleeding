@@ -12,6 +12,10 @@ apply a change to all your projects.
 Example: the template fixed a bug in the Makefile.
 You don't want to apply it manually to your projects.
 
+Note: When updating from older versions of this template,
+deprecated files like `duties.py`, `Makefile`, and `scripts/make`
+will be automatically removed during the update process.
+
 To update your project, go into its directory,
 and run `copier update`. Your repository must be clean
 (no modified files) when running this command.

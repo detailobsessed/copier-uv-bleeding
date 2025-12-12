@@ -229,10 +229,8 @@ At this point, Copier will generate the project in the specified directory:
 ```
     create  pyproject.toml
     create  mkdocs.yml
-    create  duties.py
     create  .copier-answers.yml
     create  README.md
-    create  Makefile
     create  LICENSE
     create  CREDITS.md
     create  CONTRIBUTING.md
