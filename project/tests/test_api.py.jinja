@@ -139,7 +139,9 @@ def test_api_matches_inventory(inventory: Inventory, public_objects: list[griffe
     not_in_inventory = [
         f"{obj.relative_filepath}:{obj.lineno}: {obj.path}"
         for obj in public_objects
-        if obj.name not in ignore_names and obj.path not in inventory
+        if obj.name not in ignore_names
+        and obj.path not in inventory
+        and not obj.is_attribute  # Class attributes aren't added to inventory by mkdocstrings
     ]
     msg = "Objects not in the inventory (try running `poe docs`):\n{paths}"
     assert not not_in_inventory, msg.format(paths="\n".join(sorted(not_in_inventory)))
