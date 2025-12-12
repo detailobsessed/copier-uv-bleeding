@@ -1,6 +1,6 @@
 name: release
 
-on:
+"on":
   push:
     branches:
       - main
@@ -33,32 +33,44 @@ jobs:
     - name: Install dependencies
       run: uv sync --group maintain
 
-    - name: Python Semantic Release
-      id: release
-      uses: python-semantic-release/python-semantic-release@v9
-      with:
-        github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+    - name: Semantic Release
+      env:
+        GH_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+      run: uv run semantic-release version --changelog --push --tag --vcs-release
 
 {%- if publish_to_pypi %}
 
+    - name: Check if release artifacts exist
+      id: dist
+      shell: bash
+      run: |
+        if compgen -G "dist/*" > /dev/null; then
+          echo "has_dist=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_dist=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Publish to PyPI
-      if: {% raw %}steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != ''{% endraw %}
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
+      if: {% raw %}steps.dist.outputs.has_dist == 'true'{% endraw %}
+      env:
+        PYPI_TOKEN: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
+      run: |
+        if [ -n "$PYPI_TOKEN" ]; then
+          uv publish --token "$PYPI_TOKEN"
+        else
+          echo "PYPI_TOKEN is not set; skipping PyPI publish."
+        fi
 {%- else %}
 
     # Uncomment to publish to PyPI:
     # - name: Publish to PyPI
-    #   if: {% raw %}${{ steps.release.outputs.released == 'true' && secrets.PYPI_TOKEN != '' }}{% endraw %}
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     password: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
+    #   if: {% raw %}secrets.PYPI_TOKEN != ''{% endraw %}
+    #   env:
+    #     PYPI_TOKEN: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
+    #   run: |
+    #     if [ -n "$PYPI_TOKEN" ]; then
+    #       uv publish --token $PYPI_TOKEN
+    #     fi
 {%- endif %}
 
-    - name: Publish to GitHub Releases
-      if: {% raw %}steps.release.outputs.released == 'true'{% endraw %}
-      uses: python-semantic-release/publish-action@v9
-      with:
-        github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
-        tag: {% raw %}${{ steps.release.outputs.tag }}{% endraw %}
+    
