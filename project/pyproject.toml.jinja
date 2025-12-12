@@ -125,6 +125,12 @@ setup = "uv sync --all-extras --dev"
 # VSCode configuration
 vscode = "cp -r config/vscode/.vscode ."
 
+# GitHub utilities
+releases = "gh release list --limit 10"
+tags = "git tag --sort=-version:refname"
+runs = "gh run list --limit 10"
+watch = "gh run watch"
+
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
