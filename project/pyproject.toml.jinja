@@ -61,7 +61,6 @@ maintain = [
     "python-semantic-release",
 ]
 ci = [
-    "duty",
     "ruff",
     "pytest",
     "pytest-cov",
@@ -85,6 +84,7 @@ docs = [
     "mkdocs-llmstxt",
     "mkdocs-material",
     "mkdocs-minify-plugin",
+    "mkdocs-material-extensions",
     "mkdocs-section-index",
     "mkdocstrings[python]",
     # YORE: EOL 3.10: Remove line.
@@ -96,11 +96,11 @@ default-groups = ["maintain", "ci", "docs", "local"]
 
 [tool.poe.tasks]
 # Quality checks
-lint = "ruff check src tests duties.py scripts --config config/ruff.toml"
-format = "ruff format src tests duties.py scripts --config config/ruff.toml"
-typecheck = "ty check src tests duties.py scripts"
+lint = "ruff check src tests --config config/ruff.toml"
+format = "ruff format src tests --config config/ruff.toml"
+typecheck = "ty check src tests"
 security = "bandit -r src -c config/bandit.toml"
-deadcode = "vulture src tests"
+deadcode = "vulture src --min-confidence 80"
 upgrade = "pyupgrade --py313-plus src/**/*.py tests/**/*.py"
 
 # Testing
@@ -113,6 +113,17 @@ fix = ["format", "upgrade"]
 
 # Pre-commit
 pre-commit = "prek run --all-files"
+
+# Documentation
+docs = "mkdocs serve"
+docs-build = "mkdocs build -s"
+docs-deploy = "mkdocs gh-deploy"
+
+# Setup
+setup = "uv sync --all-extras --dev"
+
+# VSCode configuration
+vscode = "cp -r config/vscode/.vscode ."
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]

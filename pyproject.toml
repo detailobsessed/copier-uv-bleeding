@@ -13,6 +13,7 @@ dev = [
     "markdown-callouts",
     "mkdocs",
     "mkdocs-material",
+    "poethepoet",
     "python-semantic-release>=10.5.2",
     "reuse",
     "ruff",
@@ -34,3 +35,12 @@ changelog_file = "CHANGELOG.md"
 allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+
+[tool.poe.tasks]
+setup = "uv sync"
+format = "ruff format ."
+docs = "mkdocs serve"
+docs-deploy = "mkdocs gh-deploy"
+smoke-test = "bash tests/smoke_test.sh"
+test = "bash tests/test_filenames.sh && bash tests/test_project.sh && .venv/bin/python tests/test_licenses.py"
+release = "test -n \"${version}\" || { echo \"error: usage: poe release version=x.y.z\" >&2; exit 1; } && git add CHANGELOG.md && git commit -m \"chore: Prepare release ${version}\" && git tag -m \"\" -a ${version} && git push && git push --tags"

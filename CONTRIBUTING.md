@@ -18,7 +18,7 @@ Then you can clone the repository, enter it and set it up with:
 ```bash
 git clone https://github.com/ichoosetoaccept/copier-uv-bleeding
 cd copier-uv-bleeding
-make setup
+poe setup
 ```
 
 ## Running tests
@@ -26,7 +26,7 @@ make setup
 To run the tests, use:
 
 ```bash
-make test
+poe test
 ```
 
 ## Serving docs
@@ -34,5 +34,5 @@ make test
 To serve the docs locally, use:
 
 ```bash
-make docs
+poe docs
 ```

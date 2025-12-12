@@ -22,16 +22,13 @@ The generated project has this structure:
 │   │   └── 📄 mkdocstrings.css --- #
 │   ├── 📄 index.md --------------- #
 │   └── 📄 license.md ------------- #
-├── 📄 duties.py ------------------ # the project's tasks
 ├── 📄 LICENSE -------------------- #
-├── 📄 Makefile ------------------- # for auto-completion (it calls scripts/make)
 ├── 📄 mkdocs.yml ----------------- # docs configuration
-├── 📄 pyproject.toml ------------- # project metadata and dependencies
+├── 📄 pyproject.toml ------------- # project metadata, dependencies, and tasks
 ├── 📄 README.md ------------------ #
 ├── 📁 scripts -------------------- # helper scripts
-│   ├── 📄 gen_credits.py --------- # script to generate credits
-│   ├── 📄 gen_ref_nav.py --------- # script to generate code reference nav
-│   └── 📄 make ------------------- # a convenience script to run tasks
+│   ├── 📄 gen_credits.py --------- # script to generate credits
+│   └── 📄 gen_ref_nav.py --------- # script to generate code reference nav
 ├── 📁 src ------------------------ # the source code directory
 │   └── 📁 your_package ----------- # your package
 │       ├── 📄 cli.py ------------- # the command line entry point
@@ -48,18 +45,10 @@ The generated project has this structure:
 
 The project is configured to use [direnv](https://direnv.net/).
 If direnv is loaded in your shell, allow it in the project with
-`direnv allow`. It will add the `scripts` folder to your PATH
-when you enter the repository (and remove it when you exit it).
-The `scripts` folder has a `make` Bash script in it:
-it will shadow any `make` command you have in your PATH
-(this is indented!).
+`direnv allow`. The .envrc file doesn't add anything to PATH anymore
+since we use poe for all tasks.
 
-If you don't have or don't use direnv, you can still use
-the official `make` command, though you won't be able
-to pass arguments to some of the actions.
-
-In the rest of the documentation, we will use `make` commands,
-but you can also directly call `scripts/make`.
+In the rest of the documentation, we will use `poe` commands.
 
 See [Tasks](#tasks) to learn more.
 
@@ -87,7 +76,7 @@ git init .
 
 Dependencies are managed by [uv](https://github.com/astral-sh/uv).
 
-Use `make setup` or `uv sync` to install the dependencies.
+Use `poe setup` or `uv sync` to install the dependencies.
 
 Dependencies are written in `pyproject.toml`.
 Runtime dependencies are listed under the `[project]` and `[project.optional-dependencies]` sections,
@@ -115,79 +104,52 @@ ci = [
 
 ## Tasks
 
-The tasks are written in Python (for cross-platform compatibility),
-and based on the task-runner called [duty](https://github.com/pawamoy/duty).
-They are written in the `duties.py` file,
-and decorated with the `@duty` decorator.
+The project uses [poe the poet](https://github.com/nat-n/poethepoet) as a task runner.
+Tasks are defined in `pyproject.toml` under the `[tool.poe.tasks]` section.
 
 Example:
 
-```python title="duties.py"
-@duty
-def check_docs(ctx):
-    """Check if the documentation builds correctly."""
-    ctx.run("mkdocs build -s", title="Building documentation")
+```toml title="pyproject.toml"
+[tool.poe.tasks]
+check_docs = "mkdocs build -s"
 ```
 
-To run a task, use `make TASK [ARG=VALUE...]`.
-You can run multiple tasks at once: `make TASK1 ARG=VALUE TASK2`.
-You can list the available tasks with `make help`.
+To run a task, use `poe TASK [ARGS...]`.
+You can run multiple tasks at once: `poe TASK1 TASK2`.
+You can list the available tasks with `poe --help`.
 
 Available tasks:
 
 - `build`: Build source and wheel distributions.
 - `changelog`: Update the changelog in-place with latest commits.
   See [the Changelog section](#changelog).
-- `check`: Check it all!
+- `check`: Run all quality checks.
   See [the Quality Analysis section](#quality-analysis).
-- `check-quality`: Check the code quality.
-  See [the check-quality section](#check-quality).
-- `check-docs`: Check if the documentation builds correctly.
-  See [the check-docs section](#check-docs).
-- `check-types`: Check that the code is correctly typed.
-  See [the check-types section](#check-types).
+- `lint`: Check the code quality.
+- `typecheck`: Check that the code is correctly typed.
+- `security`: Run security checks.
+- `deadcode`: Check for dead code.
 - `clean`: Delete temporary files.
 - `coverage`: Report coverage as text and HTML.
 - `docs`: Serve the documentation (localhost:8000).
-  See [the Documentation section](#documentation).
-  Arguments:
-  - `host="127.0.0.1"`: The host to serve the docs from.
-  - `port=8000`: The port to serve the docs on.
+- `docs-deploy`: Deploy the documentation to GitHub Pages.
 - `format`: Run formatting tools on the code.
-- `publish`: Publish source and wheel distributions to PyPI.
-- `release`: Release a new Python package.
-  See [the Releases section](#releases).
-  Arguments:
-  - `version` The Python package version.
 - `test`: Run the test suite.
-  See [the Tests section](#tests).
-  Arguments:
-  - `match=""`: A pytest expression to filter selected tests.
+- `test-cov`: Run the test suite with coverage.
+- `upgrade`: Upgrade Python syntax.
+- `pre-commit`: Run pre-commit checks.
+- `setup`: Install project dependencies.
 - `vscode`: Configure VSCode for the project.
-  See [VSCode setup](#vscode-setup).
 
-The `make` script provides some additional commands:
+## Additional Commands
 
-- `make help`: Print available commands and tasks.
-- `make setup`: Install project and dependencies for all configured Python versions,
-  as well as in a default virtual environment (`.venv` + `.venvs/*`).
-- `make run command --args`: run arbitrary commands in the default Python virtual environment (`.venv`).
-  This command can be useful to run a Python interpreter without having to activate the venv:
-  `make run python`.
-- `make multirun command --args`: run arbitrary commands for all configured Python versions (`.venvs/*`).
-  This command can be useful to check something on all Python versions:
-  `make multirun python -c 'import sys; print(sys.version_info)'`.
-- `make allrun command --args`: run arbitrary commands in *all* Python virtual environments (`.venv` + `.venvs/*`).
-  This command can be useful to override some of the installed dependencies,
-  or to install local packages as editable:
-  `make allrun pip install -U some-dependency==2.0`, `make allrun pip install -e ../some-project`.
-- `make 3.x command --args`: run arbitrary commands for a specific Python versions (`.venvs/3.x`).
-  This command can be useful to check something on a specific Python version:
-  `make 3.13 duty docs`.
+You can run arbitrary commands with uv:
+- `uv run command --args`: Run commands in the virtual environment.
+  Example: `uv run python` to start Python without activating the venv.
 
 ### VSCode setup
 
-If you work in VSCode, we provide a `make vscode` action
+If you work in VSCode, we provide a `poe vscode` task
 that configures settings and tasks. **It will overwrite the following existing
 files, so make sure to back them up:**
 
@@ -200,11 +162,11 @@ files, so make sure to back them up:**
 The first thing you should run when entering your repository is:
 
 ```bash
-make setup
+poe setup
 ```
 
 If you don't have the `make` command,
-you can use `scripts/make setup` directly,
+you can use `poe setup` directly,
 or even just `uv venv; uv pip install`
 if you don't plan on using multiple Python versions.
 
@@ -212,37 +174,37 @@ This will install the project's dependencies in virtual environments:
 one venv per chosen Python version in `.venvs/$python_version`,
 and one default venv in `.venv/`.
 
-The chosen Python versions are defined in the `scripts/make` Bash script.
+The chosen Python versions are defined in the `PYTHON_VERSIONS` environment variable.
 
 Now you can start writing and editing code in `src/your_package`.
 
-- You can auto-format the code with `make format`.
-- You can run a quality analysis with `make check`.
+- You can auto-format the code with `poe format`.
+- You can run a quality analysis with `poe check`.
 - Once you wrote tests for your new code,
-  you can run the test suite with `make test`.
+  you can run the test suite with `poe test`.
 - Once you are ready to publish a new release,
-  run `make changelog`, then `make release version=x.y.z`,
+  run `poe changelog`, then `poe release version=x.y.z`,
   where `x.y.z` is the version added to the changelog.
 
 To summarize, the typical workflow is:
 
 ```bash
-make setup  # only once
+poe setup  # only once
 
 <write code>
-make format  # to auto-format the code
+poe format  # to auto-format the code
 
 <write tests>
-make test  # to run the test suite
+poe test  # to run the test suite
 
-make check  # to check if everything is OK
+poe check  # to check if everything is OK
 
 <commit your changes>
 
-make changelog  # to update the changelog
+poe changelog  # to update the changelog
 <edit changelog if needed>
 
-make release version=x.y.z
+poe release version=x.y.z
 ```
 
 ## Quality analysis
@@ -250,20 +212,20 @@ make release version=x.y.z
 The quality checks are started with:
 
 ```
-make check
+poe check
 ```
 
 This action is actually a composition of several checks:
 
-- `check-quality`: Check the code quality.
-- `check-docs`: Check if the documentation builds correctly.
-- `check-types`: Check if the code is correctly typed.
-- `check-api`: Check for breaking changes in your Python API.
+- `lint`: Check the code quality.
+- `typecheck`: Check if the code is correctly typed.
+- `security`: Run security checks.
+- `deadcode`: Check for dead code.
 
 For example, if you are only interested in checking types,
-run `make check-types`.
+run `poe typecheck`.
 
-### check-quality
+### lint
 
 The code quality analysis is done
 with [Ruff](https://github.com/astral-sh/ruff).
@@ -289,7 +251,7 @@ import subprocess
 ```
 
 ```console
-$ make check-quality
+$ poe lint
 ✗ Checking code quality (1)
   > ruff check --config=config/ruff.toml src/ tests/ scripts/
   src/your_package/module.py:2:1: S404 Consider possible security implications associated with subprocess module.
@@ -302,7 +264,7 @@ import subprocess  # noqa: S404
 ```
 
 ```console
-$ make check-quality
+$ poe lint
 ✓ Checking code quality
 ```
 
@@ -369,7 +331,7 @@ preventing CI to pass.
 Run the test suite with:
 
 ```
-make test
+poe test
 ```
 
 Behind the scenes, it uses [`pytest`](https://docs.pytest.org/en/stable/)
@@ -385,8 +347,8 @@ The `test` command therefore accept a `match=` argument
 to specify the value of Pytest's `-k` option:
 
 ```
-make test match=training
-make test match="app and route2"
+poe test match=training
+poe test match="app and route2"
 ```
 
 Example of output:
@@ -490,7 +452,7 @@ Once you are ready to publish a new release of your package,
 run the following command:
 
 ```
-make changelog
+poe changelog
 ```
 
 This will update the changelog in-place, using the latest,
@@ -525,7 +487,7 @@ you need), and use the new version (the one that was added
 into the changelog) to create a new release:
 
 ```
-make release version=x.y.z
+poe release version=x.y.z
 ```
 
 ...where x.y.z is the version added in the changelog.
@@ -535,13 +497,13 @@ make release version=x.y.z
 As seen in the previous section, you can use the `release` command
 to publish new versions of the Python package.
 
-Usually, just before running `make release version=x.y.z`,
-you run `make changelog` to update the changelog and
+Usually, just before running `poe release version=x.y.z`,
+you run `poe changelog` to update the changelog and
 use the newly added version as the argument to `make release`.
 
-For example, if after running `make changelog`, the diff
+For example, if after running `poe changelog`, the diff
 shows a new `0.5.1` entry in the changelog, you must
-release this exact same version with `make release version=0.5.1`.
+release this exact same version with `poe release version=0.5.1`.
 
 The `release` action does several things, in this order:
 

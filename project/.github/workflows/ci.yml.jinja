@@ -65,25 +65,25 @@ jobs:
         cache-dependency-glob: pyproject.toml
 
     - name: Install dependencies
-      run: make setup
+      run: poe setup
 
     - name: Check if the documentation builds correctly
-      run: make check-docs
+      run: poe docs-build
 
     - name: Check the code quality
-      run: make check-quality
+      run: poe lint
 
     - name: Check if the code is correctly typed
-      run: make check-types
+      run: poe typecheck
 
     - name: Check for security vulnerabilities
-      run: make check-security
+      run: poe security
 
     - name: Check for dead code
-      run: make check-deadcode
+      run: poe deadcode
 
     - name: Check for breaking changes in the API
-      run: make check-api
+      run: poe lint
 
     - name: Store objects inventory for tests
       uses: actions/upload-artifact@v4
@@ -143,7 +143,7 @@ jobs:
     - name: Install dependencies
       env:
         UV_RESOLUTION: {% raw %}${{ matrix.resolution }}{% endraw %}
-      run: make setup
+      run: poe setup
 
     - name: Download objects inventory
       uses: actions/download-artifact@v4
@@ -152,4 +152,4 @@ jobs:
         path: site/
 
     - name: Run the test suite
-      run: make test
+      run: poe test
