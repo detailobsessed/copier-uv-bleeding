@@ -50,37 +50,37 @@ Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
 
 [dependency-groups]
 maintain = [
-    "build",
-    "yore",
-    "python-semantic-release",
+    "build>=1.2",
+    "yore>=0.4",
+    "python-semantic-release>=10",
 ]
 ci = [
-    "ruff",
-    "pytest",
-    "pytest-cov",
-    "pytest-randomly",
-    "pytest-xdist",
-    "ty",
-    "poethepoet",
-    "bandit",
-    "vulture",
-    "pyupgrade",
+    "ruff>=0.11",
+    "pytest>=8",
+    "pytest-cov>=6",
+    "pytest-randomly>=3.15",
+    "pytest-xdist>=3.5",
+    "ty>=0.0.1a20",
+    "poethepoet>=0.32",
+    "bandit>=1.8",
+    "vulture>=2.13",
+    "pyupgrade>=3.19",
 ]
 local = [
-    "prek",
+    "prek>=0.2.20",
 ]
 docs = [
-    "markdown-callouts",
-    "markdown-exec",
-    "mkdocs",
-    "mkdocs-coverage",
-    "mkdocs-git-revision-date-localized-plugin",
-    "mkdocs-llmstxt",
-    "mkdocs-material",
-    "mkdocs-minify-plugin",
-    "mkdocs-material-extensions",
-    "mkdocs-section-index",
-    "mkdocstrings[python]",
+    "markdown-callouts>=0.4",
+    "markdown-exec>=1.10",
+    "mkdocs>=1.6",
+    "mkdocs-coverage>=1.1",
+    "mkdocs-git-revision-date-localized-plugin>=1.4",
+    "mkdocs-llmstxt>=0.4",
+    "mkdocs-material>=9.6",
+    "mkdocs-minify-plugin>=0.8",
+    "mkdocs-material-extensions>=1.3",
+    "mkdocs-section-index>=0.3.9",
+    "mkdocstrings[python]>=0.27",
     # YORE: EOL 3.10: Remove line.
     "tomli; python_version < '3.11'",
 ]
