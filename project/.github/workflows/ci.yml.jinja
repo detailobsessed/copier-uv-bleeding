@@ -57,7 +57,10 @@ jobs:
       run: uv run poe setup
 
     - name: Check if the documentation builds correctly
-      run: uv run poe docs-build
+      run: |
+        mkdir -p htmlcov
+        echo '<html><body>No coverage report yet</body></html>' > htmlcov/index.html
+        uv run poe docs-build
 
     - name: Check the code quality
       run: uv run poe lint
