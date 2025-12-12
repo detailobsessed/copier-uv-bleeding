@@ -37,7 +37,7 @@ for Python projects managed by [uv](https://github.com/astral-sh/uv).
 - Documentation built with [MkDocs](https://github.com/mkdocs/mkdocs)
   ([Material theme](https://github.com/squidfunk/mkdocs-material)
   and "autodoc" [mkdocstrings plugin](https://github.com/mkdocstrings/mkdocstrings))
-- Cross-platform tasks with [duty](https://github.com/pawamoy/duty) and [poethepoet](https://github.com/nat-n/poethepoet)
+- Modern Python tooling with [uv](https://github.com/astral-sh/uv), [ruff](https://github.com/astral-sh/ruff), and [poethepoet](https://github.com/nat-n/poethepoet)
 - Support for GitHub workflows with Dependabot
 - Auto-generated `CHANGELOG.md` from Git (conventional) commits
 - All licenses from [choosealicense.com](https://choosealicense.com/appendix/)

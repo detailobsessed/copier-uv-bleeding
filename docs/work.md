@@ -356,7 +356,7 @@ Example of output:
 ```
 Test session starts (platform: linux, Python 3.8.6, pytest 6.2.1, pytest-sugar 0.9.4)
 Using --randomly-seed=281943462
-rootdir: /home/pawamoy/data/dev/pawamoy/duty, configfile: config/pytest.ini
+rootdir: /home/user/project, configfile: config/pytest.ini
 plugins: randomly-3.5.0, xdist-2.2.0, forked-1.3.0, cov-2.10.1, sugar-0.9.4
 collecting ...
  tests/test_logic.py ✓✓✓✓✓✓✓✓✓✓✓✓                                          15% █▋
@@ -366,8 +366,8 @@ collecting ...
 ----------- coverage: platform linux, python 3.8.6-final-0 -----------
 Name                Stmts   Miss Branch BrPart     Cover
 --------------------------------------------------------
-src/duty/cli.py        62      0     20      0   100.00%
-src/duty/logic.py      71      0     18      0   100.00%
+src/your_package/cli.py        62      0     20      0   100.00%
+src/your_package/logic.py      71      0     18      0   100.00%
 --------------------------------------------------------
 TOTAL                 133      0     38      0   100.00%
 
@@ -520,7 +520,7 @@ The `release` action does several things, in this order:
 
 The documentation is built with [Mkdocs](https://www.mkdocs.org/),
 the [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/) theme,
-and the [mkdocstrings](https://github.com/pawamoy/mkdocstrings) plugin.
+and the [mkdocstrings](https://mkdocstrings.github.io/) plugin.
 
 ### Writing
 

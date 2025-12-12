@@ -50,7 +50,7 @@ and use any character you want.
 ```
 Your full name
 author_fullname? Format: str
-🎤 [None]: Timothée Mazzucotelli
+🎤 [None]: Jane Doe
 ```
 
 The full name will appear as "author" in the project's metadata.
@@ -60,7 +60,7 @@ The full name will appear as "author" in the project's metadata.
 ```
 Your email
 author_email? Format: str
-🎤 [None]: dev@pawamoy.fr
+🎤 [None]: jane@example.com
 ```
 
 The email will appear as "author email" in the project's metadata.
@@ -70,7 +70,7 @@ The email will appear as "author email" in the project's metadata.
 ```
 Your username (e.g. on GitHub)
 author_username? Format: str
-🎤 [None]: pawamoy
+🎤 [None]: janedoe
 ```
 
 The username you are using on the git repository provider.
@@ -94,7 +94,7 @@ case we add support for more providers in the future.
 ```
 Your repository namespace
 repository_namespace? Format: str
-🎤 [pawamoy]:
+🎤 [janedoe]:
 ```
 
 The namespace (or account) on which the project will be stored.
@@ -116,7 +116,7 @@ It defaults to a slugified version of your project's name.
 ```
 The name of the person/entity holding the copyright
 copyright_holder? Format: str
-🎤 [Timothée Mazzucotelli]:
+🎤 [Jane Doe]:
 ```
 
 The name of the person or entity holding the copyright on the project.
@@ -127,7 +127,7 @@ It defaults to the full name your provided.
 ```
 The email of the person/entity holding the copyright
 copyright_holder_email? Format: str
-🎤 [dev@pawamoy.frr]:
+🎤 [jane@example.com]:
 ```
 
 The email of the person or entity holding the copyright on the project.

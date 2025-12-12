@@ -24,17 +24,10 @@ nav:
   - Contributing: contributing.md
   - Code of Conduct: code_of_conduct.md
   - Coverage report: coverage.md
-{%- if author_username == "pawamoy" %}
-- Author's website: https://{{ author_username }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/
-{%- endif %}
 
 theme:
   name: material
   custom_dir: docs/.overrides
-  {%- if author_username == "pawamoy" %}
-  icon:
-    logo: material/currency-sign
-  {%- endif %}
   features:
   - announce.dismiss
   - content.action.edit
@@ -100,7 +93,7 @@ markdown_extensions:
 - pymdownx.tasklist:
     custom_checkbox: true
 - toc:
-    permalink: {% if author_username == "pawamoy" %}"¤"{% else %}true{% endif %}
+    permalink: true
 
 plugins:
 - search
@@ -149,14 +142,8 @@ plugins:
 
 extra:
   social:
-  - icon: fontawesome/brands/{{ repository_provider.rsplit(".", 1)[0] }}
+  - icon: fontawesome/brands/{{ repository_provider.rsplit('.', 1)[0] }}
     link: https://{{ repository_provider }}/{{ author_username }}
-  {%- if author_username == "pawamoy" %}
-  - icon: fontawesome/brands/mastodon
-    link: https://fosstodon.org/@{{ author_username }}
-  - icon: fontawesome/brands/twitter
-    link: https://twitter.com/{{ author_username }}
-  {%- endif %}
   - icon: fontawesome/brands/gitter
     link: https://gitter.im/{{ repository_name }}/community
   - icon: fontawesome/brands/python

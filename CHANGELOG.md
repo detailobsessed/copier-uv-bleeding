@@ -677,4 +677,4 @@ See the original repository for historical changes before version 2.0.0.
 ### Features
 
 - Make it work with uv ([469fc45](https://github.com/pawamoy/copier-uv/commit/469fc459f04786c0064d746e778ef799e9a9eabc) by Timothée Mazzucotelli).
-- Fork from [Copier PDM v1.2.3](https://pawamoy.github.io/copier-pdm/changelog/#123-2024-02-11)
+- Fork from [Copier PDM v1.2.3](https://copier-pdm.github.io/copier-pdm/changelog/#123-2024-02-11)
