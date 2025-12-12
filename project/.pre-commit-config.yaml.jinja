@@ -37,6 +37,13 @@ repos:
         types: [python]
         pass_filenames: false
 
+      - id: docs-build
+        name: docs build check
+        entry: bash -c 'mkdir -p htmlcov && echo "<html><body>No coverage report yet</body></html>" > htmlcov/index.html && uv run poe docs-build'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: ""  # prek autoupdate will fill this
     hooks:
