@@ -36,12 +36,12 @@ jobs:
         git config --global init.defaultBranch main
         git config --global user.email "dev@ichoosetoaccept.com"
         git config --global user.name "I Choose to Accept"
-    - name: Setup Python
-      uses: actions/setup-python@v6
+    - name: Setup uv and Python
+      uses: astral-sh/setup-uv@v7.1.5
       with:
         python-version: "3.13"
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v5
+        enable-cache: true
+        cache-dependency-glob: project/pyproject.toml.jinja
     - name: Test licenses
       run: uv run --with jinja2 --with pyyaml --with reuse python tests/test_licenses.py
 
@@ -69,15 +69,10 @@ jobs:
         git config --global user.email "dev@ichoosetoaccept.com"
         git config --global user.name "I Choose to Accept"
 
-    - name: Setup Python
-      uses: actions/setup-python@v6
+    - name: Setup uv and Python
+      uses: astral-sh/setup-uv@v7.1.5
       with:
         python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
-
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v5
-      with:
         enable-cache: true
         cache-dependency-glob: project/pyproject.toml.jinja
 

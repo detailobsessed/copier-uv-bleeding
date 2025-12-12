@@ -53,14 +53,10 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
-    - name: Setup Python
-      uses: actions/setup-python@v6
+    - name: Setup uv and Python
+      uses: astral-sh/setup-uv@v7.1.5
       with:
         python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
-
-    - name: Setup uv
-      uses: astral-sh/setup-uv@v5
-      with:
         enable-cache: true
         cache-dependency-glob: pyproject.toml
 
