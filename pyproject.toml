@@ -46,6 +46,6 @@ test = "bash tests/test_filenames.sh && bash tests/test_project.sh && .venv/bin/
 release = "test -n \"${version}\" || { echo \"error: usage: poe release version=x.y.z\" >&2; exit 1; } && git add CHANGELOG.md && git commit -m \"chore: Prepare release ${version}\" && git tag -m \"\" -a ${version} && git push && git push --tags"
 # GitHub utilities
 releases = "gh release list --limit 10"
-tags = "git tag --sort=-version:refname"
+tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
 watch = "gh run watch"
