@@ -40,6 +40,10 @@ test -d tests || { echo "FAIL: tests/ directory not found"; exit 1; }
 echo "OK: Core files present"
 
 echo
+echo ">>> Checking generated CI/release configuration"
+bash "${REPO_ROOT}/tests/assert_generated_project_release_ci.sh"
+
+echo
 echo ">>> Initializing git repo (required for some tools)"
 git init .
 git add -A
