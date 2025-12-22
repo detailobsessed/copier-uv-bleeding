@@ -12,11 +12,20 @@ repos:
         priority: 0
       - id: check-toml
         priority: 0
+      - id: check-json
+        priority: 0
       - id: check-added-large-files
         priority: 0
       - id: check-merge-conflict
         priority: 0
       - id: check-case-conflict
+        priority: 0
+      - id: check-symlinks
+        priority: 0
+      - id: check-executables-have-shebangs
+        priority: 0
+      - id: mixed-line-ending
+        args: [--fix=lf]
         priority: 0
       - id: detect-private-key
         priority: 0
@@ -35,6 +44,12 @@ repos:
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: uv-lock
+        priority: 1
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: shellcheck
         priority: 1
 
   - repo: https://github.com/rhysd/actionlint
