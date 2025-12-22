@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ---
 
-**Note:** This is a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv). 
+**Note:** This is a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv).
 See the original repository for historical changes before version 2.0.0.
 
 ---

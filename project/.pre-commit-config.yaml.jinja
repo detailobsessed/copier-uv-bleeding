@@ -1,32 +1,47 @@
+minimum_prek_version: "0.2.23"
+
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: ""  # prek autoupdate will fill this
+  # prek builtin hooks - no network/env needed, instant execution
+  - repo: builtin
     hooks:
       - id: trailing-whitespace
+        priority: 0
       - id: end-of-file-fixer
+        priority: 0
       - id: check-yaml
+        priority: 0
       - id: check-toml
+        priority: 0
       - id: check-added-large-files
+        priority: 0
       - id: check-merge-conflict
+        priority: 0
+      - id: check-case-conflict
+        priority: 0
       - id: detect-private-key
+        priority: 0
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: ruff
         args: [--config, config/ruff.toml, --fix]
+        priority: 1
       - id: ruff-format
         args: [--config, config/ruff.toml]
+        priority: 1
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: uv-lock
+        priority: 1
 
   - repo: https://github.com/rhysd/actionlint
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: actionlint
+        priority: 1
 
   - repo: local
     hooks:
@@ -36,6 +51,7 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+        priority: 1
 
       - id: docs-build
         name: docs build check

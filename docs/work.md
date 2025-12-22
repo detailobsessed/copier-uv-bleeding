@@ -144,6 +144,7 @@ Available tasks:
 ## Additional Commands
 
 You can run arbitrary commands with uv:
+
 - `uv run command --args`: Run commands in the virtual environment.
   Example: `uv run python` to start Python without activating the venv.
 
