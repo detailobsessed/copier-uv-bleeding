@@ -95,7 +95,7 @@ format = "ruff format src tests --config config/ruff.toml"
 typecheck = "ty check src tests"
 security = "bandit -r src -c config/bandit.toml"
 deadcode = "vulture src --min-confidence 80"
-upgrade = "pyupgrade --py313-plus src/**/*.py tests/**/*.py"
+upgrade = "pyupgrade --py314-plus src/**/*.py tests/**/*.py"
 
 # Testing
 test = "pytest tests -c config/pytest.ini"
