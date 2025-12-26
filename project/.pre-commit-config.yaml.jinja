@@ -1,3 +1,4 @@
+default_stages: [pre-commit]
 minimum_prek_version: "0.2.23"
 
 repos:
@@ -56,6 +57,19 @@ repos:
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: actionlint
+        priority: 1
+
+  - repo: https://github.com/crate-ci/typos
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: typos
+        priority: 1
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: markdownlint
+        args: ["--fix"]
         priority: 1
 
   - repo: local
