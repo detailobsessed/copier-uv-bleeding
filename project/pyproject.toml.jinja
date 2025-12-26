@@ -42,7 +42,7 @@ Gitter = "https://gitter.im/{% if repository_namespace != author_username %}{{ r
 Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
 {%- endif %}
 
-{% if python_package_command_line_name -%}
+{% if project_type == 'package' -%}
 [project.scripts]
 {{ python_package_command_line_name }} = "{{ python_package_import_name }}.cli:main"
 
@@ -115,9 +115,6 @@ docs-deploy = "mkdocs gh-deploy"
 
 # Setup
 setup = "uv sync --all-extras --dev"
-
-# VSCode configuration
-vscode = "cp -r config/vscode/.vscode ."
 
 # GitHub utilities
 releases = "gh release list --limit 10"

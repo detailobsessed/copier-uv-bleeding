@@ -24,6 +24,15 @@ project_description:
   type: str
   help: Your project description
 
+project_type:
+  type: str
+  help: What type of project is this?
+  default: package
+  choices:
+    Application (simple script with main.py): app
+    Library (importable package, no CLI): lib
+    Package (installable with CLI entry point): package
+
 author_fullname:
   type: str
   help: Your full name

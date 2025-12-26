@@ -89,9 +89,9 @@ repos:
         pass_filenames: false
         stages: [pre-push]
 
-  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+  - repo: https://github.com/compilerla/conventional-pre-commit
     rev: ""  # prek autoupdate will fill this
     hooks:
-      - id: commitlint
+      - id: conventional-pre-commit
         stages: [commit-msg]
-        additional_dependencies: ["@commitlint/config-conventional"]
+        args: ["--verbose"]
