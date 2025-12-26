@@ -154,4 +154,4 @@ _tasks:
   - "test -d .git && uv run prek install || true"
   - "test -f .copier-answers.yml && rm -f duties.py Makefile scripts/make scripts/make.py || true"
   - "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge && echo '✓ Enabled delete-branch-on-merge' || true"
-  - "echo '🎉 Project scaffolded successfully! Run: prek autoupdate'"
+  - "test -d .git && echo '🎉 Project scaffolded successfully! Run: prek autoupdate' || echo '🎉 Project scaffolded successfully! Run: git init && prek autoupdate'"
