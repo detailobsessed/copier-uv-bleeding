@@ -148,6 +148,11 @@ publish_to_pypi:
   help: Will you publish this package to PyPI?
   default: true
 
+use_polar:
+  type: bool
+  help: Enable Polar.sh sponsorship? (requires account at polar.sh)
+  default: false
+
 # TASKS --------------------------------
 _tasks:
   - "uv sync"

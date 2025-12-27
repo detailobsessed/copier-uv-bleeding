@@ -21,15 +21,41 @@ env:
 jobs:
 
   test-filenames:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Test file names
       run: bash tests/test_filenames.sh
 
+  test-funding:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+    - name: Configure Git
+      run: |
+        git config --global init.defaultBranch main
+        git config --global user.email "dev@ichoosetoaccept.com"
+        git config --global user.name "I Choose to Accept"
+    - name: Setup uv and Python
+      uses: astral-sh/setup-uv@v7.1.5
+      with:
+        python-version: "3.13"
+        enable-cache: true
+        cache-dependency-glob: project/pyproject.toml.jinja
+    - name: Install Copier
+      env:
+        PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
+      run: uv tool install copier --with copier-templates-extensions
+    - name: Test FUNDING.yml generation
+      run: bash tests/test_funding.sh
+
   test-licenses:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -54,7 +80,7 @@ jobs:
         - "3.13"
         - "3.14"
 
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
     - name: Checkout
