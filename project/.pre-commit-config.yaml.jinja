@@ -1,5 +1,5 @@
 default_stages: [pre-commit]
-minimum_prek_version: "0.2.23"
+minimum_prek_version: "0.2.25"
 
 repos:
   # prek builtin hooks - no network/env needed, instant execution
@@ -30,6 +30,13 @@ repos:
         priority: 0
       - id: detect-private-key
         priority: 0
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: pyupgrade
+        args: [--py314-plus]
+        priority: 1
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: ""  # prek autoupdate will fill this
