@@ -15,6 +15,10 @@ _jinja_extensions:
 _skip_if_exists:
 - CHANGELOG.md
 
+_exclude:
+- "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
+- "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
+
 # PROMPT --------------------------------
 project_name:
   type: str
@@ -143,10 +147,28 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
+use_ci:
+  type: bool
+  help: Enable GitHub Actions CI workflow? (testing, linting, type checking)
+  default: true
+
+use_semantic_release:
+  type: bool
+  help: Enable semantic-release workflow? (automated versioning, changelog, GitHub releases)
+  default: true
+  when: "{{ use_ci }}"
+
 publish_to_pypi:
   type: bool
   help: Will you publish this package to PyPI?
   default: true
+  when: "{{ use_semantic_release }}"
+
+use_blacksmith_runners:
+  type: bool
+  help: Use Blacksmith.sh runners? (2x faster, 75% more cost-efficient than GitHub-hosted)
+  default: true
+  when: "{{ use_ci }}"
 
 use_polar:
   type: bool
