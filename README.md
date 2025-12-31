@@ -1,5 +1,7 @@
 # Copier UV (Bleeding Edge Fork)
 
+> **⚠️ Requires Python 3.14+** — This template targets the latest stable Python release only.
+
 > **This is a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv).**
 > Huge thanks to [Timothée Mazzucotelli](https://github.com/pawamoy) for the excellent original template!
 
