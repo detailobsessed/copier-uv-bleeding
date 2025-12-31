@@ -24,7 +24,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Test file names
       run: bash tests/test_filenames.sh
 
@@ -32,7 +32,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
         fetch-tags: true
@@ -58,7 +58,7 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Configure Git
       run: |
         git config --global init.defaultBranch main
@@ -83,7 +83,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
         fetch-tags: true
