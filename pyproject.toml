@@ -37,13 +37,22 @@ minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
 
 [tool.poe.tasks]
+# Setup
 setup = "uv sync"
+
+# Quality (template repo only has ruff)
 format = "ruff format ."
+lint = "ruff check ."
+fix = ["lint --fix", "format"]
+
+# Template tests
+test = "bash tests/smoke_test.sh"
+
+# Documentation
 docs = "mkdocs serve"
+docs-build = "mkdocs build -s"
 docs-deploy = "mkdocs gh-deploy"
-smoke-test = "bash tests/smoke_test.sh"
-test = "bash tests/test_filenames.sh && bash tests/test_project.sh && .venv/bin/python tests/test_licenses.py"
-release = "test -n \"${version}\" || { echo \"error: usage: poe release version=x.y.z\" >&2; exit 1; } && git add CHANGELOG.md && git commit -m \"chore: Prepare release ${version}\" && git tag -m \"\" -a ${version} && git push && git push --tags"
+
 # GitHub utilities
 releases = "gh release list --limit 10"
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"

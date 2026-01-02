@@ -24,9 +24,7 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
-dependencies = [
-    "prek",
-]
+dependencies = []
 
 [project.urls]
 Homepage = "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
@@ -61,7 +59,6 @@ ci = [
     "poethepoet>=0.32",
     "bandit>=1.8",
     "vulture>=2.13",
-    "pyupgrade>=3.19",
 ]
 local = [
     "prek>=0.2.20",
@@ -86,32 +83,31 @@ docs = [
 default-groups = ["maintain", "ci", "docs", "local"]
 
 [tool.poe.tasks]
+# Setup
+setup = "uv sync"
+
 # Quality checks
 lint = "ruff check src tests --config config/ruff.toml"
 format = "ruff format src tests --config config/ruff.toml"
 typecheck = "ty check src tests"
 security = "bandit -r src -c config/bandit.toml"
-deadcode = "vulture src --min-confidence 80"
-upgrade = "pyupgrade --py314-plus src/**/*.py tests/**/*.py"
+deadcode = "vulture src tests --min-confidence 80"
 
 # Testing
 test = "pytest tests -c config/pytest.ini"
-test-cov = "pytest tests -c config/pytest.ini --cov=src --cov-report=html"
+test-cov = "pytest tests -c config/pytest.ini --cov=src --cov-report=term-missing --cov-report=html"
 
 # Combined tasks
 check = ["lint", "typecheck", "security", "deadcode"]
-fix = ["format", "upgrade"]
-
-# Pre-commit
-pre-commit = "prek run --all-files"
+fix = ["lint --fix", "format"]
 
 # Documentation
 docs = "mkdocs serve"
 docs-build = "mkdocs build -s"
 docs-deploy = "mkdocs gh-deploy"
 
-# Setup
-setup = "uv sync --all-extras --dev"
+# Pre-commit
+prek = "prek run --all-files"
 
 # GitHub utilities
 releases = "gh release list --limit 10"
