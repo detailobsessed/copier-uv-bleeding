@@ -47,7 +47,7 @@ for Python projects managed by [uv](https://github.com/astral-sh/uv).
 ## Quick setup and usage
 
 ```bash
-copier copy --trust "gh:ichoosetoaccept/copier-uv-bleeding" /path/to/your/new/project
+copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/project
 ```
 
 The template automatically runs `prek autoupdate` and `uv sync` after scaffolding.
