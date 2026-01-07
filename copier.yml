@@ -62,9 +62,8 @@ repository_provider:
 
 repository_namespace:
   type: str
-  help: Your repository namespace
+  help: Your repository namespace (username or organization)
   default: "{{ author_username }}"
-  when: false
 
 repository_name:
   type: str
