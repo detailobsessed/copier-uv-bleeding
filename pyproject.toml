@@ -25,6 +25,10 @@ default-groups = ["dev"]
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
+build_command = """
+uv lock --upgrade-package "$PACKAGE_NAME"
+git add uv.lock
+"""
 commit_message = "chore(release): {version}"
 tag_format = "{version}"
 allow_zero_version = true
