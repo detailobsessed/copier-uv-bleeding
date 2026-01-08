@@ -27,6 +27,7 @@ env:
 jobs:
 
   quality:
+{%- if publish_to_pypi %}
     strategy:
       matrix:
         os:
@@ -41,8 +42,15 @@ jobs:
 {%- endif %}
         python-version:
         - "3.14"
+{%- endif %}
 
+{%- if publish_to_pypi %}
     runs-on: {% raw %}${{ matrix.os }}{% endraw %}
+{%- elif use_blacksmith_runners %}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+{%- else %}
+    runs-on: ubuntu-latest
+{%- endif %}
 
     steps:
     - name: Checkout
@@ -54,7 +62,11 @@ jobs:
     - name: Setup uv and Python
       uses: astral-sh/setup-uv@v7.1.5
       with:
+{%- if publish_to_pypi %}
         python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
+{%- else %}
+        python-version: "3.14"
+{%- endif %}
         enable-cache: true
         cache-dependency-glob: pyproject.toml
 
@@ -84,10 +96,12 @@ jobs:
 
     - name: Store objects inventory for tests
       uses: actions/upload-artifact@v6
+{%- if publish_to_pypi %}
 {%- if use_blacksmith_runners %}
       if: {% raw %}${{ matrix.os == 'blacksmith-4vcpu-ubuntu-2404' && matrix.python-version == '3.14' }}{% endraw %}
 {%- else %}
       if: {% raw %}${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' }}{% endraw %}
+{%- endif %}
 {%- endif %}
       with:
         name: objects.inv
@@ -97,6 +111,7 @@ jobs:
 
     needs:
     - quality
+{%- if publish_to_pypi %}
     strategy:
       matrix:
         os:
@@ -124,7 +139,14 @@ jobs:
         - os: windows-latest
           resolution: lowest-direct
 {%- endif %}
+{%- endif %}
+{%- if publish_to_pypi %}
     runs-on: {% raw %}${{ matrix.os }}{% endraw %}
+{%- elif use_blacksmith_runners %}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+{%- else %}
+    runs-on: ubuntu-latest
+{%- endif %}
     continue-on-error: true
 
     steps:
@@ -137,7 +159,11 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
+{%- if publish_to_pypi %}
         python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
+{%- else %}
+        python-version: "3.14"
+{%- endif %}
         allow-prereleases: true
 
     - name: Setup uv
@@ -145,11 +171,15 @@ jobs:
       with:
         enable-cache: true
         cache-dependency-glob: pyproject.toml
+{%- if publish_to_pypi %}
         cache-suffix: {% raw %}${{ matrix.resolution }}{% endraw %}
+{%- endif %}
 
     - name: Install dependencies
+{%- if publish_to_pypi %}
       env:
         UV_RESOLUTION: {% raw %}${{ matrix.resolution }}{% endraw %}
+{%- endif %}
       run: uv run poe setup
 
     - name: Download objects inventory
