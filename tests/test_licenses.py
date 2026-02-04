@@ -2,10 +2,9 @@
 import json
 from pathlib import Path
 
-import yaml
 import reuse
+import yaml
 from jinja2 import Environment
-
 
 with open("copier.yml") as file:
     copier = yaml.safe_load(file)

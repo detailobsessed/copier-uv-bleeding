@@ -146,6 +146,12 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
+use_typer:
+  type: bool
+  help: Use Typer for CLI? (modern, type-hint based CLI framework)
+  default: true
+  when: "{{ project_type == 'package' }}"
+
 use_ci:
   type: bool
   help: Enable GitHub Actions CI workflow? (testing, linting, type checking)

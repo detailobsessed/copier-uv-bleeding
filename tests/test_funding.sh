@@ -13,7 +13,7 @@ fail() {
 
 test_without_polar() {
     local test_dir="/tmp/funding-test-no-polar-$$"
-    trap "rm -rf ${test_dir}" RETURN
+    trap 'rm -rf ${test_dir}' RETURN
 
     echo ">>> Testing FUNDING.yml without polar (use_polar=false)"
     copier copy -f --trust -r HEAD "${REPO_ROOT}" "${test_dir}" \
@@ -36,7 +36,7 @@ test_without_polar() {
 
 test_with_polar() {
     local test_dir="/tmp/funding-test-with-polar-$$"
-    trap "rm -rf ${test_dir}" RETURN
+    trap 'rm -rf ${test_dir}' RETURN
 
     echo ">>> Testing FUNDING.yml with polar (use_polar=true)"
     copier copy -f --trust -r HEAD "${REPO_ROOT}" "${test_dir}" \

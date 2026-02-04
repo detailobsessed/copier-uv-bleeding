@@ -56,22 +56,47 @@ line-length = 140
 
 [tool.ruff.lint]
 select = [
-    "UP",   # pyupgrade rules
-    "PT",   # pytest best practices
-    "S",    # flake8-bandit security rules
-    "F",    # Pyflakes (includes unused imports/variables)
+    # Core (ruff defaults)
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+
+    # Modern Python
+    "UP",   # pyupgrade - use modern Python syntax
+    "I",    # isort - import sorting
+
+    # Code quality
+    "B",    # flake8-bugbear - common bugs and design issues
+    "SIM",  # flake8-simplify - simplify code
+    "C4",   # flake8-comprehensions - better comprehensions
+    "PIE",  # flake8-pie - misc improvements
+    "RET",  # flake8-return - return statement issues
+    "RUF",  # Ruff-specific rules
+
+    # Performance
+    "PERF", # Perflint - performance anti-patterns
+
+    # Security
+    "S",    # flake8-bandit - security issues
+
+    # Testing
+    "PT",   # flake8-pytest-style
+
+    # Error handling
+    "TRY",  # tryceratops - exception handling
+    "LOG",  # flake8-logging - logging best practices
+
+    # Unused code
     "ARG",  # flake8-unused-arguments
-    "C401", # unnecessary-generator-set
-    "C402", # unnecessary-generator-dict
-    "C403", # unnecessary-list-comprehension-set
-    "C404", # unnecessary-list-comprehension-dict
-    "C405", # unnecessary-literal-set
-    "F632", # is-literal
-    "W605", # invalid-escape-sequence
+    "ERA",  # eradicate - commented-out code
+
+    # Print statements (use logging instead)
+    "T20",  # flake8-print
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S603", "S607", "S701"]  # Allow assert, subprocess, jinja2 in tests
+"tests/**" = ["S101", "S603", "S607", "S701", "T201"]  # Allow assert, subprocess, jinja2, print in tests
+"extensions.py" = ["S602", "S605", "S607"]  # Template extensions use subprocess for git commands
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false

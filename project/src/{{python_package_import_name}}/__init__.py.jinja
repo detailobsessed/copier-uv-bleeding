@@ -6,10 +6,17 @@
 from __future__ import annotations
 
 {%- if project_type == 'package' %}
+{%- if use_typer %}
+
+from {{ python_package_import_name }}._internal.cli import app, main
+
+__all__: list[str] = ["app", "main"]
+{%- else %}
 
 from {{ python_package_import_name }}._internal.cli import get_parser, main
 
 __all__: list[str] = ["get_parser", "main"]
+{%- endif %}
 {%- else %}
 
 __all__: list[str] = []

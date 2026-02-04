@@ -10,6 +10,64 @@
 #   there's no `{{ python_package_import_name }}.__main__` in `sys.modules`.
 
 from __future__ import annotations
+{% if use_typer %}
+
+import typer
+
+from {{ python_package_import_name }}._internal import debug
+
+app = typer.Typer(
+    name="{{ python_package_command_line_name }}",
+    help="{{ project_description }}",
+    add_completion=False,
+)
+
+
+def version_callback(value: bool) -> None:
+    """Print version and exit."""
+    if value:
+        typer.echo(f"{{ python_package_command_line_name }} {debug._get_version()}")
+        raise typer.Exit()
+
+
+def debug_info_callback(value: bool) -> None:
+    """Print debug info and exit."""
+    if value:
+        debug._print_debug_info()
+        raise typer.Exit()
+
+
+@app.callback()
+def main_callback(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        callback=version_callback,
+        is_eager=True,
+        help="Show version and exit.",
+    ),
+    debug_info: bool = typer.Option(
+        False,
+        "--debug-info",
+        callback=debug_info_callback,
+        is_eager=True,
+        help="Print debug information.",
+    ),
+) -> None:
+    """{{ project_description }}"""
+
+
+@app.command()
+def hello(name: str = typer.Argument("World", help="Name to greet")) -> None:
+    """Say hello."""
+    typer.echo(f"Hello, {name}!")
+
+
+def main() -> None:
+    """Run the main program."""
+    app()
+{% else %}
 
 import argparse
 import sys
@@ -54,3 +112,4 @@ def main(args: list[str] | None = None) -> int:
     opts = parser.parse_args(args=args)
     print(opts)
     return 0
+{% endif %}

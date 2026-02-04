@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).parent.parent
 
 
@@ -167,8 +166,8 @@ class TestPythonVersion:
         """Ruff should target Python 3.14."""
         project = generate_project(tmp_path, copier_defaults)
 
-        ruff_config = project / "config" / "ruff.toml"
-        content = ruff_config.read_text()
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
         assert 'target-version = "py314"' in content
 
 
@@ -267,7 +266,38 @@ class TestCIWorkflows:
         assert "[build-system]" in content
 
 
-@pytest.mark.slow
+class TestTyperOption:
+    """Test typer CLI option."""
+
+    def test_typer_enabled_has_typer_dependency(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Typer enabled should add typer dependency."""
+        answers = {**copier_defaults, "use_typer": True}
+        project = generate_project(tmp_path, answers, "package")
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert '"typer>=' in content
+
+    def test_typer_disabled_no_typer_dependency(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Typer disabled should not add typer dependency."""
+        answers = {**copier_defaults, "use_typer": False}
+        project = generate_project(tmp_path, answers, "package")
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "typer" not in content
+
+    def test_typer_enabled_uses_typer_in_cli(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Typer enabled should use typer in cli.py."""
+        answers = {**copier_defaults, "use_typer": True}
+        project = generate_project(tmp_path, answers, "package")
+
+        cli_py = project / "src" / "test_project" / "_internal" / "cli.py"
+        content = cli_py.read_text()
+        assert "import typer" in content
+        assert "app = typer.Typer" in content
+
+
 class TestIntegration:
     """Integration tests that run uv sync and checks on generated project."""
 
