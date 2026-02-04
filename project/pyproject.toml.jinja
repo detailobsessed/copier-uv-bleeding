@@ -39,29 +39,28 @@ Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
 
 {% if project_type == 'package' -%}
 [project.scripts]
-{{ python_package_command_line_name }} = "{{ python_package_import_name }}.cli:main"
+{{ python_package_command_line_name }} = "{{ python_package_import_name }}:main"
 
 {% endif -%}
 
 [dependency-groups]
 maintain = [
     "build>=1.2",
-    "yore>=0.4",
     "python-semantic-release>=10",
 ]
 ci = [
-    "ruff>=0.11",
+    "ruff>=0.14",
     "pytest>=8",
     "pytest-cov>=6",
     "pytest-randomly>=3.15",
     "pytest-xdist>=3.5",
-    "ty>=0.0.9",
+    "ty>=0.0.14",
     "poethepoet>=0.32",
     "bandit>=1.8",
     "vulture>=2.13",
 ]
 local = [
-    "prek>=0.2.20",
+    "prek>=0.3.1",
 ]
 docs = [
     "markdown-callouts>=0.4",
@@ -75,8 +74,6 @@ docs = [
     "mkdocs-material-extensions>=1.3",
     "mkdocs-section-index>=0.3.9",
     "mkdocstrings[python]>=0.27",
-    # YORE: EOL 3.10: Remove line.
-    "tomli; python_version < '3.11'",
 ]
 
 [tool.uv]
@@ -129,7 +126,6 @@ allow_zero_version = true
 major_on_zero = false
 
 [tool.semantic_release.changelog]
-template_dir = "templates"
 changelog_file = "CHANGELOG.md"
 
 [tool.semantic_release.commit_parser_options]
