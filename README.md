@@ -1,5 +1,10 @@
 # Copier UV (Bleeding Edge Fork)
 
+[![ci](https://github.com/detailobsessed/copier-uv-bleeding/workflows/ci/badge.svg)](https://github.com/detailobsessed/copier-uv-bleeding/actions?query=workflow%3Aci)
+[![release](https://github.com/detailobsessed/copier-uv-bleeding/workflows/release/badge.svg)](https://github.com/detailobsessed/copier-uv-bleeding/actions?query=workflow%3Arelease)
+[![GitHub Release](https://img.shields.io/github/v/release/detailobsessed/copier-uv-bleeding)](https://github.com/detailobsessed/copier-uv-bleeding/releases)
+[![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
+
 > **⚠️ Requires Python 3.14+** — This template targets the latest stable Python release only.
 >
 > **This is a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv).**
