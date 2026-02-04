@@ -31,11 +31,20 @@
 # Path to database (overridden by BEADS_DB or --db)
 # db: ""
 
-# Auto-start daemon if not running (can also use BEADS_AUTO_START_DAEMON)
-# auto-start-daemon: true
+# Daemon settings
+daemon:
+  auto-start: true
+  auto-sync: true
+  auto-commit: true
+  auto-push: true
 
 # Debounce interval for auto-flush (can also use BEADS_FLUSH_DEBOUNCE)
 # flush-debounce: "5s"
+
+# Export events (audit trail) to .beads/events.jsonl on each flush/sync
+# When enabled, new events are appended incrementally using a high-water mark.
+# Use 'bd export --events' to trigger manually regardless of this setting.
+# events-export: false
 
 # Git branch for beads commits (bd sync will commit to this branch)
 # IMPORTANT: Set this for team projects so all clones use the same sync branch.
