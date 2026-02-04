@@ -58,6 +58,9 @@ line-length = 140
 select = [
     "UP",   # pyupgrade rules
     "PT",   # pytest best practices
+    "S",    # flake8-bandit security rules
+    "F",    # Pyflakes (includes unused imports/variables)
+    "ARG",  # flake8-unused-arguments
     "C401", # unnecessary-generator-set
     "C402", # unnecessary-generator-dict
     "C403", # unnecessary-list-comprehension-set
@@ -66,6 +69,9 @@ select = [
     "F632", # is-literal
     "W605", # invalid-escape-sequence
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "S607", "S701"]  # Allow assert, subprocess, jinja2 in tests
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false

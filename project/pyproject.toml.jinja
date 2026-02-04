@@ -56,8 +56,6 @@ ci = [
     "pytest-xdist>=3.5",
     "ty>=0.0.14",
     "poethepoet>=0.32",
-    "bandit>=1.8",
-    "vulture>=2.13",
 ]
 local = [
     "prek>=0.3.1",
@@ -87,6 +85,9 @@ line-length = 140
 select = [
     "UP",   # pyupgrade rules
     "PT",   # pytest best practices
+    "S",    # flake8-bandit security rules (replaces bandit)
+    "F",    # Pyflakes (includes unused imports/variables)
+    "ARG",  # flake8-unused-arguments
     "C401", # unnecessary-generator-set
     "C402", # unnecessary-generator-dict
     "C403", # unnecessary-list-comprehension-set
@@ -95,6 +96,9 @@ select = [
     "F632", # is-literal
     "W605", # invalid-escape-sequence
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # Allow assert in tests
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
@@ -133,10 +137,6 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING"]
 [tool.coverage.json]
 output = "htmlcov/coverage.json"
 
-[tool.bandit]
-exclude_dirs = ["tests", "scripts"]
-skips = ["B101"]
-
 [tool.ty.environment]
 python-version = "3.14"
 
@@ -151,15 +151,13 @@ setup = "uv sync"
 lint = "ruff check src tests"
 format = "ruff format src tests"
 typecheck = "ty check src tests"
-security = "bandit -r src -c pyproject.toml"
-deadcode = "vulture src tests --min-confidence 80"
 
 # Testing
 test = "pytest"
 test-cov = "pytest --cov={{ python_package_import_name }} --cov-report=term-missing --cov-report=html"
 
 # Combined tasks
-check = ["lint", "typecheck", "security", "deadcode"]
+check = ["lint", "typecheck"]
 fix = ["lint --fix", "format"]
 
 # Documentation
