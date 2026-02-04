@@ -5,3 +5,8 @@ site/
 __pycache__/
 .venv/
 .vscode/
+.perles/
+.ruff_cache/
+
+# bv (beads viewer) local config and caches
+.bv/
