@@ -1,5 +1,5 @@
 default_stages: [pre-commit]
-minimum_prek_version: "0.2.25"
+minimum_prek_version: "0.3.1"
 
 repos:
   # prek builtin hooks - no network/env needed, instant execution
@@ -10,6 +10,7 @@ repos:
       - id: end-of-file-fixer
         priority: 0
       - id: check-yaml
+        args: [--allow-multiple-documents]
         priority: 0
       - id: check-toml
         priority: 0
@@ -31,11 +32,10 @@ repos:
       - id: detect-private-key
         priority: 0
 
-  - repo: https://github.com/asottile/pyupgrade
+  - repo: https://github.com/gitleaks/gitleaks
     rev: ""  # prek autoupdate will fill this
     hooks:
-      - id: pyupgrade
-        args: [--py314-plus]
+      - id: gitleaks
         priority: 1
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -101,4 +101,19 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
-        args: ["--verbose"]
+        priority: 1
+        args:
+          [
+            --strict,
+            --verbose,
+            feat,
+            fix,
+            perf,
+            build,
+            chore,
+            ci,
+            docs,
+            style,
+            refactor,
+            test,
+          ]
