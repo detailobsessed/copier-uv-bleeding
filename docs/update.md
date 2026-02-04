@@ -9,12 +9,8 @@ It's particularly useful when you manage a lot of projects,
 all generated from the same template, and you want to
 apply a change to all your projects.
 
-Example: the template fixed a bug in the Makefile.
+Example: the template updated a dependency version or fixed a CI workflow.
 You don't want to apply it manually to your projects.
-
-Note: When updating from older versions of this template,
-deprecated files like `duties.py`, `Makefile`, and `scripts/make`
-will be automatically removed during the update process.
 
 To update your project, go into its directory,
 and run `copier update`. Your repository must be clean

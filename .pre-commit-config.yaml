@@ -96,5 +96,5 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
-        stages: [pre-commit]
+        stages: [pre-push]
         priority: 1

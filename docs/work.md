@@ -4,41 +4,36 @@ The generated project has this structure:
 
 ```
 📁 your_project ------------------- # your freshly created project!
+├── 📄 .pre-commit-config.yaml ---- # pre-commit hooks configuration
 ├── 📄 CHANGELOG.md --------------- #
 ├── 📄 CODE_OF_CONDUCT.md --------- #
-├── 📁 config --------------------- # tools configuration files
-│   ├── 📄 coverage.ini ----------- #
-│   ├── 📄 mypy.ini --------------- #
-│   ├── 📄 pytest.ini ------------- #
-│   └── 📄 ruff.toml -------------- #
 ├── 📄 CONTRIBUTING.md ------------ #
 ├── 📁 docs ----------------------- # documentation pages
-│   ├── 📄 changelog.md ----------- #
-│   ├── 📄 code_of_conduct.md ----- #
-│   ├── 📄 contributing.md -------- #
-│   ├── 📄 credits.md ------------- #
-│   ├── 📁 css -------------------- # extra CSS files
-│   │   ├── 📄 material.css ------- #
-│   │   └── 📄 mkdocstrings.css --- #
-│   ├── 📄 index.md --------------- #
-│   └── 📄 license.md ------------- #
+│   ├── 📄 changelog.md ----------- #
+│   ├── 📄 code_of_conduct.md ----- #
+│   ├── 📄 contributing.md -------- #
+│   ├── 📁 css -------------------- # extra CSS files
+│   │   ├── 📄 material.css ------- #
+│   │   └── 📄 mkdocstrings.css --- #
+│   ├── 📄 index.md --------------- #
+│   └── 📄 license.md ------------- #
 ├── 📄 LICENSE -------------------- #
 ├── 📄 mkdocs.yml ----------------- # docs configuration
-├── 📄 pyproject.toml ------------- # project metadata, dependencies, and tasks
+├── 📄 pyproject.toml ------------- # project metadata, dependencies, tools config, and tasks
 ├── 📄 README.md ------------------ #
-├── 📁 scripts -------------------- # helper scripts
-│   ├── 📄 gen_credits.py --------- # script to generate credits
-│   └── 📄 gen_ref_nav.py --------- # script to generate code reference nav
 ├── 📁 src ------------------------ # the source code directory
-│   └── 📁 your_package ----------- # your package
-│       ├── 📄 cli.py ------------- # the command line entry point
-│       ├── 📄 __init__.py -------- #
-│       ├── 📄 __main__.py -------- #
-│       └── 📄 py.typed ----------- #
+│   └── � your_package ----------- # your package
+│       ├── � _internal ---------- # internal implementation
+│       │   ├── � cli.py --------- # CLI implementation (typer or argparse)
+│       │   └── 📄 debug.py ------- # debug utilities
+│       ├── 📄 __init__.py -------- # re-exports main and app/get_parser
+│       ├── 📄 __main__.py -------- # python -m entry point
+│       └── 📄 py.typed ----------- # PEP 561 marker
 └── 📁 tests ---------------------- # the tests directory
-    ├── 📄 conftest.py ------------ # pytest fixtures, etc.
+    ├── 📄 conftest.py ------------ # pytest fixtures
     ├── 📄 __init__.py ------------ #
-    └── 📄 test_cli.py ------------ #
+    ├── 📄 test_api.py ------------ # API tests
+    └── 📄 test_cli.py ------------ # CLI tests
 ```
 
 ## Environment
@@ -54,15 +49,8 @@ See [Tasks](#tasks) to learn more.
 
 ## Python versions
 
-To specify which Python versions you would like to work with,
-define the `PYTHON_VERSIONS` environment variable:
-
-```bash
-export PYTHON_VERSIONS="3.10 3.11 3.12"
-```
-
-By default it is set to active versions of Python
-(non-EOL, in development).
+This template requires **Python 3.14+** (bleeding edge).
+The generated project will use Python 3.14 as the minimum version.
 
 ## Initialize Git Repository
 
@@ -120,26 +108,18 @@ You can list the available tasks with `poe --help`.
 
 Available tasks:
 
-- `build`: Build source and wheel distributions.
-- `changelog`: Update the changelog in-place with latest commits.
-  See [the Changelog section](#changelog).
-- `check`: Run all quality checks.
-  See [the Quality Analysis section](#quality-analysis).
-- `lint`: Check the code quality.
-- `typecheck`: Check that the code is correctly typed.
-- `security`: Run security checks.
-- `deadcode`: Check for dead code.
-- `clean`: Delete temporary files.
-- `coverage`: Report coverage as text and HTML.
-- `docs`: Serve the documentation (localhost:8000).
-- `docs-deploy`: Deploy the documentation to GitHub Pages.
-- `format`: Run formatting tools on the code.
+- `setup`: Install project dependencies.
+- `lint`: Check the code quality with ruff.
+- `format`: Run ruff formatter on the code.
+- `typecheck`: Check that the code is correctly typed with ty.
+- `check`: Run all quality checks (lint + typecheck).
+- `fix`: Auto-fix lint issues and format code.
 - `test`: Run the test suite.
 - `test-cov`: Run the test suite with coverage.
-- `upgrade`: Upgrade Python syntax.
-- `pre-commit`: Run pre-commit checks.
-- `setup`: Install project dependencies.
-- `vscode`: Configure VSCode for the project.
+- `docs`: Serve the documentation (localhost:8000).
+- `docs-build`: Build the documentation.
+- `docs-deploy`: Deploy the documentation to GitHub Pages.
+- `prek`: Run all pre-commit hooks.
 
 ## Additional Commands
 
@@ -218,10 +198,8 @@ poe check
 
 This action is actually a composition of several checks:
 
-- `lint`: Check the code quality.
-- `typecheck`: Check if the code is correctly typed.
-- `security`: Run security checks.
-- `deadcode`: Check for dead code.
+- `lint`: Check the code quality with ruff.
+- `typecheck`: Check if the code is correctly typed with ty.
 
 For example, if you are only interested in checking types,
 run `poe typecheck`.
@@ -230,9 +208,8 @@ run `poe typecheck`.
 
 The code quality analysis is done
 with [Ruff](https://github.com/astral-sh/ruff).
-The analysis is configured in `config/ruff.toml`.
-In this file, you can deactivate rules
-or activate others to customize your analysis.
+The analysis is configured in `pyproject.toml` under `[tool.ruff]`.
+You can deactivate rules or activate others to customize your analysis.
 Rules identifiers always start with one or more capital letters,
 like `D`, `S` or `BLK`, then followed by a number.
 
@@ -253,9 +230,7 @@ import subprocess
 
 ```console
 $ poe lint
-✗ Checking code quality (1)
-  > ruff check --config=config/ruff.toml src/ tests/ scripts/
-  src/your_package/module.py:2:1: S404 Consider possible security implications associated with subprocess module.
+src/your_package/module.py:2:1: S404 Consider possible security implications associated with subprocess module.
 ```
 
 Now add a comment to ignore this warning.
@@ -285,12 +260,12 @@ markdown_docstring = """
 ```
 
 You can disable a warning globally by adding its ID
-into the list in `config/ruff.toml`.
+to the ignore list in `pyproject.toml`.
 
 You can also disable warnings per file, like so:
 
-```toml title="config/ruff.toml"
-[per-file-ignores]
+```toml title="pyproject.toml"
+[tool.ruff.lint.per-file-ignores]
 "src/your_package/your_module.py" = [
     "T201",  # Print statement
 ]
@@ -306,26 +281,10 @@ or invalid cross-references.
 
 See the [Documentation section](#documentation) for more information.
 
-### check-types
+### typecheck
 
-This action runs [`mypy`](http://mypy-lang.org/) on the source code
-to find potential typing errors.
-
-If you cannot or don't know how to fix a typing error in your code,
-as a last resort you can ignore this specific error with a comment:
-
-```python title="src/your_package/module.py"
-result = data_dict.get(key, None).value  # type: ignore[ID]
-```
-
-...where ID is the name of the warning, for example `arg-type` or `union-attr`.
-
-### check-api
-
-This actions runs [Griffe](https://github.com/mkdocstrings/griffe)
-to search for API breaking changes since latest version. It is set
-to allow failures, and is more about providing information than
-preventing CI to pass.
+This action runs [`ty`](https://github.com/astral-sh/ty) on the source code
+to find potential typing errors. ty is a fast type checker from Astral (the makers of ruff and uv).
 
 ## Tests
 
@@ -343,38 +302,11 @@ Code source coverage is computed thanks to
 
 Sometimes you don't want to run the whole test suite,
 but rather one particular test, or group of tests.
-Pytest provides a `-k` option to allow filtering the tests.
-The `test` command therefore accept a `match=` argument
-to specify the value of Pytest's `-k` option:
+Pytest provides a `-k` option to allow filtering the tests:
 
 ```
-poe test match=training
-poe test match="app and route2"
-```
-
-Example of output:
-
-```
-Test session starts (platform: linux, Python 3.8.6, pytest 6.2.1, pytest-sugar 0.9.4)
-Using --randomly-seed=281943462
-rootdir: /home/user/project, configfile: config/pytest.ini
-plugins: randomly-3.5.0, xdist-2.2.0, forked-1.3.0, cov-2.10.1, sugar-0.9.4
-collecting ...
- tests/test_logic.py ✓✓✓✓✓✓✓✓✓✓✓✓                                          15% █▋
- tests/test_cli.py ✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓✓ 86% ████████▋
-                   ✓✓✓✓✓✓✓✓✓✓✓                                            100% ██████████
-
------------ coverage: platform linux, python 3.8.6-final-0 -----------
-Name                Stmts   Miss Branch BrPart     Cover
---------------------------------------------------------
-src/your_package/cli.py        62      0     20      0   100.00%
-src/your_package/logic.py      71      0     18      0   100.00%
---------------------------------------------------------
-TOTAL                 133      0     38      0   100.00%
-
-
-Results (0.76s):
-      78 passed
+uv run pytest -k training
+uv run pytest -k "app and route2"
 ```
 
 ## Continuous Integration
@@ -382,10 +314,6 @@ Results (0.76s):
 The quality checks and tests are executed in parallel
 in a [GitHub Workflow](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions).
 The CI is configured in `.github/workflows/ci.yml`.
-
-To force a step to pass even when it fails,
-add `nofail=CI` or `nofail=True` to the corresponding
-`ctx.run` instruction in `duties.py`
 
 ## Changelog
 
@@ -482,40 +410,18 @@ Moving from "alpha" status to "beta" or "stable" status
 is a choice left to the developers,
 when they consider the package is ready for it.
 
-Finally, once your changelog has been updated,
-make sure its contents are correct (add, remove or edit anything
-you need), and use the new version (the one that was added
-into the changelog) to create a new release:
-
-```
-poe release version=x.y.z
-```
-
-...where x.y.z is the version added in the changelog.
-
 ## Releases
 
-As seen in the previous section, you can use the `release` command
-to publish new versions of the Python package.
+This template uses [python-semantic-release](https://python-semantic-release.readthedocs.io/)
+for automated versioning and releases. When you push to main with conventional commits,
+the GitHub Actions workflow will:
 
-Usually, just before running `poe release version=x.y.z`,
-you run `poe changelog` to update the changelog and
-use the newly added version as the argument to `make release`.
-
-For example, if after running `poe changelog`, the diff
-shows a new `0.5.1` entry in the changelog, you must
-release this exact same version with `poe release version=0.5.1`.
-
-The `release` action does several things, in this order:
-
-- Stage the changelog file (`CHANGELOG.md`)
-- Commit the changes with a message like `chore: Prepare release 0.5.1`
-- Tag the commit with that version
-- Push the commits
-- Push the tags
-- Build the package dist and wheel
-- Publish the dist and wheel to PyPI.org
-- Build and deploy the documentation site
+1. Analyze commits to determine version bump (patch/minor/major)
+2. Update the version in `pyproject.toml`
+3. Generate/update `CHANGELOG.md`
+4. Create a git tag
+5. Build and publish to PyPI (if configured)
+6. Create a GitHub release
 
 ## Documentation
 
@@ -591,32 +497,13 @@ check [its documentation](https://mkdocstrings.github.io).
 ### Serving
 
 MkDocs provides a development server with files watching and live-reload.
-Run `make docs` to serve your documentation on `localhost:8000`.
-
-If you run it in a remote host (Linux VM) and would like to access it
-from your local browser, bind the server to 0.0.0.0 instead:
-
-```bash
-make docs host=0.0.0.0
-```
-
-If needed, you can also change the port used:
-
-```bash
-make docs host=0.0.0.0 port=5000
-```
+Run `poe docs` to serve your documentation on `localhost:8000`.
 
 ### Deploying
 
 MkDocs has a `gh-deploy` command that will deploy
-you documentation on GitHub pages.
-We make use of this command in the `docs-deploy` action:
+your documentation on GitHub pages:
 
 ```bash
-make docs-deploy
+poe docs-deploy
 ```
-
-If you'd prefer to deploy on ReadTheDocs instead,
-you will likely have to write
-a `readthedocs.yml` configuration file
-and enable the project on ReadTheDocs.
