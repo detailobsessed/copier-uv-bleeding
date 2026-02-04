@@ -1,7 +1,7 @@
 # Copier UV (Bleeding Edge Fork)
 
 > **⚠️ Requires Python 3.14+** — This template targets the latest stable Python release only.
-
+>
 > **This is a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv).**
 > Huge thanks to [Timothée Mazzucotelli](https://github.com/pawamoy) for the excellent original template!
 
@@ -15,7 +15,7 @@ for Python projects managed by [uv](https://github.com/astral-sh/uv).
 - **[poethepoet](https://github.com/nat-n/poethepoet)** task runner
 - **[bandit](https://github.com/PyCQA/bandit)** for security scanning
 - **[vulture](https://github.com/jendrikseipp/vulture)** for dead code detection
-- **[pyupgrade](https://github.com/asottile/pyupgrade)** for syntax modernization
+- **Ruff UP rules** for syntax modernization (replaces pyupgrade)
 - **No version pins** - get the latest versions at scaffold time
 - **Dependabot** configured for uv and GitHub Actions
 - **[commitlint](https://commitlint.js.org/)** for commit message enforcement (Angular/Conventional format)
