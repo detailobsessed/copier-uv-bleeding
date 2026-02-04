@@ -79,20 +79,84 @@ docs = [
 [tool.uv]
 default-groups = ["maintain", "ci", "docs", "local"]
 
+[tool.ruff]
+target-version = "py314"
+line-length = 140
+
+[tool.ruff.lint]
+select = [
+    "UP",   # pyupgrade rules
+    "PT",   # pytest best practices
+    "C401", # unnecessary-generator-set
+    "C402", # unnecessary-generator-dict
+    "C403", # unnecessary-list-comprehension-set
+    "C404", # unnecessary-list-comprehension-dict
+    "C405", # unnecessary-literal-set
+    "F632", # is-literal
+    "W605", # invalid-escape-sequence
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+
+[tool.ruff.lint.isort]
+known-first-party = ["{{ python_package_import_name }}"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov"
+filterwarnings = [
+    "error",
+    "default::EncodingWarning",
+    "error::EncodingWarning:{{ python_package_import_name }}",
+    "ignore:.*rsyncdir:DeprecationWarning:xdist",
+]
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["src/", "tests/"]
+
+[tool.coverage.paths]
+equivalent = ["src/", ".venv/lib/*/site-packages/"]
+
+[tool.coverage.report]
+precision = 2
+omit = ["src/*/__init__.py", "src/*/__main__.py", "tests/__init__.py"]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING"]
+
+[tool.coverage.json]
+output = "htmlcov/coverage.json"
+
+[tool.bandit]
+exclude_dirs = ["tests", "scripts"]
+skips = ["B101"]
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.rules]
+ignore = ["tests/fixtures/"]
+
 [tool.poe.tasks]
 # Setup
 setup = "uv sync"
 
 # Quality checks
-lint = "ruff check src tests --config config/ruff.toml"
-format = "ruff format src tests --config config/ruff.toml"
+lint = "ruff check src tests"
+format = "ruff format src tests"
 typecheck = "ty check src tests"
-security = "bandit -r src -c config/bandit.toml"
+security = "bandit -r src -c pyproject.toml"
 deadcode = "vulture src tests --min-confidence 80"
 
 # Testing
-test = "pytest tests -c config/pytest.ini"
-test-cov = "pytest tests -c config/pytest.ini --cov=src --cov-report=term-missing --cov-report=html"
+test = "pytest"
+test-cov = "pytest --cov={{ python_package_import_name }} --cov-report=term-missing --cov-report=html"
 
 # Combined tasks
 check = ["lint", "typecheck", "security", "deadcode"]

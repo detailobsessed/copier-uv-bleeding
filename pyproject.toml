@@ -14,13 +14,21 @@ dev = [
     "mkdocs",
     "mkdocs-material",
     "poethepoet",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
     "python-semantic-release>=10.5.2",
+    "pyyaml>=6.0.3",
     "reuse",
     "ruff",
 ]
 
 [tool.uv]
 default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
@@ -42,22 +50,52 @@ allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
 
+[tool.ruff]
+target-version = "py314"
+line-length = 140
+
+[tool.ruff.lint]
+select = [
+    "UP",   # pyupgrade rules
+    "PT",   # pytest best practices
+    "C401", # unnecessary-generator-set
+    "C402", # unnecessary-generator-dict
+    "C403", # unnecessary-list-comprehension-set
+    "C404", # unnecessary-list-comprehension-dict
+    "C405", # unnecessary-literal-set
+    "F632", # is-literal
+    "W605", # invalid-escape-sequence
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 100
+
 [tool.poe.tasks]
 # Setup
 setup = "uv sync"
 
-# Quality (template repo only has ruff)
+# Quality
 format = "ruff format ."
 lint = "ruff check ."
 fix = ["lint --fix", "format"]
 
-# Template tests
-test = "bash tests/smoke_test.sh"
+# Testing
+test = "pytest tests/ -v -m 'not slow'"
+test-all = "pytest tests/ -v"
+test-cov = "pytest tests/ -v --cov=tests --cov-report=term-missing"
 
 # Documentation
 docs = "mkdocs serve"
 docs-build = "mkdocs build -s"
 docs-deploy = "mkdocs gh-deploy"
+
+# Pre-commit
+prek = "prek run --all-files"
 
 # GitHub utilities
 releases = "gh release list --limit 10"

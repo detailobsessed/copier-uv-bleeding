@@ -42,10 +42,9 @@ repos:
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: ruff
-        args: [--config, config/ruff.toml, --fix]
+        args: [--fix]
         priority: 1
       - id: ruff-format
-        args: [--config, config/ruff.toml]
         priority: 1
 
   - repo: https://github.com/astral-sh/uv-pre-commit
@@ -87,6 +86,15 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+        priority: 1
+
+      - id: pytest-cov
+        name: pytest with 90% coverage
+        entry: uv run pytest --cov={{ python_package_import_name }} --cov-fail-under=90 -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-commit]
         priority: 1
 
       - id: docs-build

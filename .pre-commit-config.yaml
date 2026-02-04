@@ -90,10 +90,11 @@ repos:
 
   - repo: local
     hooks:
-      - id: smoke-test
-        name: smoke-test
-        entry: ./tests/smoke_test.sh
-        language: script
+      - id: pytest
+        name: pytest
+        entry: uv run pytest tests/ -q
+        language: system
+        types: [python]
         pass_filenames: false
-        stages: [pre-push]
-        priority: 2
+        stages: [pre-commit]
+        priority: 1
