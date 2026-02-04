@@ -14,6 +14,15 @@ _jinja_extensions:
 - extensions.py:GitHubIDsforGiscusExtension
 _skip_if_exists:
 - CHANGELOG.md
+- README.md
+- pyproject.toml
+- "src/{{ python_package_import_name }}/__init__.py"
+- "src/{{ python_package_import_name }}/cli.py"
+- "src/{{ python_package_import_name }}/_internal"
+- "src/{{ python_package_import_name }}/__main__.py"
+- "tests/test_cli.py"
+- .gitignore
+- .pre-commit-config.yaml
 
 _exclude:
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
@@ -146,11 +155,11 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
+# Typer is always used for packages - no argparse option
 use_typer:
   type: bool
-  help: Use Typer for CLI? (modern, type-hint based CLI framework)
   default: true
-  when: "{{ project_type == 'package' }}"
+  when: false
 
 use_ci:
   type: bool
