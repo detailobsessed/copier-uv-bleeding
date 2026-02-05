@@ -450,6 +450,54 @@ class TestCascadingBooleanDefaults:
         assert "classifiers" not in content
         assert "keywords" not in content
 
+    def test_use_ci_false_no_semantic_release_config(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=false, semantic_release config and maintain group should not appear."""
+        answers = {
+            **copier_defaults,
+            "use_ci": False,
+        }
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "[tool.semantic_release]" not in content
+        assert "python-semantic-release" not in content
+        assert "maintain" not in content
+
+    def test_use_semantic_release_false_no_semantic_release_config(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_semantic_release=false explicitly, semantic_release config should not appear."""
+        answers = {
+            **copier_defaults,
+            "use_ci": True,
+            "use_semantic_release": False,
+        }
+        answers.pop("publish_to_pypi", None)
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "[tool.semantic_release]" not in content
+        assert "python-semantic-release" not in content
+        assert "maintain" not in content
+
+    def test_use_semantic_release_true_has_config(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_semantic_release=true, semantic_release config and maintain group should appear."""
+        answers = {
+            **copier_defaults,
+            "use_ci": True,
+            "use_semantic_release": True,
+        }
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "[tool.semantic_release]" in content
+        assert "python-semantic-release" in content
+        assert "maintain" in content
+
 
 class TestTyperOption:
     """Test typer CLI option."""

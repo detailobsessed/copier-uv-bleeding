@@ -52,10 +52,12 @@ Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
 {% endif -%}
 
 [dependency-groups]
+{%- if use_semantic_release %}
 maintain = [
     "build>=1.2",
     "python-semantic-release>=10",
 ]
+{%- endif %}
 ci = [
     "ruff>=0.14",
     "pytest>=8",
@@ -83,7 +85,7 @@ docs = [
 ]
 
 [tool.uv]
-default-groups = ["maintain", "ci", "docs", "local"]
+default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "docs", "local"]
 
 [tool.ruff]
 target-version = "py314"
@@ -213,6 +215,7 @@ tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
 watch = "gh run watch"
 
+{%- if use_semantic_release %}
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
@@ -233,3 +236,4 @@ changelog_file = "CHANGELOG.md"
 allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+{%- endif %}
