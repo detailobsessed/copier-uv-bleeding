@@ -289,6 +289,44 @@ class TestCIWorkflows:
         content = pyproject.read_text()
         assert "[build-system]" in content
 
+    def test_pypi_false_excludes_classifiers_and_keywords(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When publish_to_pypi is false, classifiers and keywords should not be in pyproject.toml."""
+        answers = {**copier_defaults, "publish_to_pypi": False}
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "classifiers" not in content
+        assert "keywords" not in content
+
+    def test_pypi_true_includes_classifiers_and_keywords(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When publish_to_pypi is true, classifiers and keywords should be in pyproject.toml."""
+        answers = {**copier_defaults, "publish_to_pypi": True}
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "classifiers" in content
+        assert "keywords" in content
+
+    def test_pypi_true_has_environment(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When publish_to_pypi is true, release workflow should have environment: pypi."""
+        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
+        project = generate_project(tmp_path, answers)
+
+        release_yml = project / ".github" / "workflows" / "release.yml"
+        content = release_yml.read_text()
+        assert "environment: pypi" in content
+
+    def test_pypi_false_no_environment(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When publish_to_pypi is false, release workflow should not have environment: pypi."""
+        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": False}
+        project = generate_project(tmp_path, answers)
+
+        release_yml = project / ".github" / "workflows" / "release.yml"
+        content = release_yml.read_text()
+        assert "environment: pypi" not in content
+
 
 class TestTyperOption:
     """Test typer CLI option."""

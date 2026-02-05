@@ -10,7 +10,9 @@ license = "{{ copyright_license }}"
 license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.14"
+{%- if publish_to_pypi %}
 keywords = []
+{%- endif %}
 version = "0.0.0"
 {%- if publish_to_pypi %}
 classifiers = [
