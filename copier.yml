@@ -18,15 +18,28 @@ _skip_if_exists:
 - pyproject.toml
 - "src/{{ python_package_import_name }}/__init__.py"
 - "src/{{ python_package_import_name }}/cli.py"
-- "src/{{ python_package_import_name }}/_internal"
+- "src/{{ python_package_import_name }}/_internal/__init__.py"
+- "src/{{ python_package_import_name }}/_internal/cli.py"
+- "src/{{ python_package_import_name }}/_internal/debug.py"
 - "src/{{ python_package_import_name }}/__main__.py"
+- "src/{{ python_package_import_name }}/py.typed"
+- "tests/__init__.py"
+- "tests/conftest.py"
 - "tests/test_cli.py"
+- "tests/test_api.py"
 - .gitignore
 - .pre-commit-config.yaml
 
 _exclude:
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
+# Exclude scaffolding files when adopting an existing project
+- "{% if is_existing_project %}src/{{ python_package_import_name }}/_internal{% endif %}"
+- "{% if is_existing_project %}src/{{ python_package_import_name }}/__main__.py{% endif %}"
+- "{% if is_existing_project %}src/{{ python_package_import_name }}/py.typed{% endif %}"
+- "{% if is_existing_project %}tests/__init__.py{% endif %}"
+- "{% if is_existing_project %}tests/conftest.py{% endif %}"
+- "{% if is_existing_project %}tests/test_api.py{% endif %}"
 
 # PROMPT --------------------------------
 project_name:
@@ -187,6 +200,11 @@ use_blacksmith_runners:
 use_polar:
   type: bool
   help: Enable Polar.sh sponsorship? (requires account at polar.sh)
+  default: false
+
+is_existing_project:
+  type: bool
+  help: Is this an existing project? (Skip generating CLI scaffolding files)
   default: false
 
 # TASKS --------------------------------
