@@ -186,19 +186,19 @@ use_ci:
 use_semantic_release:
   type: bool
   help: Enable semantic-release workflow? (automated versioning, changelog, GitHub releases)
-  default: true
+  default: "{{ use_ci }}"
   when: "{{ use_ci }}"
 
 publish_to_pypi:
   type: bool
   help: Will you publish this package to PyPI?
-  default: true
+  default: "{{ use_semantic_release }}"
   when: "{{ use_semantic_release }}"
 
 use_blacksmith_runners:
   type: bool
   help: Use Blacksmith.sh runners? (2x faster, 75% more cost-efficient than GitHub-hosted)
-  default: true
+  default: "{{ use_ci }}"
   when: "{{ use_ci }}"
 
 use_polar:

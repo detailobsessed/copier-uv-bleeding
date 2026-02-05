@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -34,7 +35,15 @@ def generate_project(
     answers: dict,
     project_type: str = "package",
 ) -> Path:
-    """Generate a project using copier."""
+    """Generate a project using copier.
+
+    IMPORTANT: We use ``-r HEAD`` to test against the current commit, not the latest
+    git tag.  Copier resolves ``copier.yml`` (questions, defaults, ``_exclude`` patterns)
+    from the checked-out VCS ref — *not* from the working directory.  Dirty template
+    files under ``project/`` are overlaid automatically, but ``copier.yml`` itself is
+    read from the ref.  Without ``-r HEAD``, tests would silently run against the last
+    *tagged* release and miss any uncommitted configuration changes.
+    """
     answers = {**answers, "project_type": project_type}
 
     cmd = [
@@ -328,6 +337,120 @@ class TestCIWorkflows:
         assert "environment: pypi" not in content
 
 
+class TestCascadingBooleanDefaults:
+    """Test that boolean question defaults cascade correctly when parent questions are disabled.
+
+    Regression tests for https://github.com/detailobsessed/copier-uv-bleeding/issues/45
+    When use_ci=false, downstream questions (use_semantic_release, publish_to_pypi,
+    use_blacksmith_runners) should all default to false since their 'when' conditions
+    prevent them from being asked.
+    """
+
+    def test_use_ci_false_no_classifiers(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=false (without explicit publish_to_pypi), classifiers should not appear."""
+        answers = {
+            **copier_defaults,
+            "use_ci": False,
+        }
+        # Remove keys that should cascade from use_ci
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "classifiers" not in content
+        assert "keywords" not in content
+
+    def test_use_ci_false_no_release_workflow(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=false, release.yml should not be created."""
+        answers = {
+            **copier_defaults,
+            "use_ci": False,
+        }
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        assert not (project / ".github" / "workflows" / "release.yml").exists()
+        assert not (project / ".github" / "workflows" / "ci.yml").exists()
+
+    def test_use_ci_false_no_pypi_environment(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=false, no PyPI-related config should appear in release workflow."""
+        answers = {
+            **copier_defaults,
+            "use_ci": False,
+        }
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        # No release workflow at all
+        assert not (project / ".github" / "workflows" / "release.yml").exists()
+
+    def test_use_ci_false_no_matrix_in_nonexistent_ci(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=false, CI workflow should not exist (no matrix testing)."""
+        answers = {
+            **copier_defaults,
+            "use_ci": False,
+        }
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        assert not (project / ".github" / "workflows" / "ci.yml").exists()
+
+    def test_use_ci_true_defaults_include_classifiers(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=true with defaults, classifiers should appear (positive case)."""
+        answers = {
+            **copier_defaults,
+            "use_ci": True,
+        }
+        # Remove to let them cascade from use_ci=true → default true
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "classifiers" in content
+        assert "keywords" in content
+
+    def test_use_ci_true_defaults_create_all_workflows(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_ci=true with defaults, both CI and release workflows should exist."""
+        answers = {
+            **copier_defaults,
+            "use_ci": True,
+        }
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        assert (project / ".github" / "workflows" / "ci.yml").exists()
+        assert (project / ".github" / "workflows" / "release.yml").exists()
+
+    def test_use_semantic_release_false_no_classifiers(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """When use_semantic_release=false, publish_to_pypi should cascade to false."""
+        answers = {
+            **copier_defaults,
+            "use_ci": True,
+            "use_semantic_release": False,
+        }
+        answers.pop("publish_to_pypi", None)
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "classifiers" not in content
+        assert "keywords" not in content
+
+
 class TestTyperOption:
     """Test typer CLI option."""
 
@@ -376,7 +499,7 @@ class TestIntegration:
             check=True,
             capture_output=True,
             env={
-                **subprocess.os.environ,
+                **os.environ,
                 "GIT_AUTHOR_NAME": "Test",
                 "GIT_AUTHOR_EMAIL": "test@test.com",
                 "GIT_COMMITTER_NAME": "Test",
