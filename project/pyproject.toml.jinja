@@ -12,6 +12,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 keywords = []
 version = "0.0.0"
+{%- if publish_to_pypi %}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -24,6 +25,7 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
+{%- endif %}
 dependencies = [
 {%- if project_type == 'package' and use_typer %}
     "typer>=0.21",
@@ -171,8 +173,8 @@ output = "htmlcov/coverage.json"
 [tool.ty.environment]
 python-version = "3.14"
 
-[tool.ty.rules]
-ignore = ["tests/fixtures/"]
+[tool.ty.src]
+exclude = ["tests/fixtures/"]
 
 [tool.poe.tasks]
 # Setup
