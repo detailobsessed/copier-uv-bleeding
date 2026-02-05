@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
 {%- endif %}
     concurrency: release
+{%- if publish_to_pypi %}
+    environment: pypi
+{%- endif %}
 
     steps:
     - name: Checkout
@@ -58,23 +61,12 @@ jobs:
 
     - name: Publish to PyPI
       if: {% raw %}steps.dist.outputs.has_dist == 'true'{% endraw %}
-      env:
-        PYPI_TOKEN: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
-      run: |
-        if [ -n "$PYPI_TOKEN" ]; then
-          uv publish --token "$PYPI_TOKEN"
-        else
-          echo "PYPI_TOKEN is not set; skipping PyPI publish."
-        fi
+      run: uv publish
 {%- else %}
 
-    # Uncomment to publish to PyPI:
-    # - name: Publish to PyPI
-    #   if: {% raw %}secrets.PYPI_TOKEN != ''{% endraw %}
-    #   env:
-    #     PYPI_TOKEN: {% raw %}${{ secrets.PYPI_TOKEN }}{% endraw %}
-    #   run: |
-    #     if [ -n "$PYPI_TOKEN" ]; then
-    #       uv publish --token $PYPI_TOKEN
-    #     fi
+    # To enable PyPI publishing:
+    # 1. Re-run copier with publish_to_pypi=true
+    # 2. Set up trusted publisher on PyPI for {{ repository_namespace }}/{{ project_slug }}
+    #    - Workflow: release.yml, Environment: pypi
+    # 3. Create 'pypi' environment in GitHub repo settings
 {%- endif %}
