@@ -252,8 +252,8 @@ class TestCIWorkflows:
         ci_content = ci_yml.read_text()
         pyproject_content = pyproject.read_text()
 
-        # Find all poe task references in CI (e.g., "uv run poe check", "uv run poe test")
-        poe_tasks = re.findall(r"uv run poe (\w+)", ci_content)
+        # Find all poe task references in CI (e.g., "uv run poe check", "uv run poe docs-build")
+        poe_tasks = re.findall(r"uv run poe ([\w-]+)", ci_content)
 
         # Verify each task exists in pyproject.toml
         for task in poe_tasks:
