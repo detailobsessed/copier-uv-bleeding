@@ -12,10 +12,15 @@ _jinja_extensions:
 - extensions.py:GitExtension
 - extensions.py:SlugifyExtension
 - extensions.py:GitHubIDsforGiscusExtension
+# Files to skip if they already exist in the destination.
+# NOTE: pyproject.toml and .pre-commit-config.yaml are intentionally NOT here.
+# During `copier adopt`, we want these to merge with conflict markers so users
+# get template improvements (poe tasks, ruff config, hooks). During `copier update`,
+# copier performs a 3-way merge that preserves user customizations.
+# Only truly user-owned files (README, CHANGELOG, source code) should be skipped.
 _skip_if_exists:
 - CHANGELOG.md
 - README.md
-- pyproject.toml
 - "src/{{ python_package_import_name }}/__init__.py"
 - "src/{{ python_package_import_name }}/cli.py"
 - "src/{{ python_package_import_name }}/_internal/__init__.py"
@@ -28,7 +33,6 @@ _skip_if_exists:
 - "tests/test_cli.py"
 - "tests/test_api.py"
 - .gitignore
-- .pre-commit-config.yaml
 
 _exclude:
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"

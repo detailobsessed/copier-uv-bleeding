@@ -20,6 +20,7 @@ dev = [
     "pyyaml>=6.0.3",
     "reuse",
     "ruff",
+    "ty>=0.0.14",
 ]
 
 [tool.uv]
@@ -113,6 +114,8 @@ setup = "uv sync"
 # Quality
 format = "ruff format ."
 lint = "ruff check ."
+typecheck = "ty check ."
+check = ["lint", "typecheck"]
 fix = ["lint --fix", "format"]
 
 # Testing
