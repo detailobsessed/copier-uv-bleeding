@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
+  <defs>
+    <linearGradient id="bleedingGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3776ab;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#3776ab;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#dc143c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b0000;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="200" fill="#0d1117"/>
+
+  <!-- Blade shape -->
+  <path d="M 50 100 L 700 100 L 750 85 L 700 100 L 50 100"
+        fill="none"
+        stroke="url(#bleedingGradient)"
+        stroke-width="4"
+        filter="url(#glow)"/>
+
+  <!-- Blood drops -->
+  <ellipse cx="720" cy="120" rx="8" ry="12" fill="#dc143c" opacity="0.9"/>
+  <ellipse cx="735" cy="140" rx="5" ry="8" fill="#dc143c" opacity="0.7"/>
+  <ellipse cx="745" cy="155" rx="3" ry="5" fill="#dc143c" opacity="0.5"/>
+
+  <!-- Text -->
+  <text x="400" y="90" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="bold" fill="#ffffff" text-anchor="middle">
+    copier-uv-bleeding
+  </text>
+  <text x="400" y="130" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#8b949e" text-anchor="middle">
+    Python 3.14+ • uv • ruff • ty • prek • poethepoet
+  </text>
+
+  <!-- Decorative edge line -->
+  <line x1="100" y1="160" x2="700" y2="160" stroke="url(#bleedingGradient)" stroke-width="2" opacity="0.5"/>
+</svg>
