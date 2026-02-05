@@ -239,6 +239,30 @@ class TestCIWorkflows:
         content = ci_yml.read_text()
         assert "astral-sh/setup-uv" in content
 
+    def test_ci_poe_tasks_exist_in_pyproject(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """All poe tasks referenced in CI workflow should exist in pyproject.toml."""
+        import re
+
+        answers = {**copier_defaults, "use_ci": True}
+        project = generate_project(tmp_path, answers)
+
+        ci_yml = project / ".github" / "workflows" / "ci.yml"
+        pyproject = project / "pyproject.toml"
+
+        ci_content = ci_yml.read_text()
+        pyproject_content = pyproject.read_text()
+
+        # Find all poe task references in CI (e.g., "uv run poe check", "uv run poe test")
+        poe_tasks = re.findall(r"uv run poe (\w+)", ci_content)
+
+        # Verify each task exists in pyproject.toml
+        for task in poe_tasks:
+            assert "[tool.poe.tasks]" in pyproject_content, "pyproject.toml should have poe tasks"
+            # Check task is defined (either as string or table)
+            assert f"{task} = " in pyproject_content or f"{task} = [" in pyproject_content, (
+                f"poe task '{task}' referenced in CI but not defined in pyproject.toml"
+            )
+
     def test_release_has_semantic_release(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Release workflow should use semantic-release."""
         answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
