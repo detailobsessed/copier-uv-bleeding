@@ -10,7 +10,7 @@ Fork and clone the repository, then:
 
 ```bash
 cd {{ repository_name }}
-make setup
+uv sync
 ```
 
 > NOTE: If it fails for some reason, you'll need to install [uv](https://github.com/astral-sh/uv) manually.
@@ -21,12 +21,15 @@ make setup
 > curl -LsSf https://astral.sh/uv/install.sh | sh
 > ```
 >
-> Now you can try running `poe setup` again, or simply `uv sync`.
+> Now you can try running `uv sync` again.
 
 You now have the dependencies installed.
 
-{% if python_package_command_line_name -%}
+{% if project_type == 'package' -%}
 You can run the application with `uv run {{ python_package_command_line_name }} [ARGS...]`.
+
+{% elif project_type == 'app' -%}
+You can run the application with `uv run python main.py`.
 
 {% endif -%}
 
