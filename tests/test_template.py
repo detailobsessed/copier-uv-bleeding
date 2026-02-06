@@ -513,6 +513,14 @@ class TestTemplateCleanup:
         content = pyproject.read_text()
         assert "[tool.coverage.paths]" not in content
 
+    def test_coverage_excludes_main_guard(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Coverage exclude_lines should include if __name__ == '__main__' (#57)."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "if __name__ == .__main__." in content
+
     def test_no_ty_src_exclude_fixtures(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Generated pyproject.toml should not have ty.src.exclude for fixtures."""
         project = generate_project(tmp_path, copier_defaults)
