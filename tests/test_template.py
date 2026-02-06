@@ -589,6 +589,18 @@ class TestGitLabSupport:
         content = config.read_text()
         assert "actionlint" not in content
 
+    def test_gitlab_precommit_valid_yaml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab pre-commit config should have valid YAML indentation (#56)."""
+        import yaml
+
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        config = project / ".pre-commit-config.yaml"
+        data = yaml.safe_load(config.read_text())
+        repo_urls = [r["repo"] for r in data["repos"] if isinstance(r, dict)]
+        assert "https://github.com/crate-ci/typos" in repo_urls
+
     def test_gitlab_no_giscus(self, tmp_path: Path, copier_defaults: dict) -> None:
         """GitLab projects should not have Giscus comments."""
         answers = {**copier_defaults, "repository_provider": "gitlab.com"}

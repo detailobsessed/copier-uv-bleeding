@@ -59,14 +59,13 @@ repos:
       - id: shellcheck
         priority: 1
 
-{% if repository_provider == "github.com" -%}
+{%- if repository_provider == "github.com" %}
   - repo: https://github.com/rhysd/actionlint
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: actionlint
         priority: 1
-
-{% endif -%}
+{% endif %}
   - repo: https://github.com/crate-ci/typos
     rev: ""  # prek autoupdate will fill this
     hooks:
