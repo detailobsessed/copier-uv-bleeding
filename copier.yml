@@ -41,6 +41,7 @@ _exclude:
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 # Exclude scaffolding files when adopting an existing project
+- "{% if not include_template_dev_scripts %}scripts/verify-scaffold.sh{% endif %}"
 - "{% if is_existing_project %}src/{{ python_package_import_name }}/_internal{% endif %}"
 - "{% if is_existing_project %}src/{{ python_package_import_name }}/__main__.py{% endif %}"
 - "{% if is_existing_project %}src/{{ python_package_import_name }}/py.typed{% endif %}"
@@ -207,6 +208,11 @@ use_blacksmith_runners:
 use_polar:
   type: bool
   help: Enable Polar.sh sponsorship? (requires account at polar.sh)
+  default: false
+
+include_template_dev_scripts:
+  type: bool
+  help: Include helper scripts for template development? (verify-scaffold)
   default: false
 
 is_existing_project:
