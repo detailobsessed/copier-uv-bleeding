@@ -8,6 +8,10 @@ name: ci
     branches:
     - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -109,4 +113,10 @@ jobs:
     - name: Test project generation and workflow
       env:
         PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
-      run: uv run pytest tests/test_template.py -v
+      run: uv run pytest tests/test_template.py -v --cov=tests --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false

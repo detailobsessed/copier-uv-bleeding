@@ -32,6 +32,12 @@ repos:
       - id: detect-private-key
         priority: 0
 
+  - repo: https://github.com/tsvikas/sync-with-uv
+    rev: v0.5.0
+    hooks:
+      - id: sync-with-uv
+        priority: 0
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
@@ -75,10 +81,22 @@ repos:
       - id: shellcheck
         priority: 1
 
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.10.0
+    hooks:
+      - id: uv-lock
+        priority: 1
+
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.10
     hooks:
       - id: actionlint
+        priority: 1
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.43.3
+    hooks:
+      - id: typos
         priority: 1
 
   - repo: https://github.com/igorshubovych/markdownlint-cli

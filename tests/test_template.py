@@ -528,7 +528,7 @@ class TestTemplateCleanup:
         project = generate_project(tmp_path, answers)
 
         pyproject = project / "pyproject.toml"
-        with open(pyproject, "rb") as f:
+        with pyproject.open("rb") as f:
             data = tomllib.load(f)
         assert data["project"]["description"] == 'Helps you "close the loop"'
 
