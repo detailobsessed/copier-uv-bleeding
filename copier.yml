@@ -183,12 +183,12 @@ use_typer:
 
 use_ci:
   type: bool
-  help: Enable GitHub Actions CI workflow? (testing, linting, type checking)
+  help: "Enable CI workflow? (testing, linting, type checking)"
   default: true
 
 use_semantic_release:
   type: bool
-  help: Enable semantic-release workflow? (automated versioning, changelog, GitHub releases)
+  help: "Enable semantic-release workflow? (automated versioning, changelog, releases)"
   default: "{{ use_ci }}"
   when: "{{ use_ci }}"
 
