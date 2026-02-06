@@ -172,4 +172,17 @@ jobs:
         path: site/
 
     - name: Run the test suite
-      run: uv run poe test
+      run: uv run poe test-cov
+
+    - name: Upload coverage to Codecov
+{%- if publish_to_pypi %}
+{%- if use_blacksmith_runners %}
+      if: {% raw %}${{ matrix.os == 'blacksmith-4vcpu-ubuntu-2404' && matrix.resolution == 'highest' }}{% endraw %}
+{%- else %}
+      if: {% raw %}${{ matrix.os == 'ubuntu-latest' && matrix.resolution == 'highest' }}{% endraw %}
+{%- endif %}
+{%- endif %}
+      uses: codecov/codecov-action@v5
+      with:
+        token: {% raw %}${{ secrets.CODECOV_TOKEN }}{% endraw %}
+        fail_ci_if_error: false
