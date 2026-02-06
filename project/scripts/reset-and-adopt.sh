@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reset working tree and re-run copier adopt with the template.
+# Reset working tree to a clean state for re-applying a copier template.
 # Preserves .copier-answers.yml so copier reuses previous answers.
 # Usage: ./scripts/reset-and-adopt.sh [-y]
 #   -y  Skip confirmation prompt
@@ -41,13 +41,10 @@ if [ -f .copier-answers.yml.backup ]; then
     mv .copier-answers.yml.backup .copier-answers.yml
 fi
 
-echo "Running copier adopt..."
-copier adopt \
-    --trust \
-    --conflict inline \
-    --vcs-ref=HEAD \
-    "https://github.com/detailobsessed/copier-uv-bleeding.git" .
-
 echo ""
-echo "Done. Check for conflicts with:"
-echo "  grep -r '<<<<<<< existing' --include='*.toml' --include='*.yaml' --include='*.yml' --include='*.md' --include='*.example' ."
+echo "✓ Working tree reset to HEAD."
+echo ""
+echo "Next steps — run one of:"
+echo "  copier recopy --trust .                    # re-apply template (standard copier)"
+echo "  copier update --trust .                    # update to latest template version"
+echo "  copier adopt --trust --conflict inline .   # adopt template (requires copier fork)"
