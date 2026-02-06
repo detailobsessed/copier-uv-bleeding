@@ -212,9 +212,6 @@ docs-deploy = "mkdocs gh-deploy"
 # Pre-commit
 prek = "prek run --all-files"
 
-# Template
-reset-and-adopt = "bash scripts/reset-and-adopt.sh"
-
 # Git utilities
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 {%- if repository_provider == "github.com" %}

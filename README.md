@@ -124,6 +124,5 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe test-cov` | Run tests with coverage |
 | `poe docs` | Serve docs locally |
 | `poe prek` | Run all pre-commit hooks |
-| `poe reset-and-adopt` | Reset and re-adopt template (preserves answers) |
 | `poe runs` | List recent CI runs |
 | `poe watch` | Watch current CI run |

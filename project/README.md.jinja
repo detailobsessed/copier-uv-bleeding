@@ -27,10 +27,16 @@ uv tool install {{ python_package_distribution_name }}
 
 ## Template Updates
 
-This project was generated with [copier-uv-bleeding](https://github.com/detailobsessed/copier-uv-bleeding). To re-apply the latest template changes:
+This project was generated with [copier-uv-bleeding](https://github.com/detailobsessed/copier-uv-bleeding).
+
+To pull the latest template changes (smart 3-way merge that respects your project changes):
 
 ```bash
-poe reset-and-adopt
+copier update --trust .
 ```
 
-This resets local changes and preserves `.copier-answers.yml`. Then run `copier recopy --trust .` or `copier update --trust .` to re-apply the template.
+To re-apply the template from scratch (ignores your project diff):
+
+```bash
+copier recopy --trust --overwrite .
+```
