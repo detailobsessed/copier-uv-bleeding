@@ -157,10 +157,36 @@ def validate_yaml(content: str, _path: str) -> str | None:
     return None
 
 
+def validate_markdown(content: str, _path: str) -> str | None:
+    """Return error message if rendered Markdown has structural issues, else None.
+
+    Only checks issues caused by Jinja whitespace control (MD022).
+    Full markdownlint integration is tracked in #91.
+    """
+    issues = []
+    lines = content.splitlines()
+    in_code_block = False
+    for i, line in enumerate(lines):
+        # Track fenced code blocks (including inside blockquotes)
+        stripped = re.sub(r"^(?:>\s*)+", "", line)
+        if re.match(r"^```", stripped):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+        # MD022: Headings must be surrounded by blank lines
+        if re.match(r"^#{1,6}\s", line) and i > 0 and lines[i - 1].strip():
+            issues.append(f"line {i + 1}: heading without preceding blank line (MD022)")
+    if issues:
+        return "; ".join(issues)
+    return None
+
+
 VALIDATORS = {
     ".toml": validate_toml,
     ".yml": validate_yaml,
     ".yaml": validate_yaml,
+    ".md": validate_markdown,
 }
 
 # ---------------------------------------------------------------------------
