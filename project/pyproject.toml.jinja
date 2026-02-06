@@ -65,7 +65,9 @@ ci = [
     "pytest>=8",
     "pytest-cov>=6",
     "pytest-randomly>=3.15",
+{%- if use_ci %}
     "pytest-xdist>=3.5",
+{%- endif %}
     "ty>=0.0.14",
     "poethepoet>=0.32",
 ]
@@ -160,7 +162,9 @@ markers = [
 filterwarnings = [
     "error",
     "error::EncodingWarning",
+{%- if use_ci %}
     "ignore:.*rsyncdir:DeprecationWarning:xdist",
+{%- endif %}
 ]
 
 [tool.coverage.run]
