@@ -201,8 +201,8 @@ publish_to_pypi:
 use_blacksmith_runners:
   type: bool
   help: Use Blacksmith.sh runners? (2x faster, 75% more cost-efficient than GitHub-hosted)
-  default: "{{ use_ci }}"
-  when: "{{ use_ci }}"
+  default: "{{ use_ci and repository_provider == 'github.com' }}"
+  when: "{{ use_ci and repository_provider == 'github.com' }}"
 
 use_polar:
   type: bool
