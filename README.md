@@ -57,7 +57,6 @@ When you run `copier copy`, you'll be asked:
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
 | **Enable Polar.sh?** | Sponsorship integration |
-| **Existing project?** | Skip generating scaffolding files for existing codebases |
 
 ## Quick Start
 
