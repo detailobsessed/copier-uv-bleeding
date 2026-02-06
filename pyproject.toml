@@ -103,6 +103,7 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S404", "S603", "S607", "S701", "T201"]  # Allow assert, subprocess, jinja2, print in tests
 "extensions.py" = ["S602", "S605", "S607"]  # Template extensions use subprocess for git commands
+"scripts/**" = ["T201"]  # CLI scripts need print
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
@@ -132,6 +133,9 @@ test-cov = "pytest tests/ -v --cov=tests --cov-report=term-missing"
 docs = "mkdocs serve"
 docs-build = "mkdocs build -s"
 docs-deploy = "mkdocs gh-deploy"
+
+# Linting
+lint-templates = "python scripts/lint_templates.py"
 
 # Pre-commit
 prek = "prek run --all-files"
