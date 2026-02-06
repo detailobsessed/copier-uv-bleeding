@@ -499,6 +499,48 @@ class TestCascadingBooleanDefaults:
         assert "maintain" in content
 
 
+class TestTemplateCleanup:
+    """Test removal of overly specific config and proper gating of platform-specific tasks.
+
+    Regression tests for #49 (docs-deploy) and #50 (coverage.paths, ty.src.exclude).
+    """
+
+    def test_no_coverage_paths(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Generated pyproject.toml should not have [tool.coverage.paths]."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "[tool.coverage.paths]" not in content
+
+    def test_no_ty_src_exclude_fixtures(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Generated pyproject.toml should not have ty.src.exclude for fixtures."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "tests/fixtures" not in content
+
+    def test_github_has_docs_deploy(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitHub projects should have docs-deploy poe task."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "docs-deploy" in content
+        assert "gh-deploy" in content
+
+    def test_github_has_gh_cli_tasks(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitHub projects should have gh CLI poe tasks."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "gh release list" in content
+        assert "gh run list" in content
+        assert "gh run watch" in content
+
+
 class TestTyperOption:
     """Test typer CLI option."""
 

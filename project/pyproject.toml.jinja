@@ -166,9 +166,6 @@ branch = true
 parallel = true
 source = ["src/", "tests/"]
 
-[tool.coverage.paths]
-equivalent = ["src/", ".venv/lib/*/site-packages/"]
-
 [tool.coverage.report]
 precision = 2
 omit = ["src/*/__init__.py", "src/*/__main__.py", "tests/__init__.py"]
@@ -179,9 +176,6 @@ output = "htmlcov/coverage.json"
 
 [tool.ty.environment]
 python-version = "3.14"
-
-[tool.ty.src]
-exclude = ["tests/fixtures/"]
 
 [tool.poe.tasks]
 # Setup
@@ -204,16 +198,22 @@ fix = ["lint --fix", "format"]
 # Documentation
 docs = "mkdocs serve"
 docs-build = "mkdocs build -s"
+{%- if repository_provider == "github.com" %}
 docs-deploy = "mkdocs gh-deploy"
+{%- endif %}
 
 # Pre-commit
 prek = "prek run --all-files"
 
+# Git utilities
+tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
+{%- if repository_provider == "github.com" %}
+
 # GitHub utilities
 releases = "gh release list --limit 10"
-tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
 watch = "gh run watch"
+{%- endif %}
 
 {%- if use_semantic_release %}
 [tool.semantic_release]
