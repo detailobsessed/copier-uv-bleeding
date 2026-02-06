@@ -16,7 +16,7 @@ uv tool install copier --with copier-templates-extensions
 Then you can clone the repository, enter it and set it up with:
 
 ```bash
-git clone https://github.com/ichoosetoaccept/copier-uv-bleeding
+git clone https://github.com/detailobsessed/copier-uv-bleeding
 cd copier-uv-bleeding
 poe setup
 ```
