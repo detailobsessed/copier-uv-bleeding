@@ -16,6 +16,7 @@ dev = [
     "poethepoet",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
+    "pytest-randomly>=3.16",
     "pytest-xdist>=3.5",
     "python-semantic-release>=10.5.2",
     "pyyaml>=6.0.3",
@@ -75,6 +76,12 @@ select = [
     "PIE",  # flake8-pie - misc improvements
     "RET",  # flake8-return - return statement issues
     "RUF",  # Ruff-specific rules
+    "FA",   # flake8-future-annotations
+    "ISC",  # flake8-implicit-str-concat - catch missing commas
+    "ICN",  # flake8-import-conventions
+    "TID",  # flake8-tidy-imports - absolute imports
+    "TC",   # flake8-type-checking - TYPE_CHECKING imports
+    "PTH",  # flake8-use-pathlib - prefer pathlib over os.path
 
     # Performance
     "PERF", # Perflint - performance anti-patterns
@@ -100,9 +107,12 @@ select = [
     "PLW1514",  # unspecified-encoding - require encoding in open()
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = ["tests", "scripts"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S404", "S603", "S607", "S701", "T201"]  # Allow assert, subprocess, jinja2, print in tests
-"extensions.py" = ["S602", "S605", "S607"]  # Template extensions use subprocess for git commands
+"extensions.py" = ["S404", "S602", "S605", "S607"]  # Template extensions use subprocess for git commands
 "scripts/**" = ["T201"]  # CLI scripts need print
 
 [tool.ruff.lint.flake8-pytest-style]
@@ -145,3 +155,13 @@ releases = "gh release list --limit 10"
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
 watch = "gh run watch"
+
+[tool.coverage.run]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]

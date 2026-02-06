@@ -6,7 +6,7 @@ import reuse
 import yaml
 from jinja2 import Environment
 
-with open("copier.yml") as file:
+with Path("copier.yml").open(encoding="utf-8") as file:
     copier = yaml.safe_load(file)
 licenses = {identifier: name for name, identifier in copier["copyright_license"]["choices"].items()}
 
@@ -26,7 +26,7 @@ if errors:
 
 
 env = Environment()
-template = env.from_string(Path("project/LICENSE.jinja").read_text())
+template = env.from_string(Path("project/LICENSE.jinja").read_text(encoding="utf-8"))
 
 
 for license in licenses:
