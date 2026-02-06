@@ -23,7 +23,7 @@ section "Project Structure"
 for f in pyproject.toml README.md LICENSE CHANGELOG.md CONTRIBUTING.md \
          CODE_OF_CONDUCT.md SECURITY.md .gitignore .envrc .env.example \
          .copier-answers.yml .pre-commit-config.yaml .editorconfig \
-         mkdocs.yml; do
+         .markdownlint.yaml .lychee.toml mkdocs.yml; do
     if [[ -f "$f" ]]; then pass "$f exists"; else fail "$f missing"; fi
 done
 
