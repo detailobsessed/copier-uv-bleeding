@@ -1,0 +1,93 @@
+stages:
+  - quality
+  - test
+{%- if use_semantic_release %}
+  - release
+{%- endif %}
+  - pages
+
+default:
+  image: ubuntu:24.04
+
+variables:
+  UV_CACHE_DIR: .uv-cache
+  PYTHON_VERSION: "3.14"
+
+.uv-setup: &uv-setup
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - uv python install $PYTHON_VERSION
+    - uv run poe setup
+
+quality:
+  stage: quality
+  <<: *uv-setup
+  script:
+    - mkdir -p htmlcov
+    - echo '<html><body>No coverage report yet</body></html>' > htmlcov/index.html
+    - uv run poe docs-build
+    - uv run poe check
+  artifacts:
+    paths:
+      - site/objects.inv
+    expire_in: 1 day
+  cache:
+    key: uv-cache
+    paths:
+      - $UV_CACHE_DIR
+
+tests:
+  stage: test
+  needs:
+    - quality
+  <<: *uv-setup
+  script:
+    - uv run poe test
+  cache:
+    key: uv-cache
+    paths:
+      - $UV_CACHE_DIR
+{%- if use_semantic_release %}
+
+release:
+  stage: release
+  needs:
+    - tests
+  <<: *uv-setup
+  variables:
+    GITLAB_TOKEN: $GITLAB_TOKEN
+    GIT_DEPTH: 0
+  script:
+    - git config --global user.email "ci@gitlab.com"
+    - git config --global user.name "GitLab CI"
+    - git remote set-url origin "https://gitlab-ci-token:${GITLAB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    - uv sync --group maintain
+    - uv run semantic-release version --changelog --push --tag --vcs-release
+{%- if publish_to_pypi %}
+    - export UV_PUBLISH_TOKEN=$PYPI_TOKEN
+    - |
+      if compgen -G "dist/*" > /dev/null; then
+        uv publish
+      fi
+{%- endif %}
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+{%- endif %}
+
+pages:
+  stage: pages
+  needs:
+    - quality
+    - tests
+  <<: *uv-setup
+  script:
+    - mkdir -p htmlcov
+    - echo '<html><body>No coverage report yet</body></html>' > htmlcov/index.html
+    - uv run poe docs-build
+    - mv site public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

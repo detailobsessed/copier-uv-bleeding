@@ -35,7 +35,10 @@ _skip_if_exists:
 - .gitignore
 
 _exclude:
+- "{% if repository_provider != 'github.com' %}.github{% endif %}"
+- "{% if repository_provider != 'gitlab.com' %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
+- "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 # Exclude scaffolding files when adopting an existing project
 - "{% if is_existing_project %}src/{{ python_package_import_name }}/_internal{% endif %}"
@@ -80,11 +83,11 @@ author_username:
 
 repository_provider:
   type: str
-  help: Your repository provider
+  help: Your repository hosting platform
   default: github.com
   choices:
   - github.com
-  when: false
+  - gitlab.com
 
 repository_namespace:
   type: str
@@ -198,8 +201,8 @@ publish_to_pypi:
 use_blacksmith_runners:
   type: bool
   help: Use Blacksmith.sh runners? (2x faster, 75% more cost-efficient than GitHub-hosted)
-  default: "{{ use_ci }}"
-  when: "{{ use_ci }}"
+  default: "{{ use_ci and repository_provider == 'github.com' }}"
+  when: "{{ use_ci and repository_provider == 'github.com' }}"
 
 use_polar:
   type: bool

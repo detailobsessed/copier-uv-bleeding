@@ -3,7 +3,7 @@ site_description: "{{ project_description }}"
 site_url: "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
 repo_url: "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}"
 repo_name: "{{ repository_namespace }}/{{ repository_name }}"
-site_dir: "{% if repository_provider == 'github.com' %}site{% endif %}"
+site_dir: site
 watch: [mkdocs.yml, README.md, CONTRIBUTING.md, CHANGELOG.md, src/{{ python_package_import_name }}]
 copyright: Copyright &copy; {{ copyright_date }} {{ copyright_holder }}
 edit_uri: edit/main/docs/

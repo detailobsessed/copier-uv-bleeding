@@ -541,6 +541,111 @@ class TestTemplateCleanup:
         assert "gh run watch" in content
 
 
+class TestGitLabSupport:
+    """Test GitLab repository provider support.
+
+    Regression tests for #51 (GitHub-specific files) and #52 (GitLab support).
+    """
+
+    def test_gitlab_no_github_directory(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should not have .github/ directory."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        assert not (project / ".github").exists()
+
+    def test_gitlab_has_gitlab_ci(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects with CI should have .gitlab-ci.yml."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_ci": True}
+        project = generate_project(tmp_path, answers)
+
+        assert (project / ".gitlab-ci.yml").exists()
+        content = (project / ".gitlab-ci.yml").read_text()
+        assert "quality" in content
+        assert "test" in content
+        assert "pages" in content
+
+    def test_gitlab_no_ci_no_gitlab_ci(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects without CI should not have .gitlab-ci.yml."""
+        answers = {
+            **copier_defaults,
+            "repository_provider": "gitlab.com",
+            "use_ci": False,
+        }
+        answers.pop("use_semantic_release", None)
+        answers.pop("publish_to_pypi", None)
+        answers.pop("use_blacksmith_runners", None)
+        project = generate_project(tmp_path, answers)
+
+        assert not (project / ".gitlab-ci.yml").exists()
+        assert not (project / ".github").exists()
+
+    def test_gitlab_no_actionlint_in_precommit(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should not have actionlint pre-commit hook."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        config = project / ".pre-commit-config.yaml"
+        content = config.read_text()
+        assert "actionlint" not in content
+
+    def test_gitlab_no_giscus(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should not have Giscus comments."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        comments = project / "docs" / ".overrides" / "partials" / "comments.html"
+        content = comments.read_text()
+        assert "giscus" not in content
+
+    def test_gitlab_no_gh_cli_tasks(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should not have gh CLI poe tasks."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "gh release list" not in content
+        assert "gh run list" not in content
+        assert "docs-deploy" not in content
+
+    def test_gitlab_no_discussions_url(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should not have Discussions URL."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "Discussions" not in content
+
+    def test_gitlab_has_pipeline_badge(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should have pipeline badge in README."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        readme = project / "README.md"
+        content = readme.read_text()
+        assert "pipeline" in content
+        assert "gitlab.com" in content
+
+    def test_gitlab_has_gitlab_urls(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab projects should have gitlab.com URLs in pyproject.toml."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "gitlab.com" in content
+        assert "gitlab.io" in content
+
+    def test_github_still_has_github_directory(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitHub projects should still have .github/ directory (positive case)."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        assert (project / ".github").exists()
+        assert not (project / ".gitlab-ci.yml").exists()
+
+
 class TestTyperOption:
     """Test typer CLI option."""
 
