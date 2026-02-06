@@ -24,3 +24,13 @@ With [`uv`](https://docs.astral.sh/uv/):
 uv tool install {{ python_package_distribution_name }}
 ```
 {%- endif -%}
+
+## Template Updates
+
+This project was generated with [copier-uv-bleeding](https://github.com/detailobsessed/copier-uv-bleeding). To re-apply the latest template changes:
+
+```bash
+poe reset-and-adopt
+```
+
+This resets local changes, preserves `.copier-answers.yml`, and re-runs `copier adopt` with conflict markers for easy review.
