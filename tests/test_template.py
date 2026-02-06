@@ -521,6 +521,14 @@ class TestTemplateCleanup:
         content = pyproject.read_text()
         assert "if __name__ == .__main__." in content
 
+    def test_envrc_activates_venv(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Generated .envrc should activate the uv-managed virtualenv (#59)."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        envrc = project / ".envrc"
+        content = envrc.read_text()
+        assert "VIRTUAL_ENV" in content
+
     def test_no_ty_src_exclude_fixtures(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Generated pyproject.toml should not have ty.src.exclude for fixtures."""
         project = generate_project(tmp_path, copier_defaults)
