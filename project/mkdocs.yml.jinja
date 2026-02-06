@@ -1,5 +1,5 @@
-site_name: "{{ project_name }}"
-site_description: "{{ project_description }}"
+site_name: "{{ project_name | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
+site_description: "{{ project_description | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
 site_url: "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
 repo_url: "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}"
 repo_name: "{{ repository_namespace }}/{{ repository_name }}"
