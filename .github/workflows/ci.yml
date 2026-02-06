@@ -33,7 +33,7 @@ jobs:
       uses: lycheeverse/lychee-action@v2
       with:
         fail: true
-        args: --no-progress .
+        args: --config .lychee.toml --no-progress .
 
   test-filenames:
     runs-on: blacksmith-4vcpu-ubuntu-2404

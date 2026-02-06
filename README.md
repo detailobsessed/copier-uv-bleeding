@@ -28,7 +28,7 @@ It is designed to be used as a starting point for new Python projects, providing
 - **[uv](https://github.com/astral-sh/uv)** — the fastest Python package manager, used for everything (deps, venvs, builds, lockfiles)
 - **[ruff](https://github.com/astral-sh/ruff)** — 25+ rule categories for linting, formatting, security scanning, and dead code detection
 - **[ty](https://github.com/astral-sh/ty)** — next-gen type checker from Astral (fast, modern, replaces mypy)
-- **[prek](https://github.com/prek-org/prek)** — Rust-powered pre-commit hook runner (replaces pre-commit)
+- **[prek](https://github.com/j178/prek)** — Rust-powered pre-commit hook runner (replaces pre-commit)
 - **[poethepoet](https://github.com/nat-n/poethepoet)** — task runner with pre-configured tasks for every workflow
 - **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage, randomization, and parallel execution
 - **[MkDocs Material](https://github.com/squidfunk/mkdocs-material)** — beautiful documentation with API autodoc

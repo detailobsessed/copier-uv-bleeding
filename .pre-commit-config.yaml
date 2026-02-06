@@ -106,6 +106,13 @@ repos:
         args: [--fix]
         priority: 1
 
+  - repo: https://github.com/lycheeverse/lychee.git
+    rev: lychee-v0.22.0
+    hooks:
+      - id: lychee
+        args: [--config, .lychee.toml]
+        priority: 1
+
   - repo: local
     hooks:
       - id: lint-templates
@@ -115,9 +122,9 @@ repos:
         files: ^project/.*\.jinja$
         pass_filenames: false
         priority: 1
-      - id: pytest
-        name: pytest
-        entry: uv run pytest tests/ -q
+      - id: pytest-cov
+        name: pytest with coverage
+        entry: uv run pytest --cov=tests --cov-fail-under=90 --cov-report=term-missing:skip-covered -q
         language: system
         types: [python]
         pass_filenames: false

@@ -160,8 +160,7 @@ def validate_yaml(content: str, _path: str) -> str | None:
 def validate_markdown(content: str, _path: str) -> str | None:
     """Return error message if rendered Markdown has structural issues, else None.
 
-    Only checks issues caused by Jinja whitespace control (MD022).
-    Full markdownlint integration is tracked in #91.
+    Checks issues caused by Jinja whitespace control (MD022).
     """
     issues = []
     lines = content.splitlines()
