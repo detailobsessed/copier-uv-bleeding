@@ -206,7 +206,7 @@ typecheck = "ty check src tests"
 # Testing
 test = "pytest -m 'not slow'"
 test-all = "pytest"
-test-cov = "pytest --cov={{ python_package_import_name }} --cov-report=term-missing --cov-report=html"
+test-cov = "pytest --cov=src/{{ python_package_import_name }} --cov-report=term-missing --cov-report=html"
 
 # Combined tasks
 check = ["lint", "typecheck"]

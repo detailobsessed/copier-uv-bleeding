@@ -8,6 +8,8 @@ exclude = [
     '^https://codecov\.io/gh/\{\{',
     '^https://img\.shields\.io',
     '^mailto:',
+    # Upstream copier-pdm site is dead — historical CHANGELOG reference
+    '^https://copier-pdm\.github\.io/',
 ]
 
 # Exclude local/private addresses

@@ -81,6 +81,13 @@ repos:
         args: ["--fix"]
         priority: 1
 
+  - repo: https://github.com/lycheeverse/lychee.git
+    rev: ""  # prek autoupdate will fill this
+    hooks:
+      - id: lychee
+        args: [--config, .lychee.toml]
+        priority: 1
+
   - repo: local
     hooks:
       - id: ty
@@ -92,12 +99,12 @@ repos:
         priority: 1
 
       - id: pytest-cov
-        name: pytest with 90% coverage
-        entry: uv run pytest --cov={{ python_package_import_name }} --cov-fail-under=90 -q
+        name: pytest with coverage
+        entry: uv run pytest --cov=src/{{ python_package_import_name }} --cov-fail-under=90 --cov-report=term-missing:skip-covered -q
         language: system
         types: [python]
         pass_filenames: false
-        stages: [pre-commit]
+        stages: [pre-push]
         priority: 1
 
       - id: docs-build
