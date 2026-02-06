@@ -40,7 +40,9 @@ Documentation = "https://{{ repository_namespace }}.{{ repository_provider.rspli
 Changelog = "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}/changelog"
 Repository = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}"
 Issues = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/issues"
+{%- if repository_provider == "github.com" %}
 Discussions = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/discussions"
+{%- endif %}
 {%- if repository_provider == "github.com" %}
 Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
 {%- endif %}
