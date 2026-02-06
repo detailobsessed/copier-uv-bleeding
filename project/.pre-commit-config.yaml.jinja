@@ -60,12 +60,14 @@ repos:
         priority: 1
 
 {%- if repository_provider == "github.com" %}
+
   - repo: https://github.com/rhysd/actionlint
     rev: ""  # prek autoupdate will fill this
     hooks:
       - id: actionlint
         priority: 1
-{% endif %}
+{%- endif %}
+
   - repo: https://github.com/crate-ci/typos
     rev: ""  # prek autoupdate will fill this
     hooks:
@@ -100,8 +102,9 @@ repos:
 
       - id: docs-build
         name: docs build check
-        entry: bash -c 'mkdir -p htmlcov && echo "<html><body>No coverage report yet</body></html>" > htmlcov/index.html && uv run poe docs-build'
+        entry: bash -c 'test -f htmlcov/index.html || (mkdir -p htmlcov && touch htmlcov/index.html); uv run poe docs-build'
         language: system
+        files: ^(docs/|mkdocs\.yml|README\.md|CONTRIBUTING\.md|CHANGELOG\.md|src/)
         pass_filenames: false
         stages: [pre-push]
 
