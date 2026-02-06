@@ -13,6 +13,28 @@ See the original repository for historical changes before version 2.0.0.
 ---
 
 <!-- version list -->
+
+## v0.16.1 (2026-02-06)
+
+### Bug Fixes
+
+- Broken links and add lychee pre-commit hook
+  ([#112](https://github.com/detailobsessed/copier-uv-bleeding/pull/112),
+  [`4c00a6d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4c00a6de8fa994b99da160625f04687d639d40f3))
+
+### Documentation
+
+- Rewrite README, fix changelog marker + mode, fix CONTRIBUTING.md URL
+  ([#110](https://github.com/detailobsessed/copier-uv-bleeding/pull/110),
+  [`0390055`](https://github.com/detailobsessed/copier-uv-bleeding/commit/03900555902dba11d13d0c1f3d95bd5750b214e2))
+
+### Refactoring
+
+- Remove is_existing_project question — redundant with _skip_if_exists
+  ([#111](https://github.com/detailobsessed/copier-uv-bleeding/pull/111),
+  [`4032131`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4032131b408b93073c233acd36131978597de69b))
+
+
 ## [1.11.2](https://github.com/pawamoy/copier-uv/releases/tag/1.11.2) - 2025-11-20
 
 <small>[Compare with 1.11.1](https://github.com/pawamoy/copier-uv/compare/1.11.1...1.11.2)</small>
