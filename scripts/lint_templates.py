@@ -80,7 +80,6 @@ def _build_context(overrides: dict) -> dict:
         "use_blacksmith_runners": False,
         "use_polar": False,
         "include_template_dev_scripts": False,
-        "is_existing_project": False,
         **_COMMON,
     }
     base.update(overrides)
