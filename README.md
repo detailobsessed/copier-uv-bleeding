@@ -37,9 +37,10 @@ When you run `copier copy`, you'll be asked:
 | **Project description** | One-line description |
 | **Project type** | `app` (script), `lib` (library), or `package` (CLI tool) |
 | **Author info** | Name, email, username (auto-detected from git) |
-| **Repository namespace** | GitHub username or organization |
+| **Repository provider** | `github.com` or `gitlab.com` |
+| **Repository namespace** | GitHub/GitLab username or organization |
 | **License** | Choose from 40+ open source licenses |
-| **Enable CI?** | GitHub Actions for testing, linting, type checking |
+| **Enable CI?** | GitHub Actions or GitLab CI for testing, linting, type checking |
 | **Enable semantic-release?** | Automated versioning and changelog (requires CI) |
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
@@ -62,15 +63,47 @@ When you run `copier copy`, you'll be asked:
   ([Material theme](https://github.com/squidfunk/mkdocs-material)
   and "autodoc" [mkdocstrings plugin](https://github.com/mkdocstrings/mkdocstrings))
 - Modern Python tooling with [uv](https://github.com/astral-sh/uv), [ruff](https://github.com/astral-sh/ruff), and [poethepoet](https://github.com/nat-n/poethepoet)
-- Support for GitHub workflows with Dependabot
+- Support for GitHub Actions and GitLab CI with Dependabot
 - Auto-generated `CHANGELOG.md` from Git (conventional) commits
 - All licenses from [choosealicense.com](https://choosealicense.com/appendix/)
 
-## Quick setup and usage
+## Quick Start
+
+### Install copier (one-time)
+
+```bash
+# Install copier with required Jinja extensions
+uv tool install copier --with copier-templates-extensions
+```
+
+### Create a new project
 
 ```bash
 copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/project
 ```
+
+### Or use uvx for zero-install one-shot runs
+
+```bash
+uvx --with copier-templates-extensions \
+  copier copy --trust https://github.com/detailobsessed/copier-uv-bleeding.git my-project
+```
+
+### Adopt into an existing project
+
+> **Note:** The `adopt` command is available via [my fork](https://github.com/detailobsessed/copier/tree/feat/adopt-command) while the [upstream PR](https://github.com/copier-org/copier/pull/2487) ([issue](https://github.com/copier-org/copier/issues/2486)) is in review.
+
+```bash
+# Install the fork with adopt support
+uv tool install copier \
+  --from "git+https://github.com/detailobsessed/copier.git@feat/adopt-command" \
+  --with copier-templates-extensions
+
+# Adopt the template in your existing project
+copier adopt --trust --conflict inline https://github.com/detailobsessed/copier-uv-bleeding.git .
+```
+
+To update the fork later, re-run the install command with `--force`.
 
 The template automatically runs `uv sync` and `prek install` after scaffolding.
 
