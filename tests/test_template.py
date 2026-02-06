@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -520,6 +521,16 @@ class TestTemplateCleanup:
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
         assert "if __name__ == .__main__." in content
+
+    def test_description_with_quotes(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Project description containing double quotes should produce valid TOML."""
+        answers = {**copier_defaults, "project_description": 'Helps you "close the loop"'}
+        project = generate_project(tmp_path, answers)
+
+        pyproject = project / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            data = tomllib.load(f)
+        assert data["project"]["description"] == 'Helps you "close the loop"'
 
     def test_envrc_activates_venv(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Generated .envrc should activate the uv-managed virtualenv (#59)."""

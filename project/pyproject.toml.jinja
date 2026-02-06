@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "{{ python_package_distribution_name }}"
-description = "{{ project_description }}"
+description = "{{ project_description | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
 authors = [{name = "{{ author_fullname }}", email = "{{ author_email }}"}]
 license = "{{ copyright_license }}"
 license-files = ["LICENSE"]

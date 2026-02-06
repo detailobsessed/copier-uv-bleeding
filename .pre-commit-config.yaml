@@ -90,6 +90,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: lint-templates
+        name: lint-templates
+        entry: uv run python scripts/lint_templates.py
+        language: system
+        files: ^project/.*\.jinja$
+        pass_filenames: false
+        priority: 1
       - id: pytest
         name: pytest
         entry: uv run pytest tests/ -q
