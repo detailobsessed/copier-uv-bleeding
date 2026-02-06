@@ -198,8 +198,7 @@ VALIDATORS = {
 def get_output_extension(template_path: Path) -> str:
     """Get the output file extension (strip .jinja suffix)."""
     stem = template_path.name
-    if stem.endswith(".jinja"):
-        stem = stem[: -len(".jinja")]
+    stem = stem.removesuffix(".jinja")
     # Return the final extension
     if "." in stem:
         return "." + stem.rsplit(".", 1)[1]
