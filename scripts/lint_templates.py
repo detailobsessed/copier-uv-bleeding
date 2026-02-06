@@ -79,6 +79,7 @@ def _build_context(overrides: dict) -> dict:
         "publish_to_pypi": True,
         "use_blacksmith_runners": False,
         "use_polar": False,
+        "include_template_dev_scripts": False,
         "is_existing_project": False,
         **_COMMON,
     }
