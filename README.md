@@ -9,23 +9,35 @@
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.14+-blue.svg" alt="Python 3.14+"></a>
 </p>
 
-> **⚠️ Requires Python 3.14+** — This template targets the latest stable Python release only.
->
-> **This is a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv).**
-> Huge thanks to [Timothée Mazzucotelli](https://github.com/pawamoy) for the excellent original template!
+This project strives to be the absolute best general-purpose [uv](https://github.com/astral-sh/uv) Python template in the universe. One `copier copy` gives you a fully configured, production-ready project with the latest and greatest Python tooling — no boilerplate, no compromises.
 
-[Copier](https://github.com/copier-org/copier) template
-for Python projects managed by [uv](https://github.com/astral-sh/uv).
+It is designed to be used as a starting point for new Python projects, providing all the essential tooling and configuration out of the box so you don't have to fuck around with project setup but can immediately start coding. Seriously.
 
-## What's Different in This Fork
+> **🔥 BLEEDING EDGE** — This template intentionally targets the very latest stable release of Python and every tool in its stack. It strives to follow best practices for everything but completely disregards backwards compatibility. If you want safe and conservative, look elsewhere. If you want *modern and uncompromising*, you're in the right place.
 
-- **[ty](https://github.com/astral-sh/ty)** instead of mypy for type checking (fast, modern, from Astral)
-- **[prek](https://github.com/prek-org/prek)** instead of pre-commit (faster, written in Rust)
-- **[poethepoet](https://github.com/nat-n/poethepoet)** task runner with pre-configured tasks
-- **Comprehensive ruff rules** - 18 rule categories including security (S), unused args (ARG), and more
-- **No standalone bandit/vulture** - ruff handles security scanning and dead code detection
-- **No version pins** - get the latest versions at scaffold time
-- **[uv build backend](https://docs.astral.sh/uv/concepts/build-backend/)** - native uv build system
+> **⚡ Zero Configuration** — Once you run `copier copy`, everything is ready to go. No need to configure linters, formatters, or test runners. They're all set up with sensible defaults that follow modern Python best practices and are optimized for productivity, safety and maximum code quality.
+
+> **🔄 Regular Updates** — This template is actively maintained and updated--a lot. Prepare to create a snippet for `copier update --trust` 😃.
+
+> **🤝 Contributions Welcome** — This project is open to contributions! See the [Contributing Guide](CONTRIBUTING.md) for how to get started. Anybody want to take a stab at a better header image?
+
+> **🙏 Acknowledgments** — This project originated as a fork of [pawamoy/copier-uv](https://github.com/pawamoy/copier-uv) by [Timothée Mazzucotelli](https://github.com/pawamoy), whose excellent work provided the foundation. It has since diverged significantly in scope and philosophy. Much of the modern tooling advice incorporated here is inspired by the [Python Developer Tooling Handbook](https://pydevtools.com/handbook/) — an outstanding resource for anyone serious about Python development.
+
+## What You Get
+
+- **[uv](https://github.com/astral-sh/uv)** — the fastest Python package manager, used for everything (deps, venvs, builds, lockfiles)
+- **[ruff](https://github.com/astral-sh/ruff)** — 25+ rule categories for linting, formatting, security scanning, and dead code detection
+- **[ty](https://github.com/astral-sh/ty)** — next-gen type checker from Astral (fast, modern, replaces mypy)
+- **[prek](https://github.com/prek-org/prek)** — Rust-powered pre-commit hook runner (replaces pre-commit)
+- **[poethepoet](https://github.com/nat-n/poethepoet)** — task runner with pre-configured tasks for every workflow
+- **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage, randomization, and parallel execution
+- **[MkDocs Material](https://github.com/squidfunk/mkdocs-material)** — beautiful documentation with API autodoc
+- **[semantic-release](https://github.com/python-semantic-release/python-semantic-release)** — automated versioning and changelogs from conventional commits
+- **[lychee](https://github.com/lycheeverse/lychee)** — fast link checking in CI
+- **[sync-with-uv](https://github.com/tsvikas/sync-with-uv)** — auto-sync pre-commit hook versions from `uv.lock`
+- **GitHub Actions / GitLab CI** — fully configured CI with Dependabot, Codecov, and optional Blacksmith runners
+- **40+ open source licenses** from [choosealicense.com](https://choosealicense.com/appendix/)
+- **uv build backend** — native build system, no setuptools
 
 ## Scaffold Prompts
 
@@ -40,32 +52,12 @@ When you run `copier copy`, you'll be asked:
 | **Repository provider** | `github.com` or `gitlab.com` |
 | **Repository namespace** | GitHub/GitLab username or organization |
 | **License** | Choose from 40+ open source licenses |
-| **Enable CI?** | GitHub Actions or GitLab CI for testing, linting, type checking |
-| **Enable semantic-release?** | Automated versioning and changelog (requires CI) |
+| **Enable CI?** | GitHub Actions or GitLab CI |
+| **Enable semantic-release?** | Automated versioning and changelog |
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
 | **Enable Polar.sh?** | Sponsorship integration |
-| **Existing project?** | Skip generating scaffolding files (CLI, tests) for existing codebases |
-
-### Recommended Reading
-
-- [Sync with uv: Eliminate pre-commit version drift](https://pydevtools.com/blog/sync-with-uv-eliminate-pre-commit-version-drift/)
-
-## Features
-
-- [uv](https://github.com/astral-sh/uv) setup, with pre-defined `pyproject.toml`
-- Pre-configured tools for code formatting, quality analysis and testing:
-  [ruff](https://github.com/astral-sh/ruff) (linting, formatting, security, dead code),
-  [ty](https://github.com/astral-sh/ty) (type checking),
-  [pytest](https://github.com/pytest-dev/pytest) (testing)
-- Tests run with [pytest](https://github.com/pytest-dev/pytest) and plugins, with [coverage](https://github.com/nedbat/coveragepy) support
-- Documentation built with [MkDocs](https://github.com/mkdocs/mkdocs)
-  ([Material theme](https://github.com/squidfunk/mkdocs-material)
-  and "autodoc" [mkdocstrings plugin](https://github.com/mkdocstrings/mkdocstrings))
-- Modern Python tooling with [uv](https://github.com/astral-sh/uv), [ruff](https://github.com/astral-sh/ruff), and [poethepoet](https://github.com/nat-n/poethepoet)
-- Support for GitHub Actions and GitLab CI with Dependabot
-- Auto-generated `CHANGELOG.md` from Git (conventional) commits
-- All licenses from [choosealicense.com](https://choosealicense.com/appendix/)
+| **Existing project?** | Skip generating scaffolding files for existing codebases |
 
 ## Quick Start
 

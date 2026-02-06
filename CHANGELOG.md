@@ -12,7 +12,7 @@ See the original repository for historical changes before version 2.0.0.
 
 ---
 
-<!-- insertion marker -->
+<!-- version list -->
 ## [1.11.2](https://github.com/pawamoy/copier-uv/releases/tag/1.11.2) - 2025-11-20
 
 <small>[Compare with 1.11.1](https://github.com/pawamoy/copier-uv/compare/1.11.1...1.11.2)</small>
