@@ -20,7 +20,12 @@ exclude_all_private = true
 include_mail = false
 
 # Accept common status codes
+{%- if project_visibility == 'internal' %}
+# 401 included for internal projects with auth-gated URLs
+accept = [200, 204, 301, 302, 401, 403, 429]
+{%- else %}
 accept = [200, 204, 301, 302, 403, 429]
+{%- endif %}
 
 # Timeout per request
 timeout = 30
