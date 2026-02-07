@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.16.4 (2026-02-07)
+
+### Bug Fixes
+
+- Exclude copier-update.yml when use_ci is false
+  ([#121](https://github.com/detailobsessed/copier-uv-bleeding/pull/121),
+  [`98b6382`](https://github.com/detailobsessed/copier-uv-bleeding/commit/98b638203e155fae719f4f9e2f5c8d54ee7043dd))
+
+
 ## v0.16.3 (2026-02-07)
 
 ### Bug Fixes
