@@ -32,6 +32,7 @@ _skip_if_exists:
 - "tests/test_cli.py"
 - "tests/test_api.py"
 - .gitignore
+- main.py
 
 _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
