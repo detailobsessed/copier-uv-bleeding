@@ -1,6 +1,6 @@
 ---
 id: cub-fypd
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-07T11:28:18Z
