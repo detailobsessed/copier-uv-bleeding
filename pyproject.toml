@@ -138,6 +138,7 @@ fix = ["lint --fix", "format"]
 
 # Testing
 test = "pytest tests/ -v -m 'not slow'"
+test-fast = "pytest tests/ -v -m 'not slow' -n auto --dist loadscope"
 test-all = "pytest tests/ -v"
 test-cov = "pytest tests/ -v --cov=tests --cov-report=term-missing"
 
