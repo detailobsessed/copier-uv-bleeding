@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.17.0 (2026-02-07)
+
+### Features
+
+- Add project_visibility question to gate open-source scaffolding
+  ([#124](https://github.com/detailobsessed/copier-uv-bleeding/pull/124),
+  [`1dc3b69`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1dc3b697cc2daeacef888c2ce1888fd6a2c011b9))
+
+
 ## v0.16.6 (2026-02-07)
 
 ### Bug Fixes
