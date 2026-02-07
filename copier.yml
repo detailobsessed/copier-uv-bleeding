@@ -37,6 +37,7 @@ _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
 - "{% if repository_provider != 'gitlab.com' %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
+- "{% if not use_ci %}.github/workflows/copier-update.yml{% endif %}"
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not include_template_dev_scripts %}scripts/verify-scaffold.sh{% endif %}"
