@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.16.5 (2026-02-07)
+
+### Bug Fixes
+
+- Lychee exclude_path for own config file + remove no_progress from generated projects
+  ([#122](https://github.com/detailobsessed/copier-uv-bleeding/pull/122),
+  [`176896b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/176896bcb3498d3521f847e40c7632c47d9cd446))
+
+
 ## v0.16.4 (2026-02-07)
 
 ### Bug Fixes
