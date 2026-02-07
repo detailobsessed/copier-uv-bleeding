@@ -19,6 +19,11 @@ hooks = [
 ]
 
 [[repos]]
+repo = "https://github.com/detailobsessed/sync-with-uv"
+rev = ""  # prek autoupdate will fill this
+hooks = [{ id = "sync-with-uv", priority = 0 }]
+
+[[repos]]
 repo = "https://github.com/gitleaks/gitleaks"
 rev = ""  # prek autoupdate will fill this
 hooks = [{ id = "gitleaks", priority = 1 }]
