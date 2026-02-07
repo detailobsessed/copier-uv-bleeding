@@ -22,7 +22,6 @@ _skip_if_exists:
 - CHANGELOG.md
 - README.md
 - "src/{{ python_package_import_name }}/__init__.py"
-- "src/{{ python_package_import_name }}/cli.py"
 - "src/{{ python_package_import_name }}/_internal/__init__.py"
 - "src/{{ python_package_import_name }}/_internal/cli.py"
 - "src/{{ python_package_import_name }}/_internal/debug.py"
