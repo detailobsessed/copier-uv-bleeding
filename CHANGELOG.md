@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.16.3 (2026-02-07)
+
+### Bug Fixes
+
+- Remove .vscode/ from template, standardize on .editorconfig
+  ([#120](https://github.com/detailobsessed/copier-uv-bleeding/pull/120),
+  [`26be11c`](https://github.com/detailobsessed/copier-uv-bleeding/commit/26be11c169b5ddc62f9d6b46eeeb4aefe343b668))
+
+### Chores
+
+- Add tk tickets for template audit findings and GH issue tracking
+  ([#119](https://github.com/detailobsessed/copier-uv-bleeding/pull/119),
+  [`abca985`](https://github.com/detailobsessed/copier-uv-bleeding/commit/abca9857e748dae1afd3fb6fedcd28ba133e1dee))
+
+
 ## v0.16.2 (2026-02-07)
 
 ### Bug Fixes
