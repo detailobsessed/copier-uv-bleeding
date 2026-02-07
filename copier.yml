@@ -100,6 +100,11 @@ repository_provider:
   - github.com
   - gitlab.com
 
+repository_host:
+  type: str
+  help: "Repository hostname (e.g. gitlab.company.com for self-hosted)"
+  default: "{{ repository_provider }}"
+
 repository_namespace:
   type: str
   help: Your repository namespace (username or organization)

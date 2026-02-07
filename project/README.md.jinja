@@ -1,12 +1,16 @@
 # {{ project_name }}
 
 {% if repository_provider == "github.com" -%}
-[![ci](https://github.com/{{ repository_namespace }}/{{ repository_name }}/workflows/ci/badge.svg)](https://github.com/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Aci)
-[![release](https://github.com/{{ repository_namespace }}/{{ repository_name }}/workflows/release/badge.svg)](https://github.com/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Arelease)
+[![ci](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/workflows/ci/badge.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Aci)
+[![release](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/workflows/release/badge.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Arelease)
 {% elif repository_provider == "gitlab.com" -%}
-[![pipeline](https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/badges/main/pipeline.svg)](https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/-/pipelines)
+[![pipeline](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/badges/main/pipeline.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/-/pipelines)
 {% endif -%}
-[![documentation](https://img.shields.io/badge/docs-mkdocs-708FCC.svg?style=flat)](https://{{ repository_namespace }}.{{ repository_provider[:-4] }}.io/{{ repository_name }}/)
+{%- if repository_host in ['github.com', 'gitlab.com'] -%}
+[![documentation](https://img.shields.io/badge/docs-mkdocs-708FCC.svg?style=flat)](https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}/)
+{%- else -%}
+[![documentation](https://img.shields.io/badge/docs-mkdocs-708FCC.svg?style=flat)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }})
+{%- endif %}
 [![pypi version](https://img.shields.io/pypi/v/{{ python_package_distribution_name }}.svg)](https://pypi.org/project/{{ python_package_distribution_name }}/)
 [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
 {%- if repository_provider == "github.com" %}
