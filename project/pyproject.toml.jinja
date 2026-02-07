@@ -6,8 +6,10 @@ build-backend = "uv_build"
 name = "{{ python_package_distribution_name }}"
 description = "{{ project_description | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
 authors = [{name = "{{ author_fullname }}", email = "{{ author_email }}"}]
+{%- if project_visibility == 'public' %}
 license = "{{ copyright_license }}"
 license-files = ["LICENSE"]
+{%- endif %}
 readme = "README.md"
 requires-python = ">=3.14"
 {%- if publish_to_pypi %}
@@ -43,7 +45,7 @@ Issues = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ reposi
 {%- if repository_provider == "github.com" %}
 Discussions = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/discussions"
 {%- endif %}
-{%- if repository_provider == "github.com" %}
+{%- if repository_provider == "github.com" and project_visibility == 'public' %}
 Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
 {%- endif %}
 

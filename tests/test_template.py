@@ -6,6 +6,7 @@ import os
 import subprocess
 import tomllib
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -715,6 +716,179 @@ class TestTyperOption:
         content = cli_py.read_text()
         assert "import typer" in content
         assert "app = typer.Typer" in content
+
+
+class TestProjectVisibility:
+    """Test project_visibility question gates open-source scaffolding.
+
+    When project_visibility=internal, community files (LICENSE, CODE_OF_CONDUCT,
+    CONTRIBUTING, SECURITY) and their docs counterparts should be excluded.
+    pyproject.toml should omit license metadata and Funding URL.
+    mkdocs.yml should omit community pages from nav.
+    """
+
+    # -- Files that should be EXCLUDED for internal projects --
+
+    COMMUNITY_FILES: ClassVar[list[str]] = [
+        "CODE_OF_CONDUCT.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "LICENSE",
+    ]
+
+    COMMUNITY_DOCS: ClassVar[list[str]] = [
+        "docs/code_of_conduct.md",
+        "docs/contributing.md",
+        "docs/license.md",
+    ]
+
+    def test_public_has_community_files(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects should have all community files."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        for f in self.COMMUNITY_FILES:
+            assert (project / f).exists(), f"{f} should exist for public projects"
+        for f in self.COMMUNITY_DOCS:
+            assert (project / f).exists(), f"{f} should exist for public projects"
+
+    def test_internal_no_community_files(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects should not have community files."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        for f in self.COMMUNITY_FILES:
+            assert not (project / f).exists(), f"{f} should NOT exist for internal projects"
+        for f in self.COMMUNITY_DOCS:
+            assert not (project / f).exists(), f"{f} should NOT exist for internal projects"
+
+    def test_internal_no_funding_yml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects should not have FUNDING.yml."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        assert not (project / ".github" / "FUNDING.yml").exists()
+
+    def test_public_has_funding_yml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects should have FUNDING.yml."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        assert (project / ".github" / "FUNDING.yml").exists()
+
+    # -- pyproject.toml license metadata --
+
+    def test_internal_no_license_in_pyproject(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects should not have license metadata in pyproject.toml."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "license = " not in content
+        assert "license-files" not in content
+
+    def test_public_has_license_in_pyproject(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects should have license metadata in pyproject.toml."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert 'license = "MIT"' in content
+        assert "license-files" in content
+
+    def test_internal_no_funding_url_in_pyproject(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects should not have Funding URL in pyproject.toml."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "Funding" not in content
+        assert "sponsors" not in content
+
+    def test_public_has_funding_url_in_pyproject(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects should have Funding URL in pyproject.toml."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "Funding" in content
+
+    # -- mkdocs.yml nav --
+
+    def test_internal_mkdocs_no_community_nav(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects mkdocs.yml should not have community pages in nav."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "mkdocs.yml").read_text()
+        assert "License:" not in content
+        assert "Contributing:" not in content
+        assert "Code of Conduct:" not in content
+        assert "copyright:" not in content.lower().split("nav")[0]  # no copyright line
+
+    def test_public_mkdocs_has_community_nav(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects mkdocs.yml should have community pages in nav."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "mkdocs.yml").read_text()
+        assert "License: license.md" in content
+        assert "Contributing: contributing.md" in content
+        assert "Code of Conduct: code_of_conduct.md" in content
+
+    def test_internal_mkdocs_no_copyright(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects mkdocs.yml should not have copyright line."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "mkdocs.yml").read_text()
+        assert "copyright:" not in content
+
+    def test_public_mkdocs_has_copyright(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects mkdocs.yml should have copyright line."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "mkdocs.yml").read_text()
+        assert "copyright:" in content
+
+    # -- Core files still present for internal --
+
+    def test_internal_still_has_core_files(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects should still have core project files."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        assert (project / "pyproject.toml").exists()
+        assert (project / "README.md").exists()
+        assert (project / "CHANGELOG.md").exists()
+        assert (project / ".pre-commit-config.yaml").exists()
+        assert (project / ".editorconfig").exists()
+        assert (project / "mkdocs.yml").exists()
+        assert (project / "src").is_dir()
+        assert (project / "tests").is_dir()
+
+    # -- mkdocs.yml is valid YAML for both --
+
+    def test_internal_mkdocs_valid_yaml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects mkdocs.yml should be valid YAML."""
+        import yaml
+
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "mkdocs.yml").read_text()
+        data = yaml.compose(content)
+        assert data is not None
+
+    def test_internal_pyproject_valid_toml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects pyproject.toml should be valid TOML."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+        assert "project" in data
 
 
 class TestIntegration:
