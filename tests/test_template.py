@@ -889,6 +889,33 @@ class TestProjectVisibility:
             data = tomllib.load(f)
         assert "project" in data
 
+    # -- Lychee config --
+
+    def test_internal_lychee_accepts_401(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects .lychee.toml should accept 401 for auth-gated URLs."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / ".lychee.toml").read_text()
+        assert "401" in content
+
+    def test_public_lychee_no_401(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Public projects .lychee.toml should not accept 401."""
+        answers = {**copier_defaults, "project_visibility": "public"}
+        project = generate_project(tmp_path, answers)
+
+        content = (project / ".lychee.toml").read_text()
+        assert "401" not in content
+
+    def test_internal_lychee_valid_toml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Internal projects .lychee.toml should be valid TOML."""
+        answers = {**copier_defaults, "project_visibility": "internal"}
+        project = generate_project(tmp_path, answers)
+
+        with (project / ".lychee.toml").open("rb") as f:
+            data = tomllib.load(f)
+        assert "accept" in data
+
 
 class TestIntegration:
     """Integration tests that run uv sync and checks on generated project."""
