@@ -14,6 +14,25 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.18.0 (2026-02-07)
+
+### Chores
+
+- Migrate from tk to GitHub Issues
+  ([#127](https://github.com/detailobsessed/copier-uv-bleeding/pull/127),
+  [`b356e2a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b356e2a217e9c8e82539f76498289f3581f640b6))
+
+### Features
+
+- Adjust lychee config for internal projects
+  ([#131](https://github.com/detailobsessed/copier-uv-bleeding/pull/131),
+  [`f88a6ef`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f88a6efdd55aa000b1306bc71358b4e9b462ff29))
+
+- Support self-hosted repository URLs (repository_host)
+  ([#133](https://github.com/detailobsessed/copier-uv-bleeding/pull/133),
+  [`4edbf8a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4edbf8aa0ea8b72048d4074fa87b656546279928))
+
+
 ## v0.17.0 (2026-02-07)
 
 ### Features
