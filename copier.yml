@@ -13,7 +13,7 @@ _jinja_extensions:
 - extensions.py:SlugifyExtension
 - extensions.py:GitHubIDsforGiscusExtension
 # Files to skip if they already exist in the destination.
-# NOTE: pyproject.toml and .pre-commit-config.yaml are intentionally NOT here.
+# NOTE: pyproject.toml and prek.toml are intentionally NOT here.
 # During `copier adopt`, we want these to merge with conflict markers so users
 # get template improvements (poe tasks, ruff config, hooks). During `copier update`,
 # copier performs a 3-way merge that preserves user customizations.

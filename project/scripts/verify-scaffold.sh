@@ -22,7 +22,7 @@ section "Project Structure"
 # Core files
 for f in pyproject.toml README.md LICENSE CHANGELOG.md CONTRIBUTING.md \
          CODE_OF_CONDUCT.md SECURITY.md .gitignore .envrc .env.example \
-         .copier-answers.yml .pre-commit-config.yaml .editorconfig \
+         .copier-answers.yml prek.toml .editorconfig \
          .markdownlint.yaml .lychee.toml mkdocs.yml; do
     if [[ -f "$f" ]]; then pass "$f exists"; else fail "$f missing"; fi
 done
@@ -81,13 +81,13 @@ else
     fail ".env.example not excluded — it should be tracked"
 fi
 
-if grep -q 'detect-private-key' .pre-commit-config.yaml; then
+if grep -q 'detect-private-key' prek.toml; then
     pass "detect-private-key hook present"
 else
     fail "detect-private-key hook missing"
 fi
 
-if grep -q 'gitleaks' .pre-commit-config.yaml; then
+if grep -q 'gitleaks' prek.toml; then
     pass "gitleaks hook present"
 else
     fail "gitleaks hook missing"
@@ -172,7 +172,7 @@ for hook in trailing-whitespace end-of-file-fixer check-yaml check-toml \
             mixed-line-ending detect-private-key gitleaks ruff ruff-format \
             uv-lock shellcheck typos markdownlint \
             conventional-pre-commit; do
-    if grep -q "$hook" .pre-commit-config.yaml; then
+    if grep -q "$hook" prek.toml; then
         pass "Hook: $hook"
     else
         fail "Hook missing: $hook"
@@ -181,7 +181,7 @@ done
 
 # GitHub-only hooks
 if [[ "$repo_provider" == "github.com" ]]; then
-    if grep -q 'actionlint' .pre-commit-config.yaml; then
+    if grep -q 'actionlint' prek.toml; then
         pass "Hook: actionlint"
     else
         fail "Hook missing: actionlint"
@@ -189,13 +189,13 @@ if [[ "$repo_provider" == "github.com" ]]; then
 fi
 
 # Local hooks
-if grep -q 'ty check' .pre-commit-config.yaml; then
+if grep -q 'ty check' prek.toml; then
     pass "Local hook: ty type checker"
 else
     fail "Local hook missing: ty"
 fi
 
-if grep -q 'pytest.*cov-fail-under' .pre-commit-config.yaml; then
+if grep -q 'pytest.*cov-fail-under' prek.toml; then
     pass "Local hook: pytest with coverage gate"
 else
     fail "Local hook missing: pytest coverage gate"

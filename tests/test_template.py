@@ -113,7 +113,7 @@ class TestCoreFiles:
     def test_precommit_config_exists(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Pre-commit config should exist."""
         project = generate_project(tmp_path, copier_defaults)
-        assert (project / ".pre-commit-config.yaml").exists()
+        assert (project / "prek.toml").exists()
 
     def test_ruff_config_in_pyproject(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Ruff config should be in pyproject.toml."""
@@ -189,15 +189,15 @@ class TestPreCommitConfig:
         """Pre-commit config should have correct prek version."""
         project = generate_project(tmp_path, copier_defaults)
 
-        config = project / ".pre-commit-config.yaml"
+        config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version: "0.3.1"' in content
+        assert 'minimum_prek_version = "0.3.2"' in content
 
     def test_has_gitleaks(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Pre-commit config should have gitleaks."""
         project = generate_project(tmp_path, copier_defaults)
 
-        config = project / ".pre-commit-config.yaml"
+        config = project / "prek.toml"
         content = config.read_text()
         assert "gitleaks" in content
 
@@ -205,7 +205,7 @@ class TestPreCommitConfig:
         """Pre-commit config should not have pyupgrade (replaced by ruff UP)."""
         project = generate_project(tmp_path, copier_defaults)
 
-        config = project / ".pre-commit-config.yaml"
+        config = project / "prek.toml"
         content = config.read_text()
         assert "pyupgrade" not in content
 
@@ -613,20 +613,19 @@ class TestGitLabSupport:
         answers = {**copier_defaults, "repository_provider": "gitlab.com"}
         project = generate_project(tmp_path, answers)
 
-        config = project / ".pre-commit-config.yaml"
+        config = project / "prek.toml"
         content = config.read_text()
         assert "actionlint" not in content
 
-    def test_gitlab_precommit_valid_yaml(self, tmp_path: Path, copier_defaults: dict) -> None:
-        """GitLab pre-commit config should have valid YAML indentation (#56)."""
-        import yaml
-
+    def test_gitlab_precommit_valid_toml(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """GitLab prek.toml should be valid TOML with expected repos."""
         answers = {**copier_defaults, "repository_provider": "gitlab.com"}
         project = generate_project(tmp_path, answers)
 
-        config = project / ".pre-commit-config.yaml"
-        data = yaml.safe_load(config.read_text())
-        repo_urls = [r["repo"] for r in data["repos"] if isinstance(r, dict)]
+        config = project / "prek.toml"
+        with config.open("rb") as f:
+            data = tomllib.load(f)
+        repo_urls = [r["repo"] for r in data["repos"]]
         assert "https://github.com/crate-ci/typos" in repo_urls
 
     def test_gitlab_no_giscus(self, tmp_path: Path, copier_defaults: dict) -> None:
@@ -862,7 +861,7 @@ class TestProjectVisibility:
         assert (project / "pyproject.toml").exists()
         assert (project / "README.md").exists()
         assert (project / "CHANGELOG.md").exists()
-        assert (project / ".pre-commit-config.yaml").exists()
+        assert (project / "prek.toml").exists()
         assert (project / ".editorconfig").exists()
         assert (project / "mkdocs.yml").exists()
         assert (project / "src").is_dir()

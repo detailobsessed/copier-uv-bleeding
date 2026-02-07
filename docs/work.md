@@ -4,7 +4,7 @@ The generated project has this structure:
 
 ```
 📁 your_project ------------------- # your freshly created project!
-├── 📄 .pre-commit-config.yaml ---- # pre-commit hooks configuration
+├── 📄 prek.toml ------------------ # pre-commit hooks configuration (prek)
 ├── 📄 CHANGELOG.md --------------- #
 ├── 📄 CODE_OF_CONDUCT.md --------- #
 ├── 📄 CONTRIBUTING.md ------------ #
