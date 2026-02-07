@@ -14,6 +14,20 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.16.2 (2026-02-07)
+
+### Bug Fixes
+
+- Remove unconditional xdist, fix missing blank line before semantic_release (#113)
+  ([#115](https://github.com/detailobsessed/copier-uv-bleeding/pull/115),
+  [`43a62aa`](https://github.com/detailobsessed/copier-uv-bleeding/commit/43a62aa835aa4e279c54fd0e55d7f2af1eb11e16))
+
+### Chores
+
+- Migrate beads to tk for local issue tracking
+  ([`49c51a4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/49c51a4b915b3b7e4e9c90c826ca7a3c0f730bc7))
+
+
 ## v0.16.1 (2026-02-06)
 
 ### Bug Fixes
