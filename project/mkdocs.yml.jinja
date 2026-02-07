@@ -4,8 +4,10 @@ site_url: "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.',
 repo_url: "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}"
 repo_name: "{{ repository_namespace }}/{{ repository_name }}"
 site_dir: site
-watch: [mkdocs.yml, README.md, CONTRIBUTING.md, CHANGELOG.md, src/{{ python_package_import_name }}]
+watch: [mkdocs.yml, README.md,{% if project_visibility == 'public' %} CONTRIBUTING.md,{% endif %} CHANGELOG.md, src/{{ python_package_import_name }}]
+{%- if project_visibility == 'public' %}
 copyright: Copyright &copy; {{ copyright_date }} {{ copyright_holder }}
+{%- endif %}
 edit_uri: edit/main/docs/
 
 validation:
@@ -17,11 +19,15 @@ nav:
 - Home:
   - Overview: index.md
   - Changelog: changelog.md
+{%- if project_visibility == 'public' %}
   - License: license.md
+{%- endif %}
 - API reference: reference/api.md
 - Development:
+{%- if project_visibility == 'public' %}
   - Contributing: contributing.md
   - Code of Conduct: code_of_conduct.md
+{%- endif %}
   - Coverage report: coverage.md
 
 theme:

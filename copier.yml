@@ -42,6 +42,14 @@ _exclude:
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not include_template_dev_scripts %}scripts/verify-scaffold.sh{% endif %}"
+- "{% if project_visibility == 'internal' %}CODE_OF_CONDUCT.md{% endif %}"
+- "{% if project_visibility == 'internal' %}CONTRIBUTING.md{% endif %}"
+- "{% if project_visibility == 'internal' %}SECURITY.md{% endif %}"
+- "{% if project_visibility == 'internal' %}LICENSE{% endif %}"
+- "{% if project_visibility == 'internal' %}docs/code_of_conduct.md{% endif %}"
+- "{% if project_visibility == 'internal' %}docs/contributing.md{% endif %}"
+- "{% if project_visibility == 'internal' %}docs/license.md{% endif %}"
+- "{% if project_visibility == 'internal' %}.github/FUNDING.yml{% endif %}"
 
 # PROMPT --------------------------------
 project_name:
@@ -60,6 +68,14 @@ project_type:
     Application (simple script with main.py): app
     Library (importable package, no CLI): lib
     Package (installable with CLI entry point): package
+
+project_visibility:
+  type: str
+  help: "Project visibility (public = open-source scaffolding, internal = skip community files)"
+  default: public
+  choices:
+    Public (open-source with LICENSE, CoC, CONTRIBUTING, SECURITY): public
+    Internal (company/private — skip open-source scaffolding): internal
 
 author_fullname:
   type: str
@@ -117,6 +133,7 @@ copyright_license:
   type: str
   help: Your project's license
   default: ISC
+  when: "{{ project_visibility == 'public' }}"
   choices:
     Academic Free License v3.0: AFL-3.0
     Apache License 2.0: Apache-2.0
@@ -190,7 +207,7 @@ use_semantic_release:
 publish_to_pypi:
   type: bool
   help: Will you publish this package to PyPI?
-  default: "{{ use_semantic_release }}"
+  default: "{{ use_semantic_release and project_visibility == 'public' }}"
   when: "{{ use_semantic_release }}"
 
 use_blacksmith_runners:
@@ -203,6 +220,7 @@ use_polar:
   type: bool
   help: Enable Polar.sh sponsorship? (requires account at polar.sh)
   default: false
+  when: "{{ project_visibility == 'public' }}"
 
 include_template_dev_scripts:
   type: bool

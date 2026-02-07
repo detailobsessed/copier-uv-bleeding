@@ -78,6 +78,7 @@ def _build_context(overrides: dict) -> dict:
         "use_semantic_release": True,
         "publish_to_pypi": True,
         "use_blacksmith_runners": False,
+        "project_visibility": "public",
         "use_polar": False,
         "include_template_dev_scripts": False,
         **_COMMON,
@@ -127,6 +128,11 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     "lib-type": _build_context({
         "project_type": "lib",
+    }),
+    "internal": _build_context({
+        "project_visibility": "internal",
+        "publish_to_pypi": False,
+        "use_polar": False,
     }),
 }
 
@@ -266,7 +272,22 @@ def lint_templates(verbose: bool = False) -> int:
             if is_gitlab_file and provider != "gitlab.com":
                 continue
             # Skip CI files when CI is disabled
-            if not context.get("use_ci") and any(x in rel_str for x in ["ci.yml", "release.yml", "gitlab-ci"]):
+            if not context.get("use_ci") and any(x in rel_str for x in ["ci.yml", "release.yml", "copier-update.yml", "gitlab-ci"]):
+                continue
+            # Skip community/open-source files for internal projects
+            if context.get("project_visibility") == "internal" and any(
+                x in rel_str
+                for x in [
+                    "CODE_OF_CONDUCT",
+                    "CONTRIBUTING",
+                    "SECURITY",
+                    "LICENSE",
+                    "license.md",
+                    "contributing.md",
+                    "code_of_conduct.md",
+                    "FUNDING",
+                ]
+            ):
                 continue
 
             total_checks += 1

@@ -1,6 +1,6 @@
 ---
 id: cub-9w9e
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-07T11:28:23Z

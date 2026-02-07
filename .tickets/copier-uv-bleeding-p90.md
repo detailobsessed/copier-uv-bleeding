@@ -1,6 +1,6 @@
 ---
 id: copier-uv-bleeding-p90
-status: open
+status: closed
 deps: []
 links: []
 created: 2026-02-06T01:50:41.942143+01:00
