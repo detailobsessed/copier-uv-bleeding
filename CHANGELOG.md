@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.18.2 (2026-02-07)
+
+### Bug Fixes
+
+- Point sync-with-uv at fork with prek.toml support
+  ([#137](https://github.com/detailobsessed/copier-uv-bleeding/pull/137),
+  [`e87343e`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e87343e23ee93ffcfc0f4f5365c80b6f7ffd2831))
+
+
 ## v0.18.1 (2026-02-07)
 
 ### Performance Improvements
