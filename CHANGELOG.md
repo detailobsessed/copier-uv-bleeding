@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.18.1 (2026-02-07)
+
+### Performance Improvements
+
+- Speed up test suite with fixture caching and xdist
+  ([#136](https://github.com/detailobsessed/copier-uv-bleeding/pull/136),
+  [`bec58cf`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bec58cfe05a9a0ba7e2d4160a87cc1e112a2e608))
+
+
 ## v0.18.0 (2026-02-07)
 
 ### Chores
