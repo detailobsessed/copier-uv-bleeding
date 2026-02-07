@@ -30,7 +30,7 @@ It is designed to be used as a starting point for new Python projects, providing
 - **[ty](https://github.com/astral-sh/ty)** — next-gen type checker from Astral (fast, modern, replaces mypy)
 - **[prek](https://github.com/j178/prek)** — Rust-powered pre-commit hook runner (replaces pre-commit)
 - **[poethepoet](https://github.com/nat-n/poethepoet)** — task runner with pre-configured tasks for every workflow
-- **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage, randomization, and parallel execution
+- **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage and randomization
 - **[MkDocs Material](https://github.com/squidfunk/mkdocs-material)** — beautiful documentation with API autodoc
 - **[semantic-release](https://github.com/python-semantic-release/python-semantic-release)** — automated versioning and changelogs from conventional commits
 - **[lychee](https://github.com/lycheeverse/lychee)** — fast link checking in CI

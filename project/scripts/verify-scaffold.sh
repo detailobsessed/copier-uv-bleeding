@@ -149,7 +149,6 @@ section "Testing"
 if grep -q 'pytest' pyproject.toml; then pass "pytest configured"; else fail "pytest not found"; fi
 if grep -q 'pytest-cov' pyproject.toml; then pass "pytest-cov configured"; else fail "pytest-cov not found"; fi
 if grep -q 'pytest-randomly' pyproject.toml; then pass "pytest-randomly configured"; else fail "pytest-randomly not found"; fi
-if grep -q 'pytest-xdist' pyproject.toml; then pass "pytest-xdist configured"; else fail "pytest-xdist not found"; fi
 
 if grep -q 'branch = true' pyproject.toml; then
     pass "Branch coverage enabled"
@@ -207,42 +206,49 @@ section "CI Workflows"
 # ---------------------------------------------------------------------------
 
 ci=".github/workflows/ci.yml"
-if grep -q 'ubuntu' "$ci" && grep -q 'macos' "$ci" && grep -q 'windows' "$ci"; then
-    pass "CI: multi-OS matrix (Linux, macOS, Windows)"
-else
-    fail "CI: missing OS variants in matrix"
-fi
+if [ -f "$ci" ]; then
+    if grep -q 'ubuntu' "$ci" && grep -q 'macos' "$ci" && grep -q 'windows' "$ci"; then
+        pass "CI: multi-OS matrix (Linux, macOS, Windows)"
+    else
+        fail "CI: missing OS variants in matrix"
+    fi
 
-if grep -q 'lowest-direct' "$ci"; then
-    pass "CI: resolution testing (highest + lowest-direct)"
-else
-    fail "CI: no resolution testing"
-fi
+    if grep -q 'lowest-direct' "$ci"; then
+        pass "CI: resolution testing (highest + lowest-direct)"
+    else
+        fail "CI: no resolution testing"
+    fi
 
-if grep -q 'concurrency' "$ci"; then
-    pass "CI: concurrency group configured"
+    if grep -q 'concurrency' "$ci"; then
+        pass "CI: concurrency group configured"
+    else
+        warn "CI: no concurrency group"
+    fi
+
+    if grep -qi 'codecov\|coveralls\|coverage' "$ci"; then
+        pass "CI: coverage upload configured"
+    else
+        fail "CI: no coverage upload (Codecov/Coveralls) — coverage data goes nowhere"
+    fi
+elif [ -f ".gitlab-ci.yml" ]; then
+    pass "CI: GitLab CI configured"
 else
-    warn "CI: no concurrency group"
+    warn "CI: no CI workflow found"
 fi
 
 rel=".github/workflows/release.yml"
-if grep -q 'semantic-release' "$rel"; then
-    pass "Release: semantic-release configured"
-else
-    fail "Release: semantic-release not found"
-fi
+if [ -f "$rel" ]; then
+    if grep -q 'semantic-release' "$rel"; then
+        pass "Release: semantic-release configured"
+    else
+        fail "Release: semantic-release not found"
+    fi
 
-if grep -q 'uv publish' "$rel"; then
-    pass "Release: PyPI publishing configured"
-else
-    warn "Release: no PyPI publishing step"
-fi
-
-# Coverage upload
-if grep -qi 'codecov\|coveralls\|coverage' "$ci" 2>/dev/null; then
-    pass "CI: coverage upload configured"
-else
-    fail "CI: no coverage upload (Codecov/Coveralls) — coverage data goes nowhere"
+    if grep -q 'uv publish' "$rel"; then
+        pass "Release: PyPI publishing configured"
+    else
+        warn "Release: no PyPI publishing step"
+    fi
 fi
 
 # ---------------------------------------------------------------------------
