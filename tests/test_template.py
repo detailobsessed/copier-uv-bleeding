@@ -916,6 +916,47 @@ class TestProjectVisibility:
             data = tomllib.load(f)
         assert "accept" in data
 
+    # -- Self-hosted repository URLs --
+
+    def test_selfhosted_pyproject_urls(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Self-hosted GitLab should use repository_host for URLs, no Pages pattern."""
+        answers = {
+            **copier_defaults,
+            "project_visibility": "internal",
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.company.com",
+        }
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "gitlab.company.com" in content
+        # URLs should use self-hosted host, not gitlab.com directly
+        assert "://gitlab.com/" not in content
+        # No Pages URL pattern for self-hosted
+        assert ".gitlab.io" not in content
+
+    def test_selfhosted_mkdocs_urls(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Self-hosted GitLab should use repository_host in mkdocs.yml."""
+        answers = {
+            **copier_defaults,
+            "project_visibility": "internal",
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.company.com",
+        }
+        project = generate_project(tmp_path, answers)
+
+        content = (project / "mkdocs.yml").read_text()
+        assert "gitlab.company.com" in content
+        # No Pages URL pattern for self-hosted
+        assert ".gitlab.io" not in content
+
+    def test_standard_host_uses_pages_urls(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Standard github.com/gitlab.com should use Pages URL pattern."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        content = (project / "pyproject.toml").read_text()
+        assert ".github.io" in content
+
 
 class TestIntegration:
     """Integration tests that run uv sync and checks on generated project."""

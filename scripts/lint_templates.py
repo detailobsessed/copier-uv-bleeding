@@ -64,6 +64,7 @@ def _build_context(overrides: dict) -> dict:
         "author_email": "test@example.com",
         "author_username": "testuser",
         "repository_provider": "github.com",
+        "repository_host": "github.com",
         "repository_namespace": "testuser",
         "repository_name": "my-test-project",
         "copyright_holder": "Test Author",
@@ -84,6 +85,9 @@ def _build_context(overrides: dict) -> dict:
         **_COMMON,
     }
     base.update(overrides)
+    # Auto-derive repository_host from repository_provider (mirrors copier.yml default)
+    if "repository_provider" in overrides and "repository_host" not in overrides:
+        base["repository_host"] = overrides["repository_provider"]
     # Derive slug-based fields if project_name changed
     if "project_name" in overrides and "repository_name" not in overrides:
         base["repository_name"] = slugify(overrides["project_name"])
@@ -103,6 +107,7 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     "gitlab-ci": _build_context({
         "repository_provider": "gitlab.com",
+        "repository_host": "gitlab.com",
         "use_blacksmith_runners": False,
     }),
     "github-no-ci": _build_context({
@@ -113,6 +118,7 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     "gitlab-no-ci": _build_context({
         "repository_provider": "gitlab.com",
+        "repository_host": "gitlab.com",
         "use_ci": False,
         "use_semantic_release": False,
         "publish_to_pypi": False,
@@ -133,6 +139,22 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "project_visibility": "internal",
         "publish_to_pypi": False,
         "use_polar": False,
+    }),
+    "internal-selfhosted-gitlab": _build_context({
+        "project_visibility": "internal",
+        "repository_provider": "gitlab.com",
+        "repository_host": "gitlab.company.com",
+        "publish_to_pypi": False,
+        "use_polar": False,
+        "use_blacksmith_runners": False,
+    }),
+    "internal-selfhosted-github": _build_context({
+        "project_visibility": "internal",
+        "repository_provider": "github.com",
+        "repository_host": "github.company.com",
+        "publish_to_pypi": False,
+        "use_polar": False,
+        "use_blacksmith_runners": False,
     }),
 }
 

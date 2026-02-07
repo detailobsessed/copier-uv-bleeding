@@ -37,16 +37,22 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
-Documentation = "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
-Changelog = "https://{{ repository_namespace }}.{{ repository_provider.rsplit('.', 1)[0] }}.io/{{ repository_name }}/changelog"
-Repository = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}"
-Issues = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/issues"
-{%- if repository_provider == "github.com" %}
-Discussions = "https://{{ repository_provider }}/{{ repository_namespace }}/{{ repository_name }}/discussions"
+{%- if repository_host in ['github.com', 'gitlab.com'] %}
+Homepage = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
+Documentation = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
+Changelog = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}/changelog"
+{%- else %}
+Homepage = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
+Documentation = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
+Changelog = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/changelog"
 {%- endif %}
-{%- if repository_provider == "github.com" and project_visibility == 'public' %}
-Funding = "https://{{ repository_provider }}/sponsors/{{ author_username }}"
+Repository = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
+Issues = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/issues"
+{%- if repository_host == "github.com" %}
+Discussions = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/discussions"
+{%- endif %}
+{%- if repository_host == "github.com" and project_visibility == 'public' %}
+Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 {%- endif %}
 
 {% if project_type == 'package' -%}
