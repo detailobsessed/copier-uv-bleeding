@@ -20,8 +20,8 @@ hooks = [
 ]
 
 [[repos]]
-repo = "https://github.com/tsvikas/sync-with-uv"
-rev = "v0.5.0"
+repo = "https://github.com/detailobsessed/sync-with-uv"
+rev = "v0.6.0-prek"
 hooks = [{ id = "sync-with-uv", priority = 0 }]
 
 [[repos]]
