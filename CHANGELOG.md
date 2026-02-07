@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.16.6 (2026-02-07)
+
+### Bug Fixes
+
+- Add main.py to _skip_if_exists for app type adopt
+  ([#123](https://github.com/detailobsessed/copier-uv-bleeding/pull/123),
+  [`dc9147a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/dc9147a3d6b136eaa8ea8caba96bf146e7d712d8))
+
+
 ## v0.16.5 (2026-02-07)
 
 ### Bug Fixes
