@@ -12,8 +12,3 @@ __pycache__/
 htmlcov/
 .env
 !.env.example
-
-# bv (beads viewer) local config and caches
-.bv/
-AI_PR_REVIEW_AGENT_FEEDBACK.md
-project/windsurf-issues.code-workspace
