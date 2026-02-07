@@ -1,2 +1,2 @@
 [files]
-extend-exclude = ["CHANGELOG.md", "uv.lock", ".tickets/"]
+extend-exclude = ["CHANGELOG.md", "uv.lock"]
