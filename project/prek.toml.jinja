@@ -65,7 +65,7 @@ hooks = [{ id = "markdownlint", args = ["--fix"], priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
-rev = "lychee-v0.22.0"
+rev = "lychee-v0.22.0"  # pinned: 'nightly' tag is mutable, update manually
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1 }]
 
 [[repos]]
@@ -73,11 +73,12 @@ repo = "local"
 
 [[repos.hooks]]
 id = "no-commit-to-main"
-name = "prevent commits to main"
-entry = "bash -c 'test \"$(git rev-parse --abbrev-ref HEAD)\" != main || { echo Direct commits to main not allowed. Use a branch + PR. && exit 1; }'"
+name = "prevent pushes to main"
+entry = "bash -c 'test \"$(git rev-parse --abbrev-ref HEAD)\" != main || { echo Direct pushes to main not allowed. Use a branch + PR. && exit 1; }'"
 language = "system"
 always_run = true
 pass_filenames = false
+stages = ["pre-push"]
 priority = 0
 
 [[repos.hooks]]

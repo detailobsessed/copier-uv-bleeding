@@ -9,64 +9,49 @@ name: release
 
 permissions:
   contents: write
-{%- if publish_to_pypi %}
-  id-token: write
-{%- endif %}
 
 jobs:
   release:
     if: {% raw %}${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}{% endraw %}
-{%- if use_blacksmith_runners %}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-{%- else %}
-    runs-on: ubuntu-latest
+    uses: detailobsessed/ci-components/.github/workflows/semantic-release-uv.yml@main
+    with:
+      python-version: "3.14"
+{%- if not use_blacksmith_runners %}
+      runner: ubuntu-latest
 {%- endif %}
-    concurrency: release
+      pypi-publish: "false"
+    secrets: inherit
 {%- if publish_to_pypi %}
-    environment: pypi
-{%- endif %}
 
+  pypi-publish:
+    needs: release
+    if: {% raw %}needs.release.outputs.released == 'true'{% endraw %}
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/{{ python_package_distribution_name }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
     - name: Checkout
       uses: actions/checkout@v6
       with:
-        fetch-depth: 0
+        ref: main
         fetch-tags: true
-
-    - name: Setup uv and Python
-      uses: astral-sh/setup-uv@v7.1.5
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v7
       with:
         python-version: "3.14"
-        enable-cache: true
-
-    - name: Install dependencies
-      run: uv sync --group maintain
-
-    - name: Semantic Release
-      env:
-        GH_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
-      run: uv run semantic-release version --changelog --push --tag --vcs-release
-
-{%- if publish_to_pypi %}
-
-    - name: Check if release artifacts exist
-      id: dist
-      shell: bash
+    - name: Build and publish
       run: |
-        if compgen -G "dist/*" > /dev/null; then
-          echo "has_dist=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "has_dist=false" >> "$GITHUB_OUTPUT"
-        fi
-
-    - name: Publish to PyPI
-      if: {% raw %}steps.dist.outputs.has_dist == 'true'{% endraw %}
-      run: uv publish
+        uv build
+        uv publish
 {%- else %}
 
-    # To enable PyPI publishing:
-    # 1. Re-run copier with publish_to_pypi=true
-    # 2. Set up trusted publisher on PyPI for {{ repository_namespace }}/{{ repository_name }}
-    #    - Workflow: release.yml, Environment: pypi
-    # 3. Create 'pypi' environment in GitHub repo settings
+  # To enable PyPI publishing:
+  # 1. Re-run copier with publish_to_pypi=true
+  # 2. Set up trusted publisher on PyPI for {{ repository_namespace }}/{{ repository_name }}
+  #    - Workflow: release.yml, Environment: pypi
+  # 3. Create 'pypi' environment in GitHub repo settings
 {%- endif %}

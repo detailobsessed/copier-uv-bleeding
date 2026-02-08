@@ -47,7 +47,7 @@ When you run `copier copy`, you'll be asked:
 | ------ | ----------- |
 | **Project name** | Name of your project |
 | **Project description** | One-line description |
-| **Project type** | `app` (script), `lib` (library), or `package` (CLI tool) |
+| **Project type** | `app`, `lib`, or `package` — configures pyproject.toml entry points and build settings |
 | **Author info** | Name, email, username (auto-detected from git) |
 | **Repository provider** | `github.com` or `gitlab.com` |
 | **Repository namespace** | GitHub/GitLab username or organization |
@@ -97,6 +97,7 @@ copier adopt --trust --conflict inline https://github.com/detailobsessed/copier-
 To update the fork later, re-run the install command with `--force`.
 
 The template automatically runs `uv sync` and `prek install` after scaffolding.
+Create your source files in `src/<package_name>/` and tests in `tests/`.
 
 ## Available Tasks
 

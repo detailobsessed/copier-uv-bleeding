@@ -27,17 +27,15 @@ for f in pyproject.toml README.md LICENSE CHANGELOG.md CONTRIBUTING.md \
     if [[ -f "$f" ]]; then pass "$f exists"; else fail "$f missing"; fi
 done
 
+# Source package marker (__init__.py in any src/ subpackage)
+if compgen -G "src/*/__init__.py" > /dev/null 2>&1; then
+    pass "src/*/__init__.py exists"
+else
+    fail "src/*/__init__.py missing"
+fi
+
 # Read copier answers for conditional checks
 repo_provider=$(grep 'repository_provider' .copier-answers.yml 2>/dev/null | sed 's/.*: *//' || echo "github.com")
-
-# Source package
-pkg_name=$(grep '^name' pyproject.toml | head -1 | sed 's/.*"\(.*\)".*/\1/' | tr '-' '_')
-if [[ -d "src/$pkg_name" ]]; then pass "src/$pkg_name/ package dir exists"; else fail "src/$pkg_name/ missing"; fi
-if [[ -f "src/$pkg_name/__init__.py" ]]; then pass "__init__.py exists"; else fail "__init__.py missing"; fi
-if [[ -f "src/$pkg_name/py.typed" ]]; then pass "py.typed marker exists"; else fail "py.typed missing"; fi
-
-# Tests
-if [[ -f "tests/__init__.py" ]]; then pass "tests/__init__.py exists"; else fail "tests/__init__.py missing"; fi
 
 # Docs
 for f in docs/index.md docs/changelog.md docs/contributing.md docs/license.md \
@@ -321,10 +319,10 @@ section "Ruff Check (quick)"
 if command -v ruff &>/dev/null || [[ -f ".venv/bin/ruff" ]]; then
     ruff_bin="${VIRTUAL_ENV:-$PWD/.venv}/bin/ruff"
     if [[ ! -x "$ruff_bin" ]]; then ruff_bin="ruff"; fi
-    if "$ruff_bin" check src tests &>/dev/null; then
-        pass "ruff check passes on src/ tests/"
+    if "$ruff_bin" check src &>/dev/null; then
+        pass "ruff check passes on src/"
     else
-        ruff_errors=$("$ruff_bin" check src tests 2>&1 || true)
+        ruff_errors=$("$ruff_bin" check src 2>&1 || true)
         fail "ruff errors found:"
         echo "$ruff_errors" | head -20 | sed 's/^/       /'
     fi

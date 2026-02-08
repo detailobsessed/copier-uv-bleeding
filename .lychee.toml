@@ -17,6 +17,8 @@ exclude = [
     '^https://github\.com/username/',
     # Discussions link may 404 if not enabled
     'discussions/new\?category=',
+    # PyPI package URL with Jinja placeholder renders as bare /p/
+    '^https://pypi\.org/p/$',
 ]
 
 # Exclude local/private addresses

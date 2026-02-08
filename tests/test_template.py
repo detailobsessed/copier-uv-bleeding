@@ -74,10 +74,10 @@ class TestCoreFiles:
         project = project_factory(copier_defaults)
         assert (project / "src").is_dir()
 
-    def test_tests_directory_exists(self, copier_defaults: dict, project_factory) -> None:
-        """tests directory should exist."""
+    def test_tests_directory_not_generated(self, copier_defaults: dict, project_factory) -> None:
+        """tests directory should not be generated (users create via uv init)."""
         project = project_factory(copier_defaults)
-        assert (project / "tests").is_dir()
+        assert not (project / "tests").is_dir()
 
 
 class TestCIConfiguration:
@@ -273,7 +273,7 @@ class TestCIWorkflows:
 
         release_yml = project / ".github" / "workflows" / "release.yml"
         content = release_yml.read_text()
-        assert "environment: pypi" in content
+        assert "name: pypi" in content
 
     def test_pypi_false_no_environment(self, copier_defaults: dict, project_factory) -> None:
         """When publish_to_pypi is false, release workflow should not have environment: pypi."""
@@ -282,7 +282,7 @@ class TestCIWorkflows:
 
         release_yml = project / ".github" / "workflows" / "release.yml"
         content = release_yml.read_text()
-        assert "environment: pypi" not in content
+        assert "name: pypi" not in content
 
 
 class TestCascadingBooleanDefaults:
@@ -653,10 +653,12 @@ class TestTyperOption:
         assert "typer" not in content
 
     def test_package_type_no_scaffold_code(self, copier_defaults: dict, project_factory) -> None:
-        """Package type should not generate scaffold source files (users create their own)."""
+        """Package type should not generate scaffold source files (users create their own via uv init)."""
         project = project_factory(copier_defaults, "package")
         assert not (project / "src" / "test_project" / "_internal").exists()
         assert not (project / "src" / "test_project" / "__main__.py").exists()
+        assert not (project / "src" / "test_project" / "py.typed").exists()
+        assert not (project / "tests" / "__init__.py").exists()
         assert not (project / "tests" / "test_cli.py").exists()
         assert not (project / "tests" / "test_api.py").exists()
         assert not (project / "tests" / "conftest.py").exists()
@@ -810,7 +812,6 @@ class TestProjectVisibility:
         assert (project / ".editorconfig").exists()
         assert (project / "mkdocs.yml").exists()
         assert (project / "src").is_dir()
-        assert (project / "tests").is_dir()
 
     # -- mkdocs.yml is valid YAML for both --
 
@@ -933,33 +934,6 @@ class TestSkipIfExists:
 
         content = readme.read_text()
         assert "Custom README content" in content, f"README.md was overwritten by copier recopy. Content:\n{content}"
-
-    def test_recopy_overwrites_non_skipped_files(self, tmp_path: Path, copier_defaults: dict) -> None:
-        """Files NOT in _skip_if_exists should be overwritten by copier recopy.
-
-        __init__.py is a minimal marker managed by the template. User modifications
-        are preserved during copier update (3-way merge) but NOT during copier recopy.
-        """
-        project = generate_project(tmp_path, copier_defaults)
-
-        init_py = project / "src" / "test_project" / "__init__.py"
-        assert init_py.exists()
-
-        # User modifies __init__.py
-        init_py.write_text('"""My package."""\n\nfrom test_project.core import run\n')
-
-        # Re-apply template — recopy overwrites non-skipped files
-        result = subprocess.run(
-            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--overwrite"],
-            cwd=project,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        assert result.returncode == 0, f"copier recopy failed: {result.stderr}"
-
-        content = init_py.read_text()
-        assert "Test Project" in content, f"__init__.py should be overwritten by recopy. Content:\n{content}"
 
 
 class TestIntegration:
