@@ -14,6 +14,31 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.20.2 (2026-02-08)
+
+### Bug Fixes
+
+- Add id-token: write permission to release workflow for reusable workflow compatibility
+  ([#158](https://github.com/detailobsessed/copier-uv-bleeding/pull/158),
+  [`bdb718b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bdb718b04e731d90835faef3d7feafa1286bcb9a))
+
+- Address post-merge review feedback from Devin
+  ([#151](https://github.com/detailobsessed/copier-uv-bleeding/pull/151),
+  [`81e2dc9`](https://github.com/detailobsessed/copier-uv-bleeding/commit/81e2dc9ff287016afd1bfd3c5e6253dba4d8982c))
+
+- CI paths-filter permissions and lychee localhost exclusion
+  ([#157](https://github.com/detailobsessed/copier-uv-bleeding/pull/157),
+  [`81553e4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/81553e4c2552753896948f8e4205d791e7a9f06d))
+
+- Detect table-style poe tasks and fix issue triage workflow
+  ([#154](https://github.com/detailobsessed/copier-uv-bleeding/pull/154),
+  [`3b828e7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3b828e70f4ec38cc2aa7885da1c9c5013f8039bc))
+
+- Pass dependency-group: dev to semantic-release workflow
+  ([#159](https://github.com/detailobsessed/copier-uv-bleeding/pull/159),
+  [`49c3516`](https://github.com/detailobsessed/copier-uv-bleeding/commit/49c3516888fca11278206a9f7b8a107f301788e1))
+
+
 ## v0.20.1 (2026-02-08)
 
 ### Bug Fixes
