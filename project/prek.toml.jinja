@@ -72,6 +72,15 @@ hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1 }]
 repo = "local"
 
 [[repos.hooks]]
+id = "no-commit-to-main"
+name = "prevent commits to main"
+entry = "bash -c 'test \"$(git rev-parse --abbrev-ref HEAD)\" != main || { echo Direct commits to main not allowed. Use a branch + PR. && exit 1; }'"
+language = "system"
+always_run = true
+pass_filenames = false
+priority = 0
+
+[[repos.hooks]]
 id = "ty"
 name = "ty type checker"
 entry = "uv run ty check"

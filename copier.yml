@@ -21,18 +21,6 @@ _jinja_extensions:
 _skip_if_exists:
 - CHANGELOG.md
 - README.md
-- "src/{{ python_package_import_name }}/__init__.py"
-- "src/{{ python_package_import_name }}/_internal/__init__.py"
-- "src/{{ python_package_import_name }}/_internal/cli.py"
-- "src/{{ python_package_import_name }}/_internal/debug.py"
-- "src/{{ python_package_import_name }}/__main__.py"
-- "src/{{ python_package_import_name }}/py.typed"
-- "tests/__init__.py"
-- "tests/conftest.py"
-- "tests/test_cli.py"
-- "tests/test_api.py"
-- .gitignore
-- main.py
 
 _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
@@ -65,7 +53,7 @@ project_type:
   help: What type of project is this?
   default: package
   choices:
-    Application (simple script with main.py): app
+    Application (standalone script, no CLI entry point): app
     Library (importable package, no CLI): lib
     Package (installable with CLI entry point): package
 
@@ -238,4 +226,10 @@ _tasks:
   - "test -d .git && uv run prek install || true"
   - "test -f .copier-answers.yml && rm -f duties.py Makefile scripts/make scripts/make.py || true"
   - "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge && echo '✓ Enabled delete-branch-on-merge' || true"
-  - "test -d .git && echo '🎉 Project scaffolded successfully! Run: uv run prek autoupdate' || echo '🎉 Project scaffolded successfully! Run: git init && uv run prek install && uv run prek autoupdate'"
+  - "echo ''"
+  - "echo '🎉 Project scaffolded successfully!'"
+  - "echo ''"
+  - "echo 'Next steps:'"
+  - "test -d .git && echo '  1. uv run prek autoupdate' || echo '  1. git init && uv run prek install && uv run prek autoupdate'"
+  - "echo '  2. Create your source files in src/ and tests/'"
+  - "echo '     Tip: run \"uv init --help\" to see project layout examples'"

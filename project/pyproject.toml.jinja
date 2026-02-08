@@ -57,7 +57,7 @@ Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 
 {% if project_type == 'package' -%}
 [project.scripts]
-{{ python_package_command_line_name }} = "{{ python_package_import_name }}:main"
+{{ python_package_command_line_name }} = "{{ python_package_import_name }}.cli:main"
 
 {% endif -%}
 
@@ -153,10 +153,6 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]  # Allow assert in tests
-"tests/__init__.py" = ["RUF067"]  # Allow test constants (TESTS_DIR, FIXTURES_DIR)
-{%- if project_type == "package" %}
-"src/{{ python_package_import_name }}/_internal/debug.py" = ["T201"]  # Debug output uses print()
-{%- endif %}
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
