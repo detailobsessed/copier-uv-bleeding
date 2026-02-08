@@ -12,3 +12,6 @@ __pycache__/
 htmlcov/
 .env
 !.env.example
+
+# Stakpak session files
+.stakpak/session*
