@@ -26,6 +26,29 @@ env:
 
 jobs:
 
+  changes:
+{%- if use_blacksmith_runners %}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+{%- else %}
+    runs-on: ubuntu-latest
+{%- endif %}
+    outputs:
+      src: {% raw %}${{ steps.filter.outputs.src }}{% endraw %}
+    steps:
+    - uses: actions/checkout@v6
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          src:
+            - 'src/**'
+            - 'tests/**'
+            - 'pyproject.toml'
+            - 'uv.lock'
+            - 'docs/**'
+            - 'mkdocs.yml'
+            - '*.md'
+
   links:
 {%- if use_blacksmith_runners %}
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -42,6 +65,8 @@ jobs:
         args: --no-progress .
 
   quality:
+    needs: changes
+    if: {% raw %}${{ needs.changes.outputs.src == 'true' }}{% endraw %}
 {%- if publish_to_pypi %}
     strategy:
       matrix:
