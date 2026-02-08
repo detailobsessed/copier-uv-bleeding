@@ -27,11 +27,11 @@ for f in pyproject.toml README.md LICENSE CHANGELOG.md CONTRIBUTING.md \
     if [[ -f "$f" ]]; then pass "$f exists"; else fail "$f missing"; fi
 done
 
-# Source package marker (__init__.py in any src/ subpackage)
+# Source package marker (__init__.py required for editable installs)
 if compgen -G "src/*/__init__.py" > /dev/null 2>&1; then
     pass "src/*/__init__.py exists"
 else
-    fail "src/*/__init__.py missing"
+    fail "src/*/__init__.py missing (required for uv sync / editable installs)"
 fi
 
 # Read copier answers for conditional checks
@@ -257,7 +257,7 @@ section "Poe Tasks"
 
 for task in setup lint format typecheck test test-all test-cov check fix \
             docs docs-build prek; do
-    if grep -q "^$task " pyproject.toml || grep -q "^$task = " pyproject.toml; then
+    if grep -q "^$task " pyproject.toml || grep -q "^$task = " pyproject.toml || grep -q "\[tool\.poe\.tasks\.$task\]" pyproject.toml; then
         pass "Poe task: $task"
     else
         fail "Poe task missing: $task"
