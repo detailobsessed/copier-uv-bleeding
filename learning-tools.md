@@ -95,6 +95,32 @@ python-version = "3.14"
 
 ---
 
+## actionlint (GitHub Actions linter)
+
+### Cross-repo reusable workflow limitations
+
+actionlint **cannot** validate permissions of cross-repo reusable workflows. It only checks local YAML syntax. If a reusable workflow requests `id-token: write` but the caller only grants `contents: write`, actionlint won't catch the mismatch. GitHub rejects this at parse time with:
+
+> The nested job 'release' is requesting 'id-token: write', but is only allowed 'id-token: none'
+
+### Script injection detection
+
+actionlint can detect some `${{ }}` expression injection in `run:` steps, but not all cases. Always use the env variable pattern:
+
+```yaml
+# Bad — shell injection risk:
+run: uv sync --group ${{ inputs.dependency-group }}
+
+# Good — safe:
+env:
+  DEP_GROUP: ${{ inputs.dependency-group }}
+run: uv sync --group "$DEP_GROUP"
+```
+
+Safe contexts (not shell): `with:`, `runs-on:`, `if:`
+
+---
+
 ## uv
 
 ### Trusted publishing caveat
