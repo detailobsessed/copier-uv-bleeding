@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.19.1 (2026-02-08)
+
+### Performance Improvements
+
+- Skip CI matrix for workflow-only changes
+  ([#140](https://github.com/detailobsessed/copier-uv-bleeding/pull/140),
+  [`bd24fb9`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bd24fb96b0c61e2e9f1e406f89165bbdaa47484b))
+
+
 ## v0.19.0 (2026-02-08)
 
 ### Features
