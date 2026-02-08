@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.20.1 (2026-02-08)
+
+### Bug Fixes
+
+- CI path filter safety + pin lychee to stable release
+  ([#150](https://github.com/detailobsessed/copier-uv-bleeding/pull/150),
+  [`9b7a7f9`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9b7a7f9d29fbfa6970c9f764bb2f8df70306151c))
+
+
 ## v0.20.0 (2026-02-08)
 
 ### Features
