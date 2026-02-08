@@ -24,6 +24,27 @@ env:
 
 jobs:
 
+  changes:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+    steps:
+    - uses: actions/checkout@v6
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          src:
+            - 'project/**'
+            - 'tests/**'
+            - 'scripts/**'
+            - 'copier.yml'
+            - 'extensions.py'
+            - 'pyproject.toml'
+            - 'uv.lock'
+            - 'docs/**'
+            - '*.md'
+
   links:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
@@ -36,6 +57,8 @@ jobs:
         args: --config .lychee.toml --no-progress .
 
   test-filenames:
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
@@ -44,6 +67,8 @@ jobs:
       run: bash tests/test_filenames.sh
 
   test-funding:
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
@@ -70,6 +95,8 @@ jobs:
       run: bash tests/test_funding.sh
 
   test-licenses:
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
@@ -89,6 +116,8 @@ jobs:
       run: uv run --with jinja2 --with pyyaml --with reuse python tests/test_licenses.py
 
   test-project:
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
     strategy:
       matrix:
         python-version:
