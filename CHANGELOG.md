@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.20.3 (2026-02-08)
+
+### Bug Fixes
+
+- Include tests in ruff lint/format targets for generated projects
+  ([#162](https://github.com/detailobsessed/copier-uv-bleeding/pull/162),
+  [`3c166c2`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3c166c2801428aa2622dd4e802422916f0655a0a))
+
+### Documentation
+
+- Add actionlint section to learning-tools.md
+  ([#160](https://github.com/detailobsessed/copier-uv-bleeding/pull/160),
+  [`1fef98d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1fef98dcfceecd3623a78277cb59d29c8b9025dd))
+
+
 ## v0.20.2 (2026-02-08)
 
 ### Bug Fixes
