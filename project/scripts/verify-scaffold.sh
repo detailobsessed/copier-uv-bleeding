@@ -28,13 +28,7 @@ for f in pyproject.toml README.md LICENSE CHANGELOG.md CONTRIBUTING.md \
 done
 
 # Read copier answers for conditional checks
-project_type=$(grep 'project_type' .copier-answers.yml 2>/dev/null | sed 's/.*: *//' || echo "unknown")
 repo_provider=$(grep 'repository_provider' .copier-answers.yml 2>/dev/null | sed 's/.*: *//' || echo "github.com")
-
-# App entry point (only for app project type)
-if [[ "$project_type" == "app" ]]; then
-    if [[ -f "main.py" ]]; then pass "main.py exists (app entry point)"; else fail "main.py missing"; fi
-fi
 
 # Source package
 pkg_name=$(grep '^name' pyproject.toml | head -1 | sed 's/.*"\(.*\)".*/\1/' | tr '-' '_')
@@ -44,7 +38,6 @@ if [[ -f "src/$pkg_name/py.typed" ]]; then pass "py.typed marker exists"; else f
 
 # Tests
 if [[ -f "tests/__init__.py" ]]; then pass "tests/__init__.py exists"; else fail "tests/__init__.py missing"; fi
-if [[ -f "tests/conftest.py" ]]; then pass "tests/conftest.py exists"; else fail "tests/conftest.py missing"; fi
 
 # Docs
 for f in docs/index.md docs/changelog.md docs/contributing.md docs/license.md \

@@ -1,16 +1,8 @@
-"""{{ project_name }} package.
+"""{{ project_name }}.
 
 {{ project_description }}
 """
 
 from __future__ import annotations
 
-{%- if project_type == 'package' %}
-
-from {{ python_package_import_name }}._internal.cli import app, main
-
-__all__: list[str] = ["app", "main"]
-{%- else %}
-
 __all__: list[str] = []
-{%- endif %}

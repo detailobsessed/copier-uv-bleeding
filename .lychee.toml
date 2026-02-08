@@ -13,6 +13,10 @@ exclude = [
     '^mailto:',
     # Upstream copier-pdm site is dead — historical CHANGELOG reference
     '^https://copier-pdm\.github\.io/',
+    # Placeholder URLs in issue templates
+    '^https://github\.com/username/',
+    # Discussions link may 404 if not enabled
+    'discussions/new\?category=',
 ]
 
 # Exclude local/private addresses

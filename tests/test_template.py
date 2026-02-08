@@ -36,12 +36,16 @@ class TestProjectTypes:
         content = pyproject.read_text()
         assert "[project.scripts]" not in content
 
-    def test_app_type_has_main(self, copier_defaults: dict, project_factory) -> None:
-        """App type should have main.py."""
+    def test_app_type_no_main_py(self, copier_defaults: dict, project_factory) -> None:
+        """App type should NOT generate main.py (users create their own)."""
         project = project_factory(copier_defaults, "app")
+        assert not (project / "main.py").exists()
 
-        main_py = project / "main.py"
-        assert main_py.exists()
+    def test_app_type_no_cli_entry_point(self, copier_defaults: dict, project_factory) -> None:
+        """App type should not have [project.scripts] section."""
+        project = project_factory(copier_defaults, "app")
+        content = (project / "pyproject.toml").read_text()
+        assert "[project.scripts]" not in content
 
 
 class TestCoreFiles:
@@ -648,15 +652,14 @@ class TestTyperOption:
         content = pyproject.read_text()
         assert "typer" not in content
 
-    def test_typer_enabled_uses_typer_in_cli(self, copier_defaults: dict, project_factory) -> None:
-        """Typer enabled should use typer in cli.py."""
-        answers = {**copier_defaults, "use_typer": True}
-        project = project_factory(answers, "package")
-
-        cli_py = project / "src" / "test_project" / "_internal" / "cli.py"
-        content = cli_py.read_text()
-        assert "import typer" in content
-        assert "app = typer.Typer" in content
+    def test_package_type_no_scaffold_code(self, copier_defaults: dict, project_factory) -> None:
+        """Package type should not generate scaffold source files (users create their own)."""
+        project = project_factory(copier_defaults, "package")
+        assert not (project / "src" / "test_project" / "_internal").exists()
+        assert not (project / "src" / "test_project" / "__main__.py").exists()
+        assert not (project / "tests" / "test_cli.py").exists()
+        assert not (project / "tests" / "test_api.py").exists()
+        assert not (project / "tests" / "conftest.py").exists()
 
 
 class TestProjectVisibility:
@@ -898,6 +901,65 @@ class TestProjectVisibility:
 
         content = (project / "pyproject.toml").read_text()
         assert ".github.io" in content
+
+
+class TestSkipIfExists:
+    """Test _skip_if_exists preserves user changes across copier recopy.
+
+    Uses copier recopy to simulate template re-application without needing
+    a version difference. copier recopy is more aggressive than copier update
+    (no 3-way merge), so if _skip_if_exists works here, it works everywhere.
+    """
+
+    def test_recopy_preserves_modified_readme(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """User-modified README.md should not be overwritten (core _skip_if_exists file)."""
+        project = generate_project(tmp_path, copier_defaults)
+
+        readme = project / "README.md"
+        assert readme.exists()
+
+        # User customizes README
+        readme.write_text("# My Project\n\nCustom README content.\n")
+
+        # Re-apply template
+        result = subprocess.run(
+            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--overwrite"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"copier recopy failed: {result.stderr}"
+
+        content = readme.read_text()
+        assert "Custom README content" in content, f"README.md was overwritten by copier recopy. Content:\n{content}"
+
+    def test_recopy_overwrites_non_skipped_files(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """Files NOT in _skip_if_exists should be overwritten by copier recopy.
+
+        __init__.py is a minimal marker managed by the template. User modifications
+        are preserved during copier update (3-way merge) but NOT during copier recopy.
+        """
+        project = generate_project(tmp_path, copier_defaults)
+
+        init_py = project / "src" / "test_project" / "__init__.py"
+        assert init_py.exists()
+
+        # User modifies __init__.py
+        init_py.write_text('"""My package."""\n\nfrom test_project.core import run\n')
+
+        # Re-apply template — recopy overwrites non-skipped files
+        result = subprocess.run(
+            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--overwrite"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"copier recopy failed: {result.stderr}"
+
+        content = init_py.read_text()
+        assert "Test Project" in content, f"__init__.py should be overwritten by recopy. Content:\n{content}"
 
 
 class TestIntegration:
