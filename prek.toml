@@ -83,7 +83,7 @@ rev = "v0.47.0"
 hooks = [{ id = "markdownlint", args = ["--fix"], priority = 1 }]
 
 [[repos]]
-repo = "https://github.com/lycheeverse/lychee.git"
+repo = "https://github.com/lycheeverse/lychee"
 rev = "lychee-v0.22.0"
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1 }]
 
