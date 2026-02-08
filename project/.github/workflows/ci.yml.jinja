@@ -32,6 +32,8 @@ jobs:
 {%- else %}
     runs-on: ubuntu-latest
 {%- endif %}
+    permissions:
+      pull-requests: read
     outputs:
       src: {% raw %}${{ steps.filter.outputs.src }}{% endraw %}
     steps:

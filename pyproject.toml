@@ -157,6 +157,7 @@ prek = "prek run --all-files"
 releases = "gh release list --limit 10"
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
+checks = "gh pr checks --watch"
 watch = "gh run watch"
 
 [tool.coverage.run]
