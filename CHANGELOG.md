@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.20.0 (2026-02-08)
+
+### Features
+
+- Remove scaffold code, add issue templates, add no-commit-to-main hook
+  ([#149](https://github.com/detailobsessed/copier-uv-bleeding/pull/149),
+  [`4655885`](https://github.com/detailobsessed/copier-uv-bleeding/commit/465588509c7ec7b0c3d25e4cbdade29a4cbc13fc))
+
+
 ## v0.19.1 (2026-02-08)
 
 ### Performance Improvements
