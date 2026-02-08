@@ -26,6 +26,8 @@ jobs:
 
   changes:
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    permissions:
+      pull-requests: read
     outputs:
       src: ${{ steps.filter.outputs.src }}
     steps:

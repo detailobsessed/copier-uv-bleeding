@@ -19,6 +19,8 @@ exclude = [
     'discussions/new\?category=',
     # PyPI package URL with Jinja placeholder renders as bare /p/
     '^https://pypi\.org/p/$',
+    # Localhost URLs (e.g. docs preview in CONTRIBUTING.md)
+    '^http://localhost',
 ]
 
 # Exclude local/private addresses
