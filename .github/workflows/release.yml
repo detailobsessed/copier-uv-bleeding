@@ -17,5 +17,6 @@ jobs:
     uses: detailobsessed/ci-components/.github/workflows/semantic-release-uv.yml@main
     with:
       python-version: "3.14"
+      dependency-group: dev
       pypi-publish: "false"
     secrets: inherit
