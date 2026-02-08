@@ -66,7 +66,7 @@ jobs:
 
   quality:
     needs: changes
-    if: {% raw %}${{ needs.changes.outputs.src == 'true' }}{% endraw %}
+    if: {% raw %}${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}{% endraw %}
 {%- if publish_to_pypi %}
     strategy:
       matrix:

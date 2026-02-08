@@ -58,7 +58,7 @@ jobs:
 
   test-filenames:
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
@@ -68,7 +68,7 @@ jobs:
 
   test-funding:
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
@@ -96,7 +96,7 @@ jobs:
 
   test-licenses:
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - name: Checkout
@@ -117,7 +117,7 @@ jobs:
 
   test-project:
     needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
     strategy:
       matrix:
         python-version:
