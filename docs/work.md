@@ -21,19 +21,7 @@ The generated project has this structure:
 ├── 📄 mkdocs.yml ----------------- # docs configuration
 ├── 📄 pyproject.toml ------------- # project metadata, dependencies, tools config, and tasks
 ├── 📄 README.md ------------------ #
-├── 📁 src ------------------------ # the source code directory
-│   └── � your_package ----------- # your package
-│       ├── � _internal ---------- # internal implementation
-│       │   ├── � cli.py --------- # CLI implementation (typer or argparse)
-│       │   └── 📄 debug.py ------- # debug utilities
-│       ├── 📄 __init__.py -------- # re-exports main and app/get_parser
-│       ├── 📄 __main__.py -------- # python -m entry point
-│       └── 📄 py.typed ----------- # PEP 561 marker
-└── 📁 tests ---------------------- # the tests directory
-    ├── 📄 conftest.py ------------ # pytest fixtures
-    ├── 📄 __init__.py ------------ #
-    ├── 📄 test_api.py ------------ # API tests
-    └── 📄 test_cli.py ------------ # CLI tests
+└── 📁 scripts -------------------- # helper scripts (setup, verification)
 ```
 
 ## Environment

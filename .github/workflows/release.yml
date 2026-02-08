@@ -13,22 +13,8 @@ permissions:
 jobs:
   release:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    concurrency: release
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-        fetch-tags: true
-    - name: Setup uv and Python
-      uses: astral-sh/setup-uv@v7.1.5
-      with:
-        python-version: "3.14"
-        enable-cache: true
-    - name: Install dependencies
-      run: uv sync
-    - name: Semantic Release
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: uv run semantic-release version --changelog --push --tag --vcs-release
+    uses: detailobsessed/ci-components/.github/workflows/semantic-release-uv.yml@main
+    with:
+      python-version: "3.14"
+      pypi-publish: "false"
+    secrets: inherit

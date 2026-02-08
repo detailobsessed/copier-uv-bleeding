@@ -237,15 +237,6 @@ At this point, Copier will generate the project in the specified directory:
     create  CODE_OF_CONDUCT.md
     create  CHANGELOG.md
     create  .gitignore
-    create  tests/
-    create  tests/test_cli.py
-    create  tests/conftest.py
-    create  tests/__init__.py
-    create  src/
-    create  src/my_project/
-    create  src/my_project/cli.py
-    create  src/my_project/__main__.py
-    create  src/my_project/__init__.py
     create  scripts/
     create  scripts/setup.sh
     create  scripts/post_generation.py
