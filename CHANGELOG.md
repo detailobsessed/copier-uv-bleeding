@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.19.0 (2026-02-08)
+
+### Features
+
+- Add sync-with-uv hook to generated projects
+  ([#138](https://github.com/detailobsessed/copier-uv-bleeding/pull/138),
+  [`9731ba1`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9731ba12471684f542aa1046f1c111f13b59e718))
+
+
 ## v0.18.2 (2026-02-07)
 
 ### Bug Fixes
