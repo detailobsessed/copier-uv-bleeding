@@ -15,3 +15,4 @@ htmlcov/
 
 # Stakpak session files
 .stakpak/session*
+.DS_Store
