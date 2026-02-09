@@ -21,6 +21,7 @@ _jinja_extensions:
 _skip_if_exists:
 - CHANGELOG.md
 - README.md
+- "src/{{ python_package_import_name }}/__init__.py"
 
 _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
