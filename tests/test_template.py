@@ -284,6 +284,42 @@ class TestCIWorkflows:
         content = release_yml.read_text()
         assert "name: pypi" not in content
 
+    def test_pypi_false_no_readme_badge(self, copier_defaults: dict, project_factory) -> None:
+        """When publish_to_pypi is false, README should not have PyPI badge (#165)."""
+        answers = {**copier_defaults, "publish_to_pypi": False}
+        project = project_factory(answers)
+
+        readme = project / "README.md"
+        content = readme.read_text()
+        assert "pypi.org/project/" not in content
+
+    def test_pypi_true_has_readme_badge(self, copier_defaults: dict, project_factory) -> None:
+        """When publish_to_pypi is true, README should have PyPI badge."""
+        answers = {**copier_defaults, "publish_to_pypi": True}
+        project = project_factory(answers)
+
+        readme = project / "README.md"
+        content = readme.read_text()
+        assert "pypi.org/project/" in content
+
+    def test_pypi_false_no_mkdocs_social_link(self, copier_defaults: dict, project_factory) -> None:
+        """When publish_to_pypi is false, mkdocs.yml should not have PyPI social link (#165)."""
+        answers = {**copier_defaults, "publish_to_pypi": False}
+        project = project_factory(answers)
+
+        mkdocs = project / "mkdocs.yml"
+        content = mkdocs.read_text()
+        assert "pypi.org/project/" not in content
+
+    def test_pypi_true_has_mkdocs_social_link(self, copier_defaults: dict, project_factory) -> None:
+        """When publish_to_pypi is true, mkdocs.yml should have PyPI social link."""
+        answers = {**copier_defaults, "publish_to_pypi": True}
+        project = project_factory(answers)
+
+        mkdocs = project / "mkdocs.yml"
+        content = mkdocs.read_text()
+        assert "pypi.org/project/" in content
+
 
 class TestCascadingBooleanDefaults:
     """Test that boolean question defaults cascade correctly when parent questions are disabled.
@@ -622,6 +658,24 @@ class TestGitLabSupport:
         content = pyproject.read_text()
         assert "gitlab.com" in content
         assert "gitlab.io" in content
+
+    def test_gitlab_edit_uri_has_dash_prefix(self, copier_defaults: dict, project_factory) -> None:
+        """GitLab projects should have -/edit/ prefix in edit_uri (#164)."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = project_factory(answers)
+
+        mkdocs = project / "mkdocs.yml"
+        content = mkdocs.read_text()
+        assert "-/edit/main/docs/" in content
+
+    def test_github_edit_uri_no_dash_prefix(self, copier_defaults: dict, project_factory) -> None:
+        """GitHub projects should have plain edit/ in edit_uri (#164)."""
+        project = project_factory(copier_defaults)
+
+        mkdocs = project / "mkdocs.yml"
+        content = mkdocs.read_text()
+        assert "edit/main/docs/" in content
+        assert "-/edit/" not in content
 
     def test_github_still_has_github_directory(self, copier_defaults: dict, project_factory) -> None:
         """GitHub projects should still have .github/ directory (positive case)."""

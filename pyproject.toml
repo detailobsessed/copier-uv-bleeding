@@ -29,8 +29,12 @@ dev = [
 default-groups = ["dev"]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+filterwarnings = [
+    "error",
 ]
 
 [tool.semantic_release]
@@ -154,18 +158,29 @@ lint-templates = "python scripts/lint_templates.py"
 prek = "prek run --all-files"
 
 # GitHub utilities
+# actions-up: https://github.com/azat-io/actions-up
+actionsup = "actions-up"
 releases = "gh release list --limit 10"
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
 checks = "gh pr checks --watch"
 watch = "gh run watch"
 
+[tool.ty.environment]
+python-version = "3.14"
+
 [tool.coverage.run]
 branch = true
 parallel = true
+source = ["tests/"]
 
 [tool.coverage.report]
+precision = 2
+omit = ["tests/__init__.py"]
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
 ]
+
+[tool.coverage.json]
+output = "htmlcov/coverage.json"

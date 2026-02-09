@@ -173,7 +173,6 @@ markers = [
 ]
 filterwarnings = [
     "error",
-    "error::EncodingWarning",
 ]
 
 [tool.coverage.run]
@@ -231,6 +230,8 @@ tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 {%- if repository_provider == "github.com" %}
 
 # GitHub utilities
+# actions-up: https://github.com/azat-io/actions-up
+actionsup = "actions-up"
 releases = "gh release list --limit 10"
 runs = "gh run list --limit 10"
 checks = "gh pr checks --watch"
