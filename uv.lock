@@ -169,7 +169,7 @@ wheels = [
 
 [[package]]
 name = "copier-uv-bleeding"
-version = "0.23.0"
+version = "0.24.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]

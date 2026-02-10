@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.24.0 (2026-02-10)
+
+### Features
+
+- Add pytest-testmon, improve post-apply experience
+  ([#187](https://github.com/detailobsessed/copier-uv-bleeding/pull/187),
+  [`979ffcd`](https://github.com/detailobsessed/copier-uv-bleeding/commit/979ffcd9104f948590f6abbd7b4718963f3bed9a))
+
+
 ## v0.23.0 (2026-02-10)
 
 ### Features
