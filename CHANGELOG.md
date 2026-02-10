@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.23.0 (2026-02-10)
+
+### Features
+
+- Split README into user-owned starter + template-managed docs
+  ([#182](https://github.com/detailobsessed/copier-uv-bleeding/pull/182),
+  [`55e58aa`](https://github.com/detailobsessed/copier-uv-bleeding/commit/55e58aaa24979dbc785d95735994bc5a2065b70a))
+
+
 ## v0.22.1 (2026-02-10)
 
 ### Bug Fixes
