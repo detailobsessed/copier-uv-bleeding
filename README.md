@@ -99,6 +99,19 @@ To update the fork later, re-run the install command with `--force`.
 The template automatically runs `uv sync` and `prek install` after scaffolding.
 Create your source files in `src/<package_name>/` and tests in `tests/`.
 
+## Automatic Template Update Checking
+
+Generated projects include a **post-checkout git hook** that automatically checks for template updates. When a newer version is available, you'll see a notification after `git checkout` / `git pull` / `git rebase`.
+
+- **Default check interval:** 15 minutes (`COPIER_CHECK_INTERVAL=900` in `.envrc`)
+- **Manual check:** `poe check-template` (bypasses cooldown)
+- **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge)
+
+Generated projects ship two README files:
+
+- **`README.md`** — your project's landing page (badges, description). Owned by you, never overwritten by template updates.
+- **`README_TEMPLATE.md`** — template documentation (installation, update commands, copyable badge block). Kept up to date on every `copier update`.
+
 ## Available Tasks
 
 All projects come with pre-configured [poethepoet](https://github.com/nat-n/poethepoet) tasks:
@@ -109,12 +122,18 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe lint` | Check code with ruff |
 | `poe format` | Format code with ruff |
 | `poe typecheck` | Type check with ty |
-| `poe check` | Run lint + typecheck |
+| `poe check` | Run lint + typecheck (parallel) |
 | `poe fix` | Auto-fix lint issues and format |
 | `poe test` | Run fast tests (skip slow) |
 | `poe test-all` | Run all tests |
-| `poe test-cov` | Run tests with coverage |
+| `poe test-cov` | Run tests with coverage report |
 | `poe docs` | Serve docs locally |
+| `poe docs-build` | Build docs with strict mode |
 | `poe prek` | Run all pre-commit hooks |
+| `poe check-template` | Check for template updates (manual) |
+| `poe update-template` | Apply template updates via copier |
+| `poe tags` | List git tags by version |
 | `poe runs` | List recent CI runs |
+| `poe checks` | Watch PR checks |
 | `poe watch` | Watch current CI run |
+| `poe releases` | List recent GitHub releases |

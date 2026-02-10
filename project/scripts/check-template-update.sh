@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Check if a newer version of the copier template is available.
 # Runs as a post-checkout hook — informational only, never blocks.
-# Set COPIER_CHECK_INTERVAL=900 in .envrc for 15-min checks (default: 86400 = 24h).
+# Override COPIER_CHECK_INTERVAL in .envrc (default: 900 = 15 min, script fallback: 86400 = 24h).
 set -euo pipefail
 
 # Skip file-level restores (arg 3 = 0); runs on branch switch, pull, rebase, clone

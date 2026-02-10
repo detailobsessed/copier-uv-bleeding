@@ -1,5 +1,13 @@
-# {{ project_name }}
+# {{ project_name }} — Template Documentation
 
+This file is managed by [copier-uv-bleeding](https://github.com/detailobsessed/copier-uv-bleeding)
+and kept up to date on every `copier update`. Your project README lives in `README.md`.
+
+## Badges
+
+Copy these into your `README.md` to show project status on GitHub:
+
+```markdown
 {% if repository_provider == "github.com" -%}
 [![ci](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/workflows/ci/badge.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Aci)
 [![release](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/workflows/release/badge.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Arelease)
@@ -18,5 +26,34 @@
 {%- if repository_provider == "github.com" %}
 [![codecov](https://codecov.io/gh/{{ repository_namespace }}/{{ repository_name }}/branch/main/graph/badge.svg)](https://codecov.io/gh/{{ repository_namespace }}/{{ repository_name }})
 {%- endif %}
+```
 
-{{ project_description }}
+## Installation
+
+```bash
+pip install {{ python_package_distribution_name }}
+```
+
+{% if python_package_command_line_name -%}
+With [`uv`](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install {{ python_package_distribution_name }}
+```
+{%- endif %}
+
+## Template Updates
+
+This project was generated with [copier-uv-bleeding](https://github.com/detailobsessed/copier-uv-bleeding).
+
+To pull the latest template changes (smart 3-way merge that respects your project changes):
+
+```bash
+copier update --trust .
+```
+
+To re-apply the template from scratch (ignores your project diff):
+
+```bash
+copier recopy --trust --overwrite .
+```
