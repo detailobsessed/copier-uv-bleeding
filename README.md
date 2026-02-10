@@ -125,6 +125,7 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe check` | Run lint + typecheck (parallel) |
 | `poe fix` | Auto-fix lint issues and format |
 | `poe test` | Run fast tests (skip slow) |
+| `poe test-affected` | Run only tests affected by changes ([testmon](https://github.com/tarpas/pytest-testmon)) |
 | `poe test-all` | Run all tests |
 | `poe test-cov` | Run tests with coverage report |
 | `poe docs` | Serve docs locally |
