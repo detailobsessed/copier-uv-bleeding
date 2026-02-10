@@ -2,3 +2,6 @@
 # Requires: https://github.com/direnv/direnv
 export VIRTUAL_ENV="$(pwd)/.venv"
 export PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# How often the post-checkout hook checks for template updates (seconds)
+# export COPIER_CHECK_INTERVAL=86400  # default: 24h
