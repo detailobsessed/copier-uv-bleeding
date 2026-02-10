@@ -225,6 +225,9 @@ prek = "prek run --all-files"
 verify-scaffold = "bash scripts/verify-scaffold.sh"
 {%- endif %}
 
+# Template utilities
+update-template = "copier update --trust . --skip-answered"
+
 # Git utilities
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 {%- if repository_provider == "github.com" %}

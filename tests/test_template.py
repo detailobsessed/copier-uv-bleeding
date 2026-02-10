@@ -551,6 +551,116 @@ class TestTemplateCleanup:
         assert "gh run watch" in content
 
 
+class TestTemplateUpdateCheck:
+    """Test template update check hook and related tasks (#161)."""
+
+    def test_check_template_update_script_exists(self, copier_defaults: dict, project_factory) -> None:
+        """Rendered projects should have check-template-update.sh script."""
+        project = project_factory(copier_defaults)
+
+        script = project / "scripts" / "check-template-update.sh"
+        assert script.exists()
+        content = script.read_text()
+        assert "copier-answers.yml" in content
+        assert "curl" in content
+
+    def test_post_merge_in_hook_types(self, copier_defaults: dict, project_factory) -> None:
+        """prek.toml should install post-merge hooks."""
+        project = project_factory(copier_defaults)
+
+        config = project / "prek.toml"
+        with config.open("rb") as f:
+            data = tomllib.load(f)
+        assert "post-merge" in data["default_install_hook_types"]
+
+    def test_check_template_update_hook_exists(self, copier_defaults: dict, project_factory) -> None:
+        """prek.toml should have check-template-update hook."""
+        project = project_factory(copier_defaults)
+
+        config = project / "prek.toml"
+        content = config.read_text()
+        assert "check-template-update" in content
+
+    def test_update_template_poe_task(self, copier_defaults: dict, project_factory) -> None:
+        """Rendered projects should have update-template poe task."""
+        project = project_factory(copier_defaults)
+
+        pyproject = project / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "update-template" in content
+        assert "copier update" in content
+
+    def test_script_exits_cleanly_without_answers_file(self, copier_defaults: dict, project_factory) -> None:
+        """Script should exit 0 when .copier-answers.yml is missing."""
+        project = project_factory(copier_defaults)
+        script = project / "scripts" / "check-template-update.sh"
+        # Remove answers file to simulate missing
+        (project / ".copier-answers.yml").unlink(missing_ok=True)
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True)
+        assert result.returncode == 0
+        assert result.stdout == ""
+
+    def test_script_exits_cleanly_for_gitlab_source(self, copier_defaults: dict, project_factory) -> None:
+        """Script should exit 0 silently for non-GitHub templates."""
+        project = project_factory(copier_defaults)
+        answers = project / ".copier-answers.yml"
+        answers.write_text("_commit: 1.0.0\n_src_path: https://gitlab.com/org/repo\n")
+        script = project / "scripts" / "check-template-update.sh"
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True)
+        assert result.returncode == 0
+        assert result.stdout == ""
+
+    def test_script_handles_gh_shorthand(self, copier_defaults: dict, project_factory) -> None:
+        """Script should accept gh: shorthand and attempt API call."""
+        project = project_factory(copier_defaults)
+        answers = project / ".copier-answers.yml"
+        answers.write_text("_commit: 0.0.0\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
+        script = project / "scripts" / "check-template-update.sh"
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True)
+        assert result.returncode == 0
+        # Skip assertion if API unavailable (rate-limited, offline)
+        if not result.stdout.strip():
+            return
+        assert "Template update available" in result.stdout
+
+    def test_script_handles_https_github_url(self, copier_defaults: dict, project_factory) -> None:
+        """Script should accept full https://github.com/ URLs."""
+        project = project_factory(copier_defaults)
+        answers = project / ".copier-answers.yml"
+        answers.write_text("_commit: 0.0.0\n_src_path: https://github.com/detailobsessed/copier-uv-bleeding\n")
+        script = project / "scripts" / "check-template-update.sh"
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True)
+        assert result.returncode == 0
+        # Skip assertion if API unavailable (rate-limited, offline)
+        if not result.stdout.strip():
+            return
+        assert "Template update available" in result.stdout
+
+    def test_script_silent_when_up_to_date(self, copier_defaults: dict, project_factory) -> None:
+        """Script should produce no output when local version matches latest."""
+        project = project_factory(copier_defaults)
+        # First, get the actual latest version
+        curl_cmd = (
+            "curl -s --connect-timeout 3 --max-time 5 "
+            '"https://api.github.com/repos/detailobsessed/copier-uv-bleeding/releases/latest" '
+            '| grep \'"tag_name"\' | sed \'s/.*"tag_name": *"//;s/".*//\''
+        )
+        result = subprocess.run(
+            ["bash", "-c", curl_cmd],
+            capture_output=True,
+            text=True,
+        )
+        latest = result.stdout.strip()
+        if not latest:
+            return  # Skip if API unavailable
+        answers = project / ".copier-answers.yml"
+        answers.write_text(f"_commit: {latest}\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
+        script = project / "scripts" / "check-template-update.sh"
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True)
+        assert result.returncode == 0
+        assert "Template update available" not in result.stdout
+
+
 class TestGitLabSupport:
     """Test GitLab repository provider support.
 
