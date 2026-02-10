@@ -20,7 +20,7 @@ section "Project Structure"
 # ---------------------------------------------------------------------------
 
 # Core files
-for f in pyproject.toml README.md LICENSE CHANGELOG.md CONTRIBUTING.md \
+for f in pyproject.toml README.md README_TEMPLATE.md LICENSE CHANGELOG.md CONTRIBUTING.md \
          CODE_OF_CONDUCT.md SECURITY.md .gitignore .envrc .env.example \
          .copier-answers.yml prek.toml .editorconfig \
          .markdownlint.yaml .lychee.toml mkdocs.yml; do
@@ -77,6 +77,21 @@ if grep -q 'detect-private-key' prek.toml; then
 else
     fail "detect-private-key hook missing"
 fi
+
+# Drift check: env vars used by template scripts must be documented
+# shellcheck disable=SC2043  # single-item loop — ready for more vars
+for var in COPIER_CHECK_INTERVAL; do
+    if grep -q "$var" .envrc 2>/dev/null; then
+        pass "$var documented in .envrc"
+    else
+        fail "$var used by template scripts but not documented in .envrc"
+    fi
+    if grep -q "$var" .env.example 2>/dev/null; then
+        pass "$var documented in .env.example"
+    else
+        fail "$var used by template scripts but not documented in .env.example"
+    fi
+done
 
 if grep -q 'gitleaks' prek.toml; then
     pass "gitleaks hook present"
@@ -274,10 +289,10 @@ if grep -q '\[!\[documentation\]' README.md; then pass "Docs badge present"; els
 if grep -qi 'codecov\|coveralls\|coverage.*badge\|coverage.*img' README.md; then pass "Coverage badge present"; else fail "Coverage badge missing in README"; fi
 
 # Check for the known README formatting bug (#83)
-if grep -q '```##' README.md; then
-    fail "README: code fence merged with heading (no blank line) — copier-uv-bleeding#83"
+if grep -q '```##' README_TEMPLATE.md; then
+    fail "README_TEMPLATE: code fence merged with heading (no blank line) — copier-uv-bleeding#83"
 else
-    pass "README: no code fence / heading collision"
+    pass "README_TEMPLATE: no code fence / heading collision"
 fi
 
 # ---------------------------------------------------------------------------
@@ -301,7 +316,7 @@ section "Markdown Lint"
 # ---------------------------------------------------------------------------
 
 if command -v markdownlint &>/dev/null; then
-    md_errors=$(markdownlint README.md CONTRIBUTING.md CHANGELOG.md 2>&1 || true)
+    md_errors=$(markdownlint README.md README_TEMPLATE.md CONTRIBUTING.md CHANGELOG.md 2>&1 || true)
     if [[ -z "$md_errors" ]]; then
         pass "Core .md files pass markdownlint"
     else
