@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.24.1 (2026-02-10)
+
+### Bug Fixes
+
+- Coverage inflation, GitLab badge check, release tag format
+  ([#189](https://github.com/detailobsessed/copier-uv-bleeding/pull/189),
+  [`e6228ab`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e6228aba25c9de249b44210459676a4bd524bf19))
+
+
 ## v0.24.0 (2026-02-10)
 
 ### Features
