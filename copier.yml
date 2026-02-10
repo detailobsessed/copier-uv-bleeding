@@ -19,6 +19,7 @@ _jinja_extensions:
 # copier performs a 3-way merge that preserves user customizations.
 # Only truly user-owned files (README, CHANGELOG, source code) should be skipped.
 _skip_if_exists:
+- .envrc
 - CHANGELOG.md
 - README.md
 - "src/{{ python_package_import_name }}/__init__.py"
