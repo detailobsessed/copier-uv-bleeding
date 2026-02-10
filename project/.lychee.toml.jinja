@@ -22,11 +22,12 @@ exclude_all_private = true
 include_mail = false
 
 # Accept common status codes
+# 502: GitHub commit/release URLs transiently return Bad Gateway
 {%- if project_visibility == 'internal' %}
 # 401 included for internal projects with auth-gated URLs
-accept = [200, 204, 301, 302, 401, 403, 429]
+accept = [200, 204, 301, 302, 401, 403, 429, 502]
 {%- else %}
-accept = [200, 204, 301, 302, 403, 429]
+accept = [200, 204, 301, 302, 403, 429, 502]
 {%- endif %}
 
 # Timeout per request
