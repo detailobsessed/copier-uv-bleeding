@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.21.0 (2026-02-10)
+
+### Features
+
+- Add post-merge hook to check for template updates
+  ([#171](https://github.com/detailobsessed/copier-uv-bleeding/pull/171),
+  [`7349eb7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/7349eb744067c5dac93efdf737ea9181858bb71b))
+
+
 ## v0.20.4 (2026-02-10)
 
 ### Bug Fixes
