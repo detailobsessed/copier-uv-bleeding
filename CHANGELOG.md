@@ -14,6 +14,23 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.20.4 (2026-02-10)
+
+### Bug Fixes
+
+- Gate PyPI links on publish_to_pypi, fix GitLab edit_uri, skip __init__.py on update, exclude
+  overrides from lychee ([#169](https://github.com/detailobsessed/copier-uv-bleeding/pull/169),
+  [`3170624`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3170624c8d7bd589439214fc3c68a0ccf4cf89bd))
+
+- Prevent race condition in pypi-publish by checking out release tag
+  ([#163](https://github.com/detailobsessed/copier-uv-bleeding/pull/163),
+  [`ff4c10f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/ff4c10f0bcbbe5d13e1e0b2ae290a08808a3bf00))
+
+- Trim default_install_hook_types to only hooks actually used
+  ([#168](https://github.com/detailobsessed/copier-uv-bleeding/pull/168),
+  [`64426d4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/64426d477e76d2c46a6eb618ae6a042f55b2ed87))
+
+
 ## v0.20.3 (2026-02-08)
 
 ### Bug Fixes
