@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.22.0 (2026-02-10)
+
+### Features
+
+- Adopt poethepoet 0.38-0.41 features — parallel check task
+  ([#174](https://github.com/detailobsessed/copier-uv-bleeding/pull/174),
+  [`347c903`](https://github.com/detailobsessed/copier-uv-bleeding/commit/347c903e712bbffae35d3cf4a307a82c43d6c0f1))
+
+
 ## v0.21.0 (2026-02-10)
 
 ### Features
