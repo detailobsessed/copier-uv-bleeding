@@ -28,7 +28,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#160](https://github.com/detailobsessed/copier-uv-bleeding/pull/160),
   [`1fef98d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1fef98dcfceecd3623a78277cb59d29c8b9025dd))
 
-
 ## v0.20.2 (2026-02-08)
 
 ### Bug Fixes
@@ -53,7 +52,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#159](https://github.com/detailobsessed/copier-uv-bleeding/pull/159),
   [`49c3516`](https://github.com/detailobsessed/copier-uv-bleeding/commit/49c3516888fca11278206a9f7b8a107f301788e1))
 
-
 ## v0.20.1 (2026-02-08)
 
 ### Bug Fixes
@@ -61,7 +59,6 @@ See the original repository for historical changes before version 2.0.0.
 - CI path filter safety + pin lychee to stable release
   ([#150](https://github.com/detailobsessed/copier-uv-bleeding/pull/150),
   [`9b7a7f9`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9b7a7f9d29fbfa6970c9f764bb2f8df70306151c))
-
 
 ## v0.20.0 (2026-02-08)
 
@@ -71,7 +68,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#149](https://github.com/detailobsessed/copier-uv-bleeding/pull/149),
   [`4655885`](https://github.com/detailobsessed/copier-uv-bleeding/commit/465588509c7ec7b0c3d25e4cbdade29a4cbc13fc))
 
-
 ## v0.19.1 (2026-02-08)
 
 ### Performance Improvements
@@ -79,7 +75,6 @@ See the original repository for historical changes before version 2.0.0.
 - Skip CI matrix for workflow-only changes
   ([#140](https://github.com/detailobsessed/copier-uv-bleeding/pull/140),
   [`bd24fb9`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bd24fb96b0c61e2e9f1e406f89165bbdaa47484b))
-
 
 ## v0.19.0 (2026-02-08)
 
@@ -89,7 +84,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#138](https://github.com/detailobsessed/copier-uv-bleeding/pull/138),
   [`9731ba1`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9731ba12471684f542aa1046f1c111f13b59e718))
 
-
 ## v0.18.2 (2026-02-07)
 
 ### Bug Fixes
@@ -98,7 +92,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#137](https://github.com/detailobsessed/copier-uv-bleeding/pull/137),
   [`e87343e`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e87343e23ee93ffcfc0f4f5365c80b6f7ffd2831))
 
-
 ## v0.18.1 (2026-02-07)
 
 ### Performance Improvements
@@ -106,7 +99,6 @@ See the original repository for historical changes before version 2.0.0.
 - Speed up test suite with fixture caching and xdist
   ([#136](https://github.com/detailobsessed/copier-uv-bleeding/pull/136),
   [`bec58cf`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bec58cfe05a9a0ba7e2d4160a87cc1e112a2e608))
-
 
 ## v0.18.0 (2026-02-07)
 
@@ -126,7 +118,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#133](https://github.com/detailobsessed/copier-uv-bleeding/pull/133),
   [`4edbf8a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4edbf8aa0ea8b72048d4074fa87b656546279928))
 
-
 ## v0.17.0 (2026-02-07)
 
 ### Features
@@ -134,7 +125,6 @@ See the original repository for historical changes before version 2.0.0.
 - Add project_visibility question to gate open-source scaffolding
   ([#124](https://github.com/detailobsessed/copier-uv-bleeding/pull/124),
   [`1dc3b69`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1dc3b697cc2daeacef888c2ce1888fd6a2c011b9))
-
 
 ## v0.16.6 (2026-02-07)
 
@@ -144,7 +134,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#123](https://github.com/detailobsessed/copier-uv-bleeding/pull/123),
   [`dc9147a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/dc9147a3d6b136eaa8ea8caba96bf146e7d712d8))
 
-
 ## v0.16.5 (2026-02-07)
 
 ### Bug Fixes
@@ -153,7 +142,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#122](https://github.com/detailobsessed/copier-uv-bleeding/pull/122),
   [`176896b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/176896bcb3498d3521f847e40c7632c47d9cd446))
 
-
 ## v0.16.4 (2026-02-07)
 
 ### Bug Fixes
@@ -161,7 +149,6 @@ See the original repository for historical changes before version 2.0.0.
 - Exclude copier-update.yml when use_ci is false
   ([#121](https://github.com/detailobsessed/copier-uv-bleeding/pull/121),
   [`98b6382`](https://github.com/detailobsessed/copier-uv-bleeding/commit/98b638203e155fae719f4f9e2f5c8d54ee7043dd))
-
 
 ## v0.16.3 (2026-02-07)
 
@@ -177,7 +164,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#119](https://github.com/detailobsessed/copier-uv-bleeding/pull/119),
   [`abca985`](https://github.com/detailobsessed/copier-uv-bleeding/commit/abca9857e748dae1afd3fb6fedcd28ba133e1dee))
 
-
 ## v0.16.2 (2026-02-07)
 
 ### Bug Fixes
@@ -190,7 +176,6 @@ See the original repository for historical changes before version 2.0.0.
 
 - Migrate beads to tk for local issue tracking
   ([`49c51a4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/49c51a4b915b3b7e4e9c90c826ca7a3c0f730bc7))
-
 
 ## v0.16.1 (2026-02-06)
 
@@ -211,7 +196,6 @@ See the original repository for historical changes before version 2.0.0.
 - Remove is_existing_project question — redundant with _skip_if_exists
   ([#111](https://github.com/detailobsessed/copier-uv-bleeding/pull/111),
   [`4032131`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4032131b408b93073c233acd36131978597de69b))
-
 
 ## [1.11.2](https://github.com/pawamoy/copier-uv/releases/tag/1.11.2) - 2025-11-20
 

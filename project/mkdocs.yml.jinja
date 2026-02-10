@@ -12,7 +12,11 @@ watch: [mkdocs.yml, README.md,{% if project_visibility == 'public' %} CONTRIBUTI
 {%- if project_visibility == 'public' %}
 copyright: Copyright &copy; {{ copyright_date }} {{ copyright_holder }}
 {%- endif %}
+{%- if repository_provider == 'gitlab.com' %}
+edit_uri: -/edit/main/docs/
+{%- else %}
 edit_uri: edit/main/docs/
+{%- endif %}
 
 validation:
   omitted_files: warn
@@ -153,8 +157,10 @@ extra:
   social:
   - icon: fontawesome/brands/{{ repository_provider.rsplit('.', 1)[0] }}
     link: https://{{ repository_host }}/{{ author_username }}
+{%- if publish_to_pypi %}
   - icon: fontawesome/brands/python
     link: https://pypi.org/project/{{ python_package_distribution_name }}/
+{%- endif %}
   analytics:
     feedback:
       title: Was this page helpful?

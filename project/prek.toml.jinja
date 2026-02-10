@@ -68,7 +68,7 @@ hooks = [{ id = "markdownlint", args = ["--fix"], priority = 1 }]
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
 rev = "lychee-v0.22.0"  # pinned: 'nightly' tag is mutable, update manually
-hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1 }]
+hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
 
 [[repos]]
 repo = "local"

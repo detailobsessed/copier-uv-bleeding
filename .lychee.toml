@@ -2,7 +2,7 @@
 # https://github.com/lycheeverse/lychee
 
 # Don't check the config file itself (regex patterns get parsed as URLs)
-exclude_path = [".lychee.toml"]
+exclude_path = [".lychee.toml", "project/docs/"]
 
 # Exclude placeholder and example URLs in templates
 exclude = [
@@ -37,6 +37,3 @@ timeout = 30
 
 # Max concurrent requests
 max_concurrency = 16
-
-# Don't show progress bar (cleaner CI output)
-no_progress = true
