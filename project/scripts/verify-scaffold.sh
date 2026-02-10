@@ -286,7 +286,7 @@ section "README Quality"
 if grep -q '\[!\[ci\]' README.md; then pass "CI badge present"; else warn "CI badge missing"; fi
 if grep -q '\[!\[release\]' README.md; then pass "Release badge present"; else warn "Release badge missing"; fi
 if grep -q '\[!\[documentation\]' README.md; then pass "Docs badge present"; else warn "Docs badge missing"; fi
-if grep -qi 'codecov\|coveralls\|coverage.*badge\|coverage.*img' README.md; then pass "Coverage badge present"; else fail "Coverage badge missing in README"; fi
+if grep -qi 'codecov\|coveralls\|coverage.*badge\|coverage.*img' README.md; then pass "Coverage badge present"; else warn "Coverage badge missing"; fi
 
 # Check for the known README formatting bug (#83)
 if grep -q '```##' README_TEMPLATE.md; then

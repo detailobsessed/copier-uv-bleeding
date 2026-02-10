@@ -38,7 +38,7 @@ jobs:
     - name: Checkout release tag
       uses: actions/checkout@v6
       with:
-        ref: {% raw %}${{ needs.release.outputs.version }}{% endraw %}
+        ref: {% raw %}${{ needs.release.outputs.tag }}{% endraw %}
     - name: Setup uv
       uses: astral-sh/setup-uv@v7
       with:

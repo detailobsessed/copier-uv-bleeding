@@ -168,7 +168,7 @@ docstring-code-line-length = 100
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --cov"
+addopts = "-v"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
@@ -179,7 +179,7 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 parallel = true
-source = ["src/", "tests/"]
+source = ["src/"]
 
 [tool.coverage.report]
 precision = 2
@@ -203,9 +203,9 @@ typecheck = "ty check ."
 
 # Testing
 test = "pytest -m 'not slow'"
-test-affected = "pytest --testmon --no-cov"
+test-affected = "pytest --testmon"
 test-all = "pytest"
-test-cov = "pytest --cov=src/{{ python_package_import_name }} --cov-report=term-missing --cov-report=html"
+test-cov = "pytest --cov --cov-report=term-missing --cov-report=html"
 
 # Combined tasks
 check.parallel = ["lint", "typecheck"]
