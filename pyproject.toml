@@ -137,7 +137,8 @@ setup = "uv sync"
 format = "ruff format ."
 lint = "ruff check ."
 typecheck = "ty check ."
-check = ["lint", "typecheck"]
+check.parallel = ["lint", "typecheck"]
+check.ignore_fail = "return_non_zero"
 fix = ["lint --fix", "format"]
 
 # Testing

@@ -257,7 +257,7 @@ section "Poe Tasks"
 
 for task in setup lint format typecheck test test-all test-cov check fix \
             docs docs-build prek; do
-    if grep -q "^$task " pyproject.toml || grep -q "^$task = " pyproject.toml || grep -q "\[tool\.poe\.tasks\.$task\]" pyproject.toml; then
+    if grep -q "^$task " pyproject.toml || grep -q "^$task = " pyproject.toml || grep -q "^$task\." pyproject.toml || grep -q "\[tool\.poe\.tasks\.$task\]" pyproject.toml; then
         pass "Poe task: $task"
     else
         fail "Poe task missing: $task"

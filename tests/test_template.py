@@ -215,8 +215,8 @@ class TestCIWorkflows:
         # Verify each task exists in pyproject.toml
         for task in poe_tasks:
             assert "[tool.poe.tasks]" in pyproject_content, "pyproject.toml should have poe tasks"
-            # Check task is defined (either as string or table)
-            assert f"{task} = " in pyproject_content or f"{task} = [" in pyproject_content, (
+            # Check task is defined (as string, array, or dotted table like check.parallel)
+            assert f"{task} = " in pyproject_content or f"{task} = [" in pyproject_content or f"{task}." in pyproject_content, (
                 f"poe task '{task}' referenced in CI but not defined in pyproject.toml"
             )
 
