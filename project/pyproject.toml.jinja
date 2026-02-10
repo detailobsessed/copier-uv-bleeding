@@ -78,6 +78,7 @@ ci = [
 ]
 local = [
     "prek>=0.3.1",
+    "pytest-testmon>=2.2",
 ]
 docs = [
     "markdown-callouts>=0.4",
@@ -202,6 +203,7 @@ typecheck = "ty check ."
 
 # Testing
 test = "pytest -m 'not slow'"
+test-affected = "pytest --testmon --no-cov"
 test-all = "pytest"
 test-cov = "pytest --cov=src/{{ python_package_import_name }} --cov-report=term-missing --cov-report=html"
 
