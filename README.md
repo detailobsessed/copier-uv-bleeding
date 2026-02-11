@@ -96,7 +96,7 @@ copier adopt --trust --conflict inline https://github.com/detailobsessed/copier-
 
 To update the fork later, re-run the install command with `--force`.
 
-The template automatically runs `uv sync` and `prek install` after scaffolding.
+The template automatically runs `uv sync --upgrade` and `prek install` after scaffolding.
 Create your source files in `src/<package_name>/` and tests in `tests/`.
 
 ## Automatic Template Update Checking

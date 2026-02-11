@@ -223,7 +223,7 @@ include_template_dev_scripts:
 
 # TASKS --------------------------------
 _tasks:
-  - "uv sync"
+  - "uv sync --upgrade"
   - "test -d .git && uv run prek install || true"
   - "test -d .git && uv run prek autoupdate || true"
   - "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge && echo '✓ Enabled delete-branch-on-merge' || true"

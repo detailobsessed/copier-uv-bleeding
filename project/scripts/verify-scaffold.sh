@@ -270,7 +270,7 @@ if grep -q 'git-revision-date' mkdocs.yml; then pass "Git revision date plugin";
 section "Poe Tasks"
 # ---------------------------------------------------------------------------
 
-for task in setup lint format typecheck test test-all test-cov check fix \
+for task in setup lint format typecheck test test-affected test-all test-cov check fix \
             docs docs-build prek check-template update-template; do
     if grep -q "^$task " pyproject.toml || grep -q "^$task = " pyproject.toml || grep -q "^$task\." pyproject.toml || grep -q "\[tool\.poe\.tasks\.$task\]" pyproject.toml; then
         pass "Poe task: $task"

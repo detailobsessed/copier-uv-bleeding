@@ -1096,6 +1096,7 @@ class TestSkipIfExists:
     (no 3-way merge), so if _skip_if_exists works here, it works everywhere.
     """
 
+    @pytest.mark.slow
     def test_recopy_preserves_modified_readme(self, tmp_path: Path, copier_defaults: dict) -> None:
         """User-modified README.md should not be overwritten (core _skip_if_exists file)."""
         project = generate_project(tmp_path, copier_defaults)
@@ -1142,6 +1143,7 @@ class TestIntegration:
             },
         )
 
+    @pytest.mark.slow
     def test_uv_sync_succeeds(self, tmp_path: Path, copier_defaults: dict) -> None:
         """Generated project should successfully run uv sync."""
         project = generate_project(tmp_path, copier_defaults)
