@@ -1,0 +1,33 @@
+name: PR Description
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+permissions: {}
+
+jobs:
+  check:
+{%- if use_blacksmith_runners %}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+{%- else %}
+    runs-on: ubuntu-latest
+{%- endif %}
+    steps:
+    - name: Validate PR description
+      env:
+        BODY: {% raw %}${{ github.event.pull_request.body }}{% endraw %}
+      run: |
+        if [ -z "$BODY" ]; then
+          echo "::error::PR description is empty"
+          exit 1
+        fi
+
+        # Check that ## Description section has real content (not just the placeholder comment)
+        desc=$(printf '%s\n' "$BODY" | tr -d '\r' | sed -n '/^## Description/,/^## /{ /^## /d; p; }' | sed '/^<!--.*-->$/d' | tr -d '[:space:]')
+        if [ -z "$desc" ]; then
+          echo "::error::## Description section is missing, empty, or contains only placeholder text. Use the PR template."
+          exit 1
+        fi
+
+        echo "✓ PR description looks good"
