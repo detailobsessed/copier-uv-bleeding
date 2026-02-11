@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.26.1 (2026-02-11)
+
+### Bug Fixes
+
+- Make PR description check heading-agnostic
+  ([#195](https://github.com/detailobsessed/copier-uv-bleeding/pull/195),
+  [`560f77c`](https://github.com/detailobsessed/copier-uv-bleeding/commit/560f77cc8d29582097f31bb5e11143401f53165f))
+
+
 ## v0.26.0 (2026-02-11)
 
 ### Features
