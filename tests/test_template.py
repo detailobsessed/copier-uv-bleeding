@@ -591,13 +591,26 @@ class TestTemplateUpdateCheck:
         assert 'check-template = "bash scripts/check-template-update.sh"' in content
 
     def test_update_template_poe_task(self, copier_defaults: dict, project_factory) -> None:
-        """Rendered projects should have update-template poe task."""
+        """Rendered projects should have update-template poe task that chains prek autoupdate."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
         assert "update-template" in content
         assert "copier update" in content
+        assert "prek autoupdate" in content
+
+    def test_lychee_rev_is_pinned_not_empty(self, copier_defaults: dict, project_factory) -> None:
+        """Lychee should have a pinned rev (not empty) since its 'nightly' tag is mutable."""
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+        lychee_repos = [r for r in data["repos"] if r.get("repo", "").endswith("/lychee")]
+        assert len(lychee_repos) == 1, "Expected exactly one lychee repo entry"
+        rev = lychee_repos[0]["rev"]
+        assert rev, "Lychee rev should be pinned, not empty"
+        assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
 
     def test_script_exits_cleanly_without_answers_file(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
         """Script should exit 0 when .copier-answers.yml is missing."""
