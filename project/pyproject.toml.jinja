@@ -203,7 +203,7 @@ typecheck = "ty check ."
 
 # Testing
 test = "pytest -m 'not slow'"
-test-affected = "pytest --testmon"
+test-affected = "pytest --testmon --no-cov"
 test-all = "pytest"
 test-cov = "pytest --cov --cov-report=term-missing --cov-report=html"
 
