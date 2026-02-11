@@ -16,6 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 {%- endif %}
     steps:
+    - name: Ensure needs-triage label exists
+      run: gh label create "needs-triage" --description "Issue needs triage" --color "FBCA04" || true
+      env:
+        GH_REPO: {% raw %}${{ github.repository }}{% endraw %}
+        GH_TOKEN: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
     - name: Add needs-triage label
       run: gh issue edit "$NUMBER" --add-label "needs-triage"
       env:
