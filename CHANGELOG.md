@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.0 (2026-02-11)
+
+### Features
+
+- Improve template update reliability + add pathlib encoding hook
+  ([#200](https://github.com/detailobsessed/copier-uv-bleeding/pull/200),
+  [`c917687`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c9176876e4e98a51ad6031be0b0c74431a025800))
+
+
 ## v0.26.3 (2026-02-11)
 
 ### Bug Fixes
