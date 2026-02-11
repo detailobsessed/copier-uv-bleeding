@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.26.3 (2026-02-11)
+
+### Bug Fixes
+
+- Restore .git guard for prek install in copier _tasks
+  ([#198](https://github.com/detailobsessed/copier-uv-bleeding/pull/198),
+  [`de1d588`](https://github.com/detailobsessed/copier-uv-bleeding/commit/de1d5880e68037d5bbdcd88c6d5c680979449597))
+
+
 ## v0.26.2 (2026-02-11)
 
 ### Bug Fixes
