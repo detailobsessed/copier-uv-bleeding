@@ -224,14 +224,17 @@ include_template_dev_scripts:
 
 # TASKS --------------------------------
 _tasks:
+  # Always run
   - "uv sync --upgrade"
-  - "test -d .git && uv run prek install || true"
-  - "test -d .git && uv run prek autoupdate || true"
-  - "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge && echo '✓ Enabled delete-branch-on-merge' || true"
-  - "echo ''"
-  - "echo '🎉 Done!'"
-  - "echo ''"
-  - "echo '  ✓ Dependencies installed'"
-  - "test -d .git && echo '  ✓ Git hooks installed and synced' || true"
-  - "echo ''"
-  - "test ! -d .git && echo 'To finish setup:' && echo '  git init && uv run prek install && uv run prek autoupdate' && echo '  Create your source files in src/ and tests/' || true"
+  # Update only — reinstall hooks (fresh copy has no .git yet)
+  - command: "uv run prek install"
+    when: "{{ _copier_operation in ('update', 'recopy') }}"
+  # Copy only — one-time GitHub repo setup
+  - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge && echo '✓ Enabled delete-branch-on-merge' || true"
+    when: "{{ _copier_operation == 'copy' }}"
+  # Copy — setup instructions
+  - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && uv run prek autoupdate\\n  Create your source files in src/ and tests/\\n'"
+    when: "{{ _copier_operation == 'copy' }}"
+  # Update — minimal output (poe update-template handles prek autoupdate)
+  - command: "printf '\\n🎉 Template updated!\\n\\n  ✓ Dependencies synced\\n  ✓ Git hooks reinstalled\\n'"
+    when: "{{ _copier_operation in ('update', 'recopy') }}"

@@ -230,7 +230,7 @@ verify-scaffold = "bash scripts/verify-scaffold.sh"
 
 # Template utilities
 check-template = "bash scripts/check-template-update.sh"
-update-template = "copier update --trust . --skip-answered"
+update-template = { shell = "copier update --trust . --skip-answered && prek autoupdate && echo '  ✓ Hook versions updated'" }
 
 # Git utilities
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
