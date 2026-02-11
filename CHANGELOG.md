@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.26.2 (2026-02-11)
+
+### Bug Fixes
+
+- Modernize copier _tasks with _copier_operation and chain prek autoupdate
+  ([#197](https://github.com/detailobsessed/copier-uv-bleeding/pull/197),
+  [`1d50965`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1d5096566e3a038c26823ec073c5c453b689c507))
+
+
 ## v0.26.1 (2026-02-11)
 
 ### Bug Fixes
