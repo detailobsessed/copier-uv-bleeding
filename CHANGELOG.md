@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.1 (2026-02-11)
+
+### Bug Fixes
+
+- Add --no-cov to poe test-affected task
+  ([#202](https://github.com/detailobsessed/copier-uv-bleeding/pull/202),
+  [`e1eb54e`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e1eb54e68a2279129a51f11695b97e040eaa8d89))
+
+
 ## v0.27.0 (2026-02-11)
 
 ### Features
