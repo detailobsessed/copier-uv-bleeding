@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.26.0 (2026-02-11)
+
+### Features
+
+- Add PR description validation workflow and auto-create needs-triage label
+  ([#194](https://github.com/detailobsessed/copier-uv-bleeding/pull/194),
+  [`e35e840`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e35e840949a727a93db5866f5c38cdf9fb3568aa))
+
+
 ## v0.25.0 (2026-02-11)
 
 ### Bug Fixes
