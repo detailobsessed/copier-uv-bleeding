@@ -227,7 +227,7 @@ _tasks:
   # Always run
   - "uv sync --upgrade"
   # Update only — reinstall hooks (fresh copy has no .git yet)
-  - command: "uv run prek install"
+  - command: "if [ -d .git ]; then uv run prek install; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
   # Copy only — one-time GitHub repo setup
   - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge && echo '✓ Enabled delete-branch-on-merge' || true"
