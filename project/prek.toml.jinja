@@ -84,6 +84,16 @@ stages = ["pre-push"]
 priority = 0
 
 [[repos.hooks]]
+id = "check-pathlib-encoding"
+name = "pathlib encoding check"
+entry = "python scripts/check-pathlib-encoding.py"
+language = "system"
+types = ["python"]
+priority = 1
+# Workaround for ruff PLW1514 false negatives on indirect Path objects.
+# Remove when https://github.com/astral-sh/ruff/issues/19294 is fixed.
+
+[[repos.hooks]]
 id = "ty"
 name = "ty type checker"
 entry = "uv run ty check"
@@ -95,7 +105,7 @@ priority = 1
 [[repos.hooks]]
 id = "pytest-testmon"
 name = "pytest affected tests"
-entry = "uv run pytest --testmon"
+entry = "uv run pytest --testmon --no-cov"
 language = "system"
 types = ["python"]
 pass_filenames = false
