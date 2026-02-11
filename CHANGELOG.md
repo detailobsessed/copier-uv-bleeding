@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.25.0 (2026-02-11)
+
+### Bug Fixes
+
+- Use uv sync --upgrade in post-copy tasks, add test-affected to scaffold check, mark slow tests
+  ([#192](https://github.com/detailobsessed/copier-uv-bleeding/pull/192),
+  [`1bd8dbb`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1bd8dbbddc8865e7c8efd1e62c1391cc25cad3c7))
+
+### Features
+
+- Auto-create needs-triage label in issue triage workflow
+  ([#193](https://github.com/detailobsessed/copier-uv-bleeding/pull/193),
+  [`c19439b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c19439b681dd06b52a969458e079b9c3adfa5c94))
+
+
 ## v0.24.1 (2026-02-10)
 
 ### Bug Fixes
