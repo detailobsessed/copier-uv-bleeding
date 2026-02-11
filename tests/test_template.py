@@ -591,13 +591,14 @@ class TestTemplateUpdateCheck:
         assert 'check-template = "bash scripts/check-template-update.sh"' in content
 
     def test_update_template_poe_task(self, copier_defaults: dict, project_factory) -> None:
-        """Rendered projects should have update-template poe task that chains prek autoupdate."""
+        """Rendered projects should have update-template poe task that chains uv sync --upgrade and prek autoupdate."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
         assert "update-template" in content
         assert "copier update" in content
+        assert "uv sync --upgrade" in content
         assert "prek autoupdate" in content
 
     def test_lychee_rev_is_pinned_not_empty(self, copier_defaults: dict, project_factory) -> None:
