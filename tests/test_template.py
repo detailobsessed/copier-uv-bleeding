@@ -613,6 +613,7 @@ class TestTemplateUpdateCheck:
         assert rev, "Lychee rev should be pinned, not empty"
         assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
 
+    @pytest.mark.slow
     def test_script_exits_cleanly_without_answers_file(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
         """Script should exit 0 when .copier-answers.yml is missing."""
         project = tmp_path / "project"
@@ -625,6 +626,7 @@ class TestTemplateUpdateCheck:
         assert result.returncode == 0
         assert result.stdout == ""
 
+    @pytest.mark.slow
     def test_script_exits_cleanly_for_gitlab_source(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
         """Script should exit 0 silently for non-GitHub templates."""
         project = tmp_path / "project"
@@ -637,6 +639,7 @@ class TestTemplateUpdateCheck:
         assert result.returncode == 0
         assert result.stdout == ""
 
+    @pytest.mark.slow
     def test_script_handles_gh_shorthand(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
         """Script should accept gh: shorthand and attempt API call."""
         project = tmp_path / "project"
@@ -652,6 +655,7 @@ class TestTemplateUpdateCheck:
             return
         assert "Template update available" in result.stdout
 
+    @pytest.mark.slow
     def test_script_handles_https_github_url(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
         """Script should accept full https://github.com/ URLs."""
         project = tmp_path / "project"
@@ -667,6 +671,7 @@ class TestTemplateUpdateCheck:
             return
         assert "Template update available" in result.stdout
 
+    @pytest.mark.slow
     def test_script_silent_when_up_to_date(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
         """Script should produce no output when local version matches latest."""
         project = tmp_path / "project"
