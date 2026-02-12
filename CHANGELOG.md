@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.3 (2026-02-12)
+
+### Bug Fixes
+
+- Set executable bit on check-template-update.sh
+  ([#204](https://github.com/detailobsessed/copier-uv-bleeding/pull/204),
+  [`4012488`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4012488f43d7fc145eb06735e72686e15314e2d9))
+
+
 ## v0.27.2 (2026-02-12)
 
 ### Bug Fixes
