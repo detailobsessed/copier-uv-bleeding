@@ -1,7 +1,0 @@
-rules: []
-memories:
-  - title: PR description check warns for GitLab projects incorrectly
-    description: The new pr-description.yml check always warns when the file is missing, but this is incorrect for GitLab projects. The .github folder is completely excluded for GitLab (copier.yml line 27), so this check will always produce a false warning 'PR description check workflow missing' for GitLab projects. The script already reads `repo_provider` from `.copier-answers.yml` and uses it for other conditional checks, but this new check is missing that condition.
-    file: /Users/ismar/repos/copier-uv-bleeding/project/scripts/verify-scaffold.sh
-    line: 245
-    comment: Not legit. Same claim as before — the script has no repo_provider variable and no .copier-answers.yml parsing. Lifeguard is hallucinating. The script is GitHub-only, and for GitLab projects the entire .github directory (including this script's caller context) is excluded by copier.
