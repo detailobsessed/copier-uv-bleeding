@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.2 (2026-02-12)
+
+### Bug Fixes
+
+- Use uv run for pathlib encoding check hook
+  ([#203](https://github.com/detailobsessed/copier-uv-bleeding/pull/203),
+  [`8810014`](https://github.com/detailobsessed/copier-uv-bleeding/commit/8810014e8ec6bd561859c283c2ac1ca17f906bf2))
+
+
 ## v0.27.1 (2026-02-11)
 
 ### Bug Fixes
