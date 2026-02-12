@@ -58,73 +58,9 @@ jobs:
         fail: true
         args: --config .lychee.toml --no-progress .
 
-  test-filenames:
-    needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    steps:
-    - name: Checkout
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Test file names
-      run: bash tests/test_filenames.sh
-
-  test-funding:
-    needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    steps:
-    - name: Checkout
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        fetch-depth: 0
-        fetch-tags: true
-    - name: Configure Git
-      run: |
-        git config --global init.defaultBranch main
-        git config --global user.email "dev@ichoosetoaccept.com"
-        git config --global user.name "I Choose to Accept"
-    - name: Setup uv and Python
-      uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
-      with:
-        python-version: "3.14"
-        enable-cache: true
-        cache-dependency-glob: project/pyproject.toml.jinja
-    - name: Install Copier
-      env:
-        PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
-      run: uv tool install copier --with copier-templates-extensions
-    - name: Test FUNDING.yml generation
-      run: bash tests/test_funding.sh
-
-  test-licenses:
-    needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    steps:
-    - name: Checkout
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Configure Git
-      run: |
-        git config --global init.defaultBranch main
-        git config --global user.email "dev@ichoosetoaccept.com"
-        git config --global user.name "I Choose to Accept"
-    - name: Setup uv and Python
-      uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
-      with:
-        python-version: "3.14"
-        enable-cache: true
-        cache-dependency-glob: project/pyproject.toml.jinja
-    - name: Test licenses
-      run: uv run --with jinja2 --with pyyaml --with reuse python tests/test_licenses.py
-
   test-project:
     needs: changes
     if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
-    strategy:
-      matrix:
-        python-version:
-        - "3.14"
-
     runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
@@ -143,7 +79,7 @@ jobs:
     - name: Setup uv and Python
       uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.14"
         enable-cache: true
         cache-dependency-glob: project/pyproject.toml.jinja
 
@@ -151,6 +87,15 @@ jobs:
       env:
         PYO3_USE_ABI3_FORWARD_COMPATIBILITY: "1"
       run: uv tool install copier --with copier-templates-extensions
+
+    - name: Test file names
+      run: bash tests/test_filenames.sh
+
+    - name: Test licenses
+      run: uv run --with jinja2 --with pyyaml --with reuse python tests/test_licenses.py
+
+    - name: Test FUNDING.yml generation
+      run: bash tests/test_funding.sh
 
     - name: Test project generation and workflow
       env:
