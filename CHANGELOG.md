@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.8 (2026-02-12)
+
+### Bug Fixes
+
+- Inline release logic, remove verify-scaffold.sh, fix CI continue-on-error, right-size triage
+  runner ([#212](https://github.com/detailobsessed/copier-uv-bleeding/pull/212),
+  [`421d227`](https://github.com/detailobsessed/copier-uv-bleeding/commit/421d227ca02aac39cb52525bc9ecebc4a66a28a9))
+
+
 ## v0.27.7 (2026-02-12)
 
 ### Bug Fixes
