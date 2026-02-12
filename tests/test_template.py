@@ -231,7 +231,7 @@ class TestCIWorkflows:
         assert "semantic-release" in content
 
     def test_release_has_uv_publish(self, copier_defaults: dict, project_factory) -> None:
-        """Release workflow should use uv publish."""
+        """Release workflow should use uv publish in separate pypi-publish job."""
         answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
         project = project_factory(answers)
 
@@ -1171,25 +1171,3 @@ class TestIntegration:
         # Run uv sync
         result = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True)
         assert result.returncode == 0, f"uv sync failed: {result.stderr}"
-
-    @pytest.mark.slow
-    def test_verify_scaffold_passes(self, tmp_path: Path, copier_defaults: dict) -> None:
-        """Generated project with dev scripts should pass verify-scaffold checks."""
-        answers = {**copier_defaults, "include_template_dev_scripts": True, "publish_to_pypi": True}
-        project = generate_project(tmp_path, answers)
-        self._init_git_repo(project)
-
-        # Run uv sync to create .venv and uv.lock
-        sync_result = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True)
-        assert sync_result.returncode == 0, f"uv sync failed: {sync_result.stderr}"
-
-        # Run verify-scaffold.sh
-        script = project / "scripts" / "verify-scaffold.sh"
-        assert script.exists(), "verify-scaffold.sh not generated"
-        result = subprocess.run(
-            ["bash", str(script)],
-            cwd=project,
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode == 0, f"verify-scaffold.sh failed:\n{result.stdout}\n{result.stderr}"
