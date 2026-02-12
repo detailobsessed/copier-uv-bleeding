@@ -14,6 +14,31 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.5 (2026-02-12)
+
+### Bug Fixes
+
+- Unblock .env.example.jinja from .gitignore and mark network-dependent tests as slow
+  ([#209](https://github.com/detailobsessed/copier-uv-bleeding/pull/209),
+  [`e30211d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e30211daa54fcb0db233eca8a525570d63a2cf96))
+
+### Chores
+
+- Comment out COPIER_CHECK_INTERVAL in .env.example.jinja
+  ([#208](https://github.com/detailobsessed/copier-uv-bleeding/pull/208),
+  [`8eb44db`](https://github.com/detailobsessed/copier-uv-bleeding/commit/8eb44dbc4fcf4524f5cd43e982c70ae1b0cd99fe))
+
+- Delete pr-description workflow — replaced by gt submit --ai
+  ([#206](https://github.com/detailobsessed/copier-uv-bleeding/pull/206),
+  [`091eb4a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/091eb4a4a24ac551c77a4ba2d4ada5a01f09cf54))
+
+### Continuous Integration
+
+- Consolidate test jobs into single test-project job
+  ([#207](https://github.com/detailobsessed/copier-uv-bleeding/pull/207),
+  [`140f950`](https://github.com/detailobsessed/copier-uv-bleeding/commit/140f9506363afd868a8c855f748d23f6e6df0dd6))
+
+
 ## v0.27.4 (2026-02-12)
 
 ### Bug Fixes
