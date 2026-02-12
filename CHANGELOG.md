@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.7 (2026-02-12)
+
+### Bug Fixes
+
+- Correct except syntax in check-pathlib-encoding and align setup-uv tags
+  ([#211](https://github.com/detailobsessed/copier-uv-bleeding/pull/211),
+  [`ad7a752`](https://github.com/detailobsessed/copier-uv-bleeding/commit/ad7a75294abc3480e380aaea5641f562f52c1e1e))
+
+
 ## v0.27.6 (2026-02-12)
 
 ### Bug Fixes
