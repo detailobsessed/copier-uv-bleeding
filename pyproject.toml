@@ -169,6 +169,7 @@ watch = "gh run watch"
 
 [tool.ty.environment]
 python-version = "3.14"
+python = ".venv"
 
 [tool.coverage.run]
 branch = true
