@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.9 (2026-02-12)
+
+### Bug Fixes
+
+- Use --only-group maintain in release job to minimize attack surface
+  ([#213](https://github.com/detailobsessed/copier-uv-bleeding/pull/213),
+  [`00daf7f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/00daf7fab7d921015ac4a8427c6cce3f1a649774))
+
+
 ## v0.27.8 (2026-02-12)
 
 ### Bug Fixes
