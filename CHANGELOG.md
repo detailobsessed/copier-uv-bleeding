@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.6 (2026-02-12)
+
+### Bug Fixes
+
+- Gitignore testmondata SQLite sidecar files
+  ([#210](https://github.com/detailobsessed/copier-uv-bleeding/pull/210),
+  [`5011a30`](https://github.com/detailobsessed/copier-uv-bleeding/commit/5011a30680d0e30ccd1065b245db3419932e78d8))
+
+
 ## v0.27.5 (2026-02-12)
 
 ### Bug Fixes
