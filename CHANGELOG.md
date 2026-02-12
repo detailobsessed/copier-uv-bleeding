@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.10 (2026-02-12)
+
+### Bug Fixes
+
+- Tell python where .venv is explicitly to help code editors resolve modules
+  ([#214](https://github.com/detailobsessed/copier-uv-bleeding/pull/214),
+  [`82c75c2`](https://github.com/detailobsessed/copier-uv-bleeding/commit/82c75c2ef6214a7ee845214df55126a0f5f11fae))
+
+
 ## v0.27.9 (2026-02-12)
 
 ### Bug Fixes
