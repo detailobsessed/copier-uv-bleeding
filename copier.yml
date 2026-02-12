@@ -225,6 +225,7 @@ include_template_dev_scripts:
 # TASKS --------------------------------
 _tasks:
   # Always run
+  - "chmod +x scripts/*.sh scripts/*.py 2>/dev/null || true"
   - "uv sync --upgrade"
   # Update only — reinstall hooks (fresh copy has no .git yet)
   - command: "if [ -d .git ]; then uv run prek install; fi"
