@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.4 (2026-02-12)
+
+### Bug Fixes
+
+- Chmod scripts in _tasks to ensure executable bits after copier update
+  ([#205](https://github.com/detailobsessed/copier-uv-bleeding/pull/205),
+  [`27d688c`](https://github.com/detailobsessed/copier-uv-bleeding/commit/27d688c44b57dbc7c13b57f4e11ae2c1efb3f4ab))
+
+
 ## v0.27.3 (2026-02-12)
 
 ### Bug Fixes
