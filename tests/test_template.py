@@ -622,9 +622,9 @@ class TestTemplateUpdateCheck:
         # Remove answers file to simulate missing
         (project / ".copier-answers.yml").unlink(missing_ok=True)
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env)
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
         assert result.returncode == 0
-        assert result.stdout == ""
+        assert not result.stdout
 
     @pytest.mark.slow
     def test_script_exits_cleanly_for_gitlab_source(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
@@ -635,9 +635,9 @@ class TestTemplateUpdateCheck:
         answers.write_text("_commit: 1.0.0\n_src_path: https://gitlab.com/org/repo\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env)
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
         assert result.returncode == 0
-        assert result.stdout == ""
+        assert not result.stdout
 
     @pytest.mark.slow
     def test_script_handles_gh_shorthand(self, copier_defaults: dict, project_factory, tmp_path: Path) -> None:
@@ -648,7 +648,7 @@ class TestTemplateUpdateCheck:
         answers.write_text("_commit: 0.0.0\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env)
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
         assert result.returncode == 0
         # Skip assertion if API unavailable (rate-limited, offline)
         if not result.stdout.strip():
@@ -664,7 +664,7 @@ class TestTemplateUpdateCheck:
         answers.write_text("_commit: 0.0.0\n_src_path: https://github.com/detailobsessed/copier-uv-bleeding\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env)
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
         assert result.returncode == 0
         # Skip assertion if API unavailable (rate-limited, offline)
         if not result.stdout.strip():
@@ -686,6 +686,7 @@ class TestTemplateUpdateCheck:
             ["bash", "-c", curl_cmd],
             capture_output=True,
             text=True,
+            check=False,
         )
         latest = result.stdout.strip()
         if not latest:
@@ -694,7 +695,7 @@ class TestTemplateUpdateCheck:
         answers.write_text(f"_commit: {latest}\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env)
+        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
         assert result.returncode == 0
         assert "Template update available" not in result.stdout
 
@@ -1169,5 +1170,5 @@ class TestIntegration:
         self._init_git_repo(project)
 
         # Run uv sync
-        result = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True)
+        result = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
         assert result.returncode == 0, f"uv sync failed: {result.stderr}"
