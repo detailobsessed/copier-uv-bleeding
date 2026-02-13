@@ -231,6 +231,10 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "publish_to_pypi": False,
         "use_blacksmith_runners": False,
     }),
+    "ci-no-release": _build_context({
+        "use_semantic_release": False,
+        "publish_to_pypi": False,
+    }),
     "ci-no-pypi": _build_context({
         "use_semantic_release": True,
         "publish_to_pypi": False,
