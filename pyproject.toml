@@ -57,7 +57,9 @@ mode = "update"
 [tool.semantic_release.commit_parser_options]
 allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
 minor_tags = ["feat"]
-patch_tags = ["fix", "perf"]
+# Aggressive patch releases: template users get improvements via `copier update` only
+# when a release exists. Scale back to ["fix", "perf"] once the template stabilises.
+patch_tags = ["fix", "perf", "refactor", "ci", "docs", "chore", "style", "build", "deps"]
 
 [tool.ruff]
 target-version = "py314"
