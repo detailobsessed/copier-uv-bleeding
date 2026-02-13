@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.27.11 (2026-02-13)
+
+### Bug Fixes
+
+- Add verbose=true to template update hook so prek shows the notice
+  ([#216](https://github.com/detailobsessed/copier-uv-bleeding/pull/216),
+  [`79a3518`](https://github.com/detailobsessed/copier-uv-bleeding/commit/79a35183064521bd84a4d2526d6955b04e28f710))
+
+### Refactoring
+
+- Add strict pylint and modern ruff rules to template
+  ([#215](https://github.com/detailobsessed/copier-uv-bleeding/pull/215),
+  [`e815632`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e8156327d61694329e96fc5d95c562848738773e))
+
+
 ## v0.27.10 (2026-02-12)
 
 ### Bug Fixes
