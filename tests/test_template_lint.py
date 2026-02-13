@@ -178,8 +178,10 @@ def _should_skip(rel_str: str, context: dict) -> bool:
         return True
     if "gitlab-ci" in rel_str and provider != "gitlab.com":
         return True
-    ci_files = ("ci.yml", "release.yml", "copier-update.yml", "gitlab-ci")
+    ci_files = ("ci.yml", "copier-update.yml", "gitlab-ci")
     if not context.get("use_ci") and any(x in rel_str for x in ci_files):
+        return True
+    if not context.get("use_semantic_release") and "release.yml" in rel_str:
         return True
     community_files = (
         "CODE_OF_CONDUCT",
