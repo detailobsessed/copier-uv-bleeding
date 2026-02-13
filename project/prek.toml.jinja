@@ -117,6 +117,7 @@ entry = "uv run pytest --testmon --no-cov"
 language = "system"
 types = ["python"]
 pass_filenames = false
+verbose = true
 stages = ["pre-commit"]
 priority = 1
 
@@ -127,6 +128,7 @@ entry = "uv run pytest --cov --cov-fail-under=90 --cov-report=term-missing:skip-
 language = "system"
 types = ["python"]
 pass_filenames = false
+verbose = true
 stages = ["pre-push"]
 priority = 1
 
