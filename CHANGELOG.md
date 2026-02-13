@@ -14,6 +14,27 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.28.0 (2026-02-13)
+
+### Continuous Integration
+
+- Expand semantic-release patch_tags for aggressive template releases
+  ([#222](https://github.com/detailobsessed/copier-uv-bleeding/pull/222),
+  [`e291507`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e2915074ded91b0e2f970275cd58e101fc56ffb9))
+
+### Features
+
+- Add ci-pass gate job for branch protection
+  ([#219](https://github.com/detailobsessed/copier-uv-bleeding/pull/219),
+  [`1bb36ee`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1bb36eec049d80af9e8a190e969c5ef8ea690aea))
+
+### Refactoring
+
+- Convert lint_templates.py to pytest+hypothesis test
+  ([#220](https://github.com/detailobsessed/copier-uv-bleeding/pull/220),
+  [`8dbde33`](https://github.com/detailobsessed/copier-uv-bleeding/commit/8dbde33adbb6d9a0bc8a79afee0501ccf482377d))
+
+
 ## v0.27.11 (2026-02-13)
 
 ### Bug Fixes
