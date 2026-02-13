@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.28.3 (2026-02-13)
+
+### Refactoring
+
+- Collapse project_type to 2 choices and add cli_framework
+  ([#225](https://github.com/detailobsessed/copier-uv-bleeding/pull/225),
+  [`e1ff6d5`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e1ff6d512596d6e8fe89056729c66f224b16da16))
+
+
 ## v0.28.2 (2026-02-13)
 
 ### Bug Fixes
