@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 
 
 class TestProjectTypes:
-    """Test different project types generate correctly."""
+    """Test project types (app = CLI, lib = no CLI)."""
 
-    def test_package_type_has_cli(self, copier_defaults: dict, project_factory) -> None:
-        """Package type should have CLI entry point."""
-        project = project_factory(copier_defaults, "package")
+    def test_app_type_has_cli(self, copier_defaults: dict, project_factory) -> None:
+        """App type should have CLI entry point."""
+        project = project_factory(copier_defaults, "app")
 
         pyproject = project / "pyproject.toml"
         assert pyproject.exists()
@@ -38,16 +38,11 @@ class TestProjectTypes:
         content = pyproject.read_text()
         assert "[project.scripts]" not in content
 
-    def test_app_type_no_main_py(self, copier_defaults: dict, project_factory) -> None:
-        """App type should NOT generate main.py (users create their own)."""
-        project = project_factory(copier_defaults, "app")
-        assert not (project / "main.py").exists()
-
-    def test_app_type_no_cli_entry_point(self, copier_defaults: dict, project_factory) -> None:
-        """App type should not have [project.scripts] section."""
-        project = project_factory(copier_defaults, "app")
-        content = (project / "pyproject.toml").read_text()
-        assert "[project.scripts]" not in content
+    def test_no_main_py(self, copier_defaults: dict, project_factory) -> None:
+        """Neither type should generate main.py (users create their own)."""
+        for project_type in ("app", "lib"):
+            project = project_factory(copier_defaults, project_type)
+            assert not (project / "main.py").exists()
 
 
 class TestCoreFiles:
@@ -1104,30 +1099,47 @@ class TestGitLabSupport:
         assert not (project / ".gitlab-ci.yml").exists()
 
 
-class TestTyperOption:
-    """Test typer CLI option."""
+class TestCLIFramework:
+    """Test cli_framework question (typer, cyclopts, none)."""
 
-    def test_typer_enabled_has_typer_dependency(self, copier_defaults: dict, project_factory) -> None:
-        """Typer enabled should add typer dependency."""
-        answers = {**copier_defaults, "use_typer": True}
-        project = project_factory(answers, "package")
+    def test_typer_has_dependency(self, copier_defaults: dict, project_factory) -> None:
+        """Typer framework should add typer dependency."""
+        answers = {**copier_defaults, "cli_framework": "typer"}
+        project = project_factory(answers, "app")
 
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
+        content = (project / "pyproject.toml").read_text()
         assert '"typer>=' in content
+        assert "cyclopts" not in content
 
-    def test_typer_disabled_no_typer_dependency(self, copier_defaults: dict, project_factory) -> None:
-        """Typer disabled should not add typer dependency."""
-        answers = {**copier_defaults, "use_typer": False}
-        project = project_factory(answers, "package")
+    def test_cyclopts_has_dependency(self, copier_defaults: dict, project_factory) -> None:
+        """Cyclopts framework should add cyclopts dependency."""
+        answers = {**copier_defaults, "cli_framework": "cyclopts"}
+        project = project_factory(answers, "app")
 
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
+        content = (project / "pyproject.toml").read_text()
+        assert '"cyclopts>=' in content
         assert "typer" not in content
 
-    def test_package_type_no_scaffold_code(self, copier_defaults: dict, project_factory) -> None:
-        """Package type should not generate scaffold source files (users create their own via uv init)."""
-        project = project_factory(copier_defaults, "package")
+    def test_none_no_cli_dependency(self, copier_defaults: dict, project_factory) -> None:
+        """No framework should not add any CLI dependency."""
+        answers = {**copier_defaults, "cli_framework": "none"}
+        project = project_factory(answers, "app")
+
+        content = (project / "pyproject.toml").read_text()
+        assert "typer" not in content
+        assert "cyclopts" not in content
+
+    def test_none_still_has_scripts_entry(self, copier_defaults: dict, project_factory) -> None:
+        """App with no framework still gets [project.scripts] — user wires their own CLI."""
+        answers = {**copier_defaults, "cli_framework": "none"}
+        project = project_factory(answers, "app")
+
+        content = (project / "pyproject.toml").read_text()
+        assert "[project.scripts]" in content
+
+    def test_app_type_no_scaffold_code(self, copier_defaults: dict, project_factory) -> None:
+        """App type should not generate scaffold source files (users create their own via uv init)."""
+        project = project_factory(copier_defaults, "app")
         assert not (project / "src" / "test_project" / "_internal").exists()
         assert not (project / "src" / "test_project" / "__main__.py").exists()
         assert not (project / "src" / "test_project" / "py.typed").exists()

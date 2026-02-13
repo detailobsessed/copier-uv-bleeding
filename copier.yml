@@ -51,11 +51,10 @@ project_description:
 project_type:
   type: str
   help: What type of project is this?
-  default: package
+  default: app
   choices:
-    Application (standalone script, no CLI entry point): app
-    Library (importable package, no CLI): lib
-    Package (installable with CLI entry point): package
+    Application (with CLI entry point — uv init --app): app
+    Library (importable package, no CLI — uv init --lib): lib
 
 project_visibility:
   type: str
@@ -180,11 +179,15 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
-# Typer is always used for packages - no argparse option
-use_typer:
-  type: bool
-  default: true
-  when: false
+cli_framework:
+  type: str
+  help: CLI framework
+  default: typer
+  when: "{{ project_type == 'app' }}"
+  choices:
+    "Typer (https://typer.tiangolo.com/)": typer
+    "Cyclopts (https://cyclopts.readthedocs.io/)": cyclopts
+    "None (no framework)": none
 
 use_ci:
   type: bool

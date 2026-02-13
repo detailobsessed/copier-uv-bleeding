@@ -55,7 +55,7 @@ def _build_context(overrides: dict) -> dict:
     base = {
         "project_name": "My Test Project",
         "project_description": "A test project",
-        "project_type": "package",
+        "project_type": "app",
         "author_fullname": "Test Author",
         "author_email": "test@example.com",
         "author_username": "testuser",
@@ -70,7 +70,7 @@ def _build_context(overrides: dict) -> dict:
         "python_package_distribution_name": "my-test-project",
         "python_package_import_name": "my_test_project",
         "python_package_command_line_name": "my-test-project",
-        "use_typer": True,
+        "cli_framework": "typer",
         "use_ci": True,
         "use_semantic_release": True,
         "publish_to_pypi": True,
@@ -248,10 +248,10 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "publish_to_pypi": True,
     }),
     # Project types
-    "app-type": _build_context({"project_type": "app"}),
     "lib-type": _build_context({"project_type": "lib"}),
-    # Typer disabled (previously untested — exercises argparse fallback)
-    "no-typer": _build_context({"use_typer": False}),
+    # CLI frameworks
+    "cyclopts": _build_context({"cli_framework": "cyclopts"}),
+    "no-cli-framework": _build_context({"cli_framework": "none"}),
     # Polar enabled (previously untested)
     "polar-enabled": _build_context({"use_polar": True}),
     # Visibility
