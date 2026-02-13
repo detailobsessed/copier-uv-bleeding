@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.28.2 (2026-02-13)
+
+### Bug Fixes
+
+- Tty notification and verbose hooks
+  ([#224](https://github.com/detailobsessed/copier-uv-bleeding/pull/224),
+  [`3c5175a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3c5175a2935bc16fcebce96f05b630b80af26474))
+
+
 ## v0.28.1 (2026-02-13)
 
 ### Documentation
