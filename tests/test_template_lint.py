@@ -1,0 +1,375 @@
+"""Test that Jinja templates render valid structured output.
+
+Replaces scripts/lint_templates.py with proper pytest parametrization and
+hypothesis-based property testing for string edge cases.
+
+Tests two properties:
+1. All templates render without errors for each context variant (parametrized)
+2. TOML/YAML templates produce valid output for arbitrary string inputs (hypothesis)
+"""
+
+from __future__ import annotations
+
+import ast
+import re
+import tomllib
+import unicodedata
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+import yaml
+from hypothesis import given, settings
+from hypothesis import strategies as st
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR = REPO_ROOT / "project"
+
+# ---------------------------------------------------------------------------
+# Jinja filter (mirrors extensions.py)
+# ---------------------------------------------------------------------------
+
+
+def slugify(value: str, separator: str = "-") -> str:
+    value = unicodedata.normalize("NFKD", str(value)).encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^\w\s-]", "", value.lower())
+    return re.sub(r"[-_\s]+", separator, value).strip("-_")
+
+
+# ---------------------------------------------------------------------------
+# Template rendering infrastructure
+# ---------------------------------------------------------------------------
+
+_ENV = Environment(
+    loader=FileSystemLoader(str(TEMPLATE_DIR)),
+    autoescape=False,
+    keep_trailing_newline=True,
+    undefined=StrictUndefined,
+)
+_ENV.filters["slugify"] = slugify
+
+
+def _build_context(overrides: dict) -> dict:
+    """Build a full template context from overrides."""
+    base = {
+        "project_name": "My Test Project",
+        "project_description": "A test project",
+        "project_type": "package",
+        "author_fullname": "Test Author",
+        "author_email": "test@example.com",
+        "author_username": "testuser",
+        "repository_provider": "github.com",
+        "repository_host": "github.com",
+        "repository_namespace": "testuser",
+        "repository_name": "my-test-project",
+        "copyright_holder": "Test Author",
+        "copyright_holder_email": "test@example.com",
+        "copyright_date": str(datetime.now(UTC).year),
+        "copyright_license": "MIT",
+        "python_package_distribution_name": "my-test-project",
+        "python_package_import_name": "my_test_project",
+        "python_package_command_line_name": "my-test-project",
+        "use_typer": True,
+        "use_ci": True,
+        "use_semantic_release": True,
+        "publish_to_pypi": True,
+        "use_blacksmith_runners": False,
+        "project_visibility": "public",
+        "use_polar": False,
+        "include_template_dev_scripts": False,
+        "current_year": datetime.now(UTC).year,
+        "giscus_repo_id": "PLACEHOLDER_REPO_ID",
+        "giscus_discussion_category_id": "PLACEHOLDER_CATEGORY_ID",
+    }
+    base.update(overrides)
+    if "repository_provider" in overrides and "repository_host" not in overrides:
+        base["repository_host"] = overrides["repository_provider"]
+    if "project_name" in overrides and "repository_name" not in overrides:
+        base["repository_name"] = slugify(overrides["project_name"])
+        base["python_package_distribution_name"] = slugify(overrides["project_name"])
+        base["python_package_import_name"] = slugify(overrides["project_name"], "_")
+        base["python_package_command_line_name"] = slugify(overrides["project_name"])
+    return base
+
+
+# ---------------------------------------------------------------------------
+# Validators
+# ---------------------------------------------------------------------------
+
+
+def _validate_toml(content: str) -> str | None:
+    try:
+        tomllib.loads(content)
+    except tomllib.TOMLDecodeError as exc:
+        return f"Invalid TOML: {exc}"
+    return None
+
+
+def _validate_yaml(content: str) -> str | None:
+    try:
+        yaml.compose(content)
+    except yaml.YAMLError as exc:
+        return f"Invalid YAML: {exc}"
+    return None
+
+
+def _validate_markdown(content: str) -> str | None:
+    issues = []
+    lines = content.splitlines()
+    in_code_block = False
+    for i, line in enumerate(lines):
+        stripped = re.sub(r"^(?:>\s*)+", "", line)
+        if re.match(r"^```", stripped):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+        if re.match(r"^#{1,6}\s", line) and i > 0 and lines[i - 1].strip():
+            issues.append(f"line {i + 1}: heading without preceding blank line (MD022)")
+    if issues:
+        return "; ".join(issues)
+    return None
+
+
+def _validate_python(content: str) -> str | None:
+    try:
+        ast.parse(content)
+    except SyntaxError as exc:
+        return f"Invalid Python: {exc}"
+    return None
+
+
+_VALIDATORS = {
+    ".toml": _validate_toml,
+    ".yml": _validate_yaml,
+    ".yaml": _validate_yaml,
+    ".md": _validate_markdown,
+    ".py": _validate_python,
+}
+
+
+# ---------------------------------------------------------------------------
+# Template discovery
+# ---------------------------------------------------------------------------
+
+
+def _get_output_extension(template_path: Path) -> str:
+    stem = template_path.name.removesuffix(".jinja")
+    if "." in stem:
+        return "." + stem.rsplit(".", 1)[1]
+    return ""
+
+
+def _collect_templates() -> list[Path]:
+    templates = []
+    for path in sorted(TEMPLATE_DIR.rglob("*.jinja")):
+        if "{{" in path.name or "{%" in path.name:
+            continue
+        if any("{{" in part or "{%" in part for part in path.parts):
+            continue
+        templates.append(path)
+    return templates
+
+
+def _should_skip(rel_str: str, context: dict) -> bool:
+    provider = context.get("repository_provider", "github.com")
+    if rel_str.startswith(".github") and provider != "github.com":
+        return True
+    if "gitlab-ci" in rel_str and provider != "gitlab.com":
+        return True
+    ci_files = ("ci.yml", "release.yml", "copier-update.yml", "gitlab-ci")
+    if not context.get("use_ci") and any(x in rel_str for x in ci_files):
+        return True
+    community_files = (
+        "CODE_OF_CONDUCT",
+        "CONTRIBUTING",
+        "SECURITY",
+        "LICENSE",
+        "license.md",
+        "contributing.md",
+        "code_of_conduct.md",
+        "FUNDING",
+    )
+    return context.get("project_visibility") == "internal" and any(x in rel_str for x in community_files)
+
+
+_TEMPLATES = _collect_templates()
+
+# ---------------------------------------------------------------------------
+# Context variants — exhaustive coverage of boolean/enum branches
+# ---------------------------------------------------------------------------
+
+CONTEXT_VARIANTS: dict[str, dict] = {
+    # GitHub defaults (most common path)
+    "github-defaults": _build_context({}),
+    # String edge cases
+    "github-quotes": _build_context({
+        "project_description": 'Helps you "close the loop" on reviews',
+        "author_fullname": "Timothée O'Brien",
+    }),
+    "backslash-edge": _build_context({
+        "project_description": 'My "path" is C:\\temp\\',
+    }),
+    # GitLab
+    "gitlab-ci": _build_context({
+        "repository_provider": "gitlab.com",
+    }),
+    "gitlab-no-ci": _build_context({
+        "repository_provider": "gitlab.com",
+        "use_ci": False,
+        "use_semantic_release": False,
+        "publish_to_pypi": False,
+        "use_blacksmith_runners": False,
+    }),
+    # CI toggling
+    "github-no-ci": _build_context({
+        "use_ci": False,
+        "use_semantic_release": False,
+        "publish_to_pypi": False,
+        "use_blacksmith_runners": False,
+    }),
+    "ci-no-pypi": _build_context({
+        "use_semantic_release": True,
+        "publish_to_pypi": False,
+    }),
+    # Blacksmith runners (previously untested)
+    "blacksmith-runners": _build_context({
+        "use_blacksmith_runners": True,
+    }),
+    "blacksmith-with-pypi": _build_context({
+        "use_blacksmith_runners": True,
+        "publish_to_pypi": True,
+    }),
+    # Project types
+    "app-type": _build_context({"project_type": "app"}),
+    "lib-type": _build_context({"project_type": "lib"}),
+    # Typer disabled (previously untested — exercises argparse fallback)
+    "no-typer": _build_context({"use_typer": False}),
+    # Polar enabled (previously untested)
+    "polar-enabled": _build_context({"use_polar": True}),
+    # Visibility
+    "internal": _build_context({
+        "project_visibility": "internal",
+        "publish_to_pypi": False,
+        "use_polar": False,
+    }),
+    "internal-selfhosted-gitlab": _build_context({
+        "project_visibility": "internal",
+        "repository_provider": "gitlab.com",
+        "repository_host": "gitlab.company.com",
+        "publish_to_pypi": False,
+        "use_polar": False,
+        "use_blacksmith_runners": False,
+    }),
+    "internal-selfhosted-github": _build_context({
+        "project_visibility": "internal",
+        "repository_provider": "github.com",
+        "repository_host": "github.company.com",
+        "publish_to_pypi": False,
+        "use_polar": False,
+        "use_blacksmith_runners": False,
+    }),
+}
+
+
+# ---------------------------------------------------------------------------
+# Parametrized tests — one run per context variant
+# ---------------------------------------------------------------------------
+
+
+class TestTemplateLint:
+    """All templates render without errors and produce valid structured output."""
+
+    @pytest.mark.parametrize(
+        ("variant_name", "context"),
+        list(CONTEXT_VARIANTS.items()),
+        ids=list(CONTEXT_VARIANTS.keys()),
+    )
+    def test_renders_valid_output(self, variant_name: str, context: dict) -> None:
+        errors = []
+        for template_path in _TEMPLATES:
+            rel = template_path.relative_to(TEMPLATE_DIR)
+            rel_str = str(rel)
+            if _should_skip(rel_str, context):
+                continue
+
+            label = f"{rel} [{variant_name}]"
+
+            try:
+                template = _ENV.get_template(str(rel))
+                rendered = template.render(context)
+            except Exception as exc:
+                errors.append(f"RENDER FAIL {label}: {exc}")
+                continue
+
+            ext = _get_output_extension(template_path)
+            validator = _VALIDATORS.get(ext)
+            if validator:
+                error = validator(rendered)
+                if error:
+                    errors.append(f"INVALID {label}: {error}")
+
+        assert not errors, "\n".join(errors)
+
+
+# ---------------------------------------------------------------------------
+# Hypothesis tests — string fuzzing for structured output
+# ---------------------------------------------------------------------------
+
+# Characters that commonly break TOML/YAML: quotes, backslashes, colons, etc.
+_user_text = st.text(
+    min_size=1,
+    max_size=80,
+    alphabet=st.characters(
+        categories=("L", "M", "N", "P", "S", "Z"),
+        exclude_characters=("\x00",),
+    ),
+)
+
+
+class TestStringFuzzing:
+    """TOML and YAML templates produce valid output for arbitrary string inputs."""
+
+    @given(project_description=_user_text, author_fullname=_user_text)
+    @settings(max_examples=100)
+    def test_toml_survives_special_strings(
+        self,
+        project_description: str,
+        author_fullname: str,
+    ) -> None:
+        context = _build_context({
+            "project_description": project_description,
+            "author_fullname": author_fullname,
+        })
+        for template_path in _TEMPLATES:
+            rel = template_path.relative_to(TEMPLATE_DIR)
+            if _get_output_extension(template_path) != ".toml":
+                continue
+            if _should_skip(str(rel), context):
+                continue
+            rendered = _ENV.get_template(str(rel)).render(context)
+            error = _validate_toml(rendered)
+            assert error is None, f"{rel}: {error} (description={project_description!r}, author={author_fullname!r})"
+
+    @given(project_description=_user_text, author_fullname=_user_text)
+    @settings(max_examples=100)
+    def test_yaml_survives_special_strings(
+        self,
+        project_description: str,
+        author_fullname: str,
+    ) -> None:
+        context = _build_context({
+            "project_description": project_description,
+            "author_fullname": author_fullname,
+        })
+        for template_path in _TEMPLATES:
+            rel = template_path.relative_to(TEMPLATE_DIR)
+            ext = _get_output_extension(template_path)
+            if ext not in {".yml", ".yaml"}:
+                continue
+            if _should_skip(str(rel), context):
+                continue
+            rendered = _ENV.get_template(str(rel)).render(context)
+            error = _validate_yaml(rendered)
+            assert error is None, f"{rel}: {error} (description={project_description!r}, author={author_fullname!r})"
