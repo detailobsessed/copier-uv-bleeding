@@ -54,7 +54,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.15.0"
+rev = "v0.15.1"
 hooks = [
   { id = "ruff", args = ["--fix"], priority = 1 },
   { id = "ruff-format", priority = 1 },
@@ -101,14 +101,6 @@ language = "system"
 types_or = ["bash", "shell", "python", "ruby", "perl"]
 priority = 0
 
-[[repos.hooks]]
-id = "lint-templates"
-name = "lint-templates"
-entry = "uv run python scripts/lint_templates.py"
-language = "system"
-files = { glob = "project/**/*.jinja" }
-pass_filenames = false
-priority = 1
 
 [[repos.hooks]]
 id = "ty"

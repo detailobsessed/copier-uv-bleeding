@@ -14,6 +14,7 @@ dev = [
     "mkdocs",
     "mkdocs-material",
     "poethepoet",
+    "hypothesis>=6.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "pytest-randomly>=3.16",
@@ -129,7 +130,7 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["tests", "scripts"]
+known-first-party = ["tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
@@ -144,7 +145,6 @@ known-first-party = ["tests", "scripts"]
     "PLR0904",    # Test classes naturally have many test methods
 ]
 "extensions.py" = ["S404", "S602", "S605", "S607"]  # Template extensions use subprocess for git commands
-"scripts/**" = ["T201"]  # CLI scripts need print
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
@@ -176,9 +176,6 @@ test-cov = "pytest tests/ -v --cov=tests --cov-report=term-missing"
 docs = "mkdocs serve"
 docs-build = "mkdocs build -s"
 docs-deploy = "mkdocs gh-deploy"
-
-# Linting
-lint-templates = "python scripts/lint_templates.py"
 
 # Pre-commit
 prek = "prek run --all-files"

@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 name = "{{ python_package_distribution_name }}"
 description = "{{ project_description | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
-authors = [{name = "{{ author_fullname }}", email = "{{ author_email }}"}]
+authors = [{name = "{{ author_fullname | replace('\\', '\\\\') | replace('\"', '\\\"') }}", email = "{{ author_email | replace('\\', '\\\\') | replace('\"', '\\\"') }}"}]
 {%- if project_visibility == 'public' %}
 license = "{{ copyright_license }}"
 license-files = ["LICENSE"]
