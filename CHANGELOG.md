@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.28.1 (2026-02-13)
+
+### Documentation
+
+- Refine ruff rules and rewrite CONTRIBUTING
+  ([#223](https://github.com/detailobsessed/copier-uv-bleeding/pull/223),
+  [`30cced6`](https://github.com/detailobsessed/copier-uv-bleeding/commit/30cced69e565b68b17369e0957ef7a30de596155))
+
+
 ## v0.28.0 (2026-02-13)
 
 ### Continuous Integration
