@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import shutil
 import subprocess
 import tomllib
@@ -622,7 +623,15 @@ class TestTemplateUpdateCheck:
         # Remove answers file to simulate missing
         (project / ".copier-answers.yml").unlink(missing_ok=True)
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+            start_new_session=True,
+        )
         assert result.returncode == 0
         assert not result.stdout
 
@@ -635,7 +644,15 @@ class TestTemplateUpdateCheck:
         answers.write_text("_commit: 1.0.0\n_src_path: https://gitlab.com/org/repo\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+            start_new_session=True,
+        )
         assert result.returncode == 0
         assert not result.stdout
 
@@ -648,7 +665,15 @@ class TestTemplateUpdateCheck:
         answers.write_text("_commit: 0.0.0\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+            start_new_session=True,
+        )
         assert result.returncode == 0
         # Skip assertion if API unavailable (rate-limited, offline)
         if not result.stdout.strip():
@@ -664,7 +689,15 @@ class TestTemplateUpdateCheck:
         answers.write_text("_commit: 0.0.0\n_src_path: https://github.com/detailobsessed/copier-uv-bleeding\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+            start_new_session=True,
+        )
         assert result.returncode == 0
         # Skip assertion if API unavailable (rate-limited, offline)
         if not result.stdout.strip():
@@ -695,9 +728,246 @@ class TestTemplateUpdateCheck:
         answers.write_text(f"_commit: {latest}\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
         script = project / "scripts" / "check-template-update.sh"
         env = {**os.environ, "COPIER_CHECK_INTERVAL": "0"}
-        result = subprocess.run(["bash", str(script)], cwd=project, capture_output=True, text=True, env=env, check=False)
+        result = subprocess.run(
+            ["bash", str(script)],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+            start_new_session=True,
+        )
         assert result.returncode == 0
         assert "Template update available" not in result.stdout
+
+
+class TestTemplateUpdateNotification:
+    """Test template update notification delivery and script behavior.
+
+    Uses a mock curl to avoid network dependency and ensure deterministic results.
+    The script is static (no jinja), so we copy it directly from the template
+    source instead of generating a full project — tests run in <1s each.
+    """
+
+    SCRIPT_SRC = pathlib.Path(__file__).resolve().parent.parent / "project" / "scripts" / "check-template-update.sh"
+
+    @classmethod
+    def _setup(cls, tmp_path: Path, *, tag: str = "99.0.0") -> Path:
+        """Create a minimal directory with just the script, answers, and mock curl."""
+        project = tmp_path / "project"
+        scripts = project / "scripts"
+        scripts.mkdir(parents=True)
+        shutil.copy2(cls.SCRIPT_SRC, scripts / "check-template-update.sh")
+        (project / ".copier-answers.yml").write_text("_commit: 0.0.0\n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
+        mock_bin = project / "mock-bin"
+        mock_bin.mkdir()
+        mock_curl = mock_bin / "curl"
+        mock_curl.write_text(f'#!/bin/bash\necho \'{{"tag_name": "{tag}"}}\'\n')
+        mock_curl.chmod(0o755)
+        return project
+
+    @staticmethod
+    def _run(project: Path, *, args: list[str] | None = None, env_overrides: dict | None = None) -> subprocess.CompletedProcess:
+        """Run check-template-update.sh with mock curl on PATH."""
+        script = project / "scripts" / "check-template-update.sh"
+        env = {
+            **os.environ,
+            "COPIER_CHECK_INTERVAL": "0",
+            "PATH": f"{project / 'mock-bin'}:{os.environ['PATH']}",
+        }
+        if env_overrides:
+            env.update(env_overrides)
+        cmd = ["bash", str(script), *(args or [])]
+        # start_new_session=True detaches from controlling terminal so /dev/tty
+        # is unavailable, forcing the stdout fallback path that capture_output can see.
+        return subprocess.run(cmd, cwd=project, capture_output=True, text=True, env=env, check=False, start_new_session=True)
+
+    @staticmethod
+    def _cleanup_cache(project: Path) -> None:
+        """Remove cooldown cache file for this project."""
+        import hashlib
+        import pathlib
+
+        # Match shell: echo "$PWD" | sha1sum — echo appends \n, script uses /tmp
+        digest = hashlib.sha1(f"{project}\n".encode(), usedforsecurity=False).hexdigest()[:8]
+        cache = pathlib.Path("/tmp") / f".copier-template-check-{digest}"  # noqa: S108
+        cache.unlink(missing_ok=True)
+
+    # -- Output channel tests --------------------------------------------------
+
+    def test_notification_only_on_stdout(self, tmp_path: Path) -> None:
+        """Script writes to /dev/tty when available, falls back to stdout.
+
+        In tests (start_new_session=True), /dev/tty is unavailable so the
+        fallback to stdout is exercised. Stderr should always be empty.
+        """
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        result = self._run(project)
+        assert result.returncode == 0
+        assert "Template update available" in result.stdout
+        assert not result.stderr
+
+    def test_notification_includes_versions(self, tmp_path: Path) -> None:
+        """Notification shows local → latest version."""
+        project = self._setup(tmp_path, tag="1.2.3")
+        self._cleanup_cache(project)
+        result = self._run(project)
+        assert "0.0.0" in result.stdout
+        assert "1.2.3" in result.stdout
+
+    def test_notification_includes_update_commands(self, tmp_path: Path) -> None:
+        """Notification shows both copier and poe update commands."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        result = self._run(project)
+        assert "copier update" in result.stdout
+        assert "poe update-template" in result.stdout
+
+    def test_silent_when_up_to_date(self, tmp_path: Path) -> None:
+        """No output when local version matches latest."""
+        project = self._setup(tmp_path, tag="0.0.0")
+        self._cleanup_cache(project)
+        result = self._run(project)
+        assert result.returncode == 0
+        assert not result.stdout.strip()
+
+    # -- Hook argument handling ------------------------------------------------
+
+    def test_file_level_restore_skipped(self, tmp_path: Path) -> None:
+        """Script exits silently when git signals file-level restore (arg3=0)."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        result = self._run(project, args=["oldref", "newref", "0"])
+        assert result.returncode == 0
+        assert not result.stdout
+
+    def test_branch_checkout_runs(self, tmp_path: Path) -> None:
+        """Script runs on branch checkout (arg3=1)."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        result = self._run(project, args=["oldref", "newref", "1"])
+        assert "Template update available" in result.stdout
+
+    # -- Cooldown mechanism ----------------------------------------------------
+
+    def test_cooldown_blocks_repeated_hook_calls(self, tmp_path: Path) -> None:
+        """Hook invocation (3 args) respects cooldown — second call is silent."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        # First call: should produce output and create cache file
+        result1 = self._run(
+            project,
+            args=["oldref", "newref", "1"],
+            env_overrides={"COPIER_CHECK_INTERVAL": "86400"},
+        )
+        assert "Template update available" in result1.stdout
+        # Second call within cooldown: should be silent
+        result2 = self._run(
+            project,
+            args=["oldref", "newref", "1"],
+            env_overrides={"COPIER_CHECK_INTERVAL": "86400"},
+        )
+        assert not result2.stdout.strip()
+
+    def test_manual_invocation_bypasses_cooldown(self, tmp_path: Path) -> None:
+        """Manual invocation (0 args, e.g. poe check-template) ignores cooldown."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        # First call as hook to prime the cache
+        self._run(
+            project,
+            args=["oldref", "newref", "1"],
+            env_overrides={"COPIER_CHECK_INTERVAL": "86400"},
+        )
+        # Manual call (0 args): should still show notification
+        result = self._run(project, env_overrides={"COPIER_CHECK_INTERVAL": "86400"})
+        assert "Template update available" in result.stdout
+
+    # -- Edge cases ------------------------------------------------------------
+
+    def test_empty_commit_field(self, tmp_path: Path) -> None:
+        """Script exits silently when _commit is empty."""
+        project = self._setup(tmp_path)
+        (project / ".copier-answers.yml").write_text("_commit: \n_src_path: gh:detailobsessed/copier-uv-bleeding\n")
+        result = self._run(project)
+        assert result.returncode == 0
+        assert not result.stdout
+
+    def test_src_path_with_trailing_dot_git(self, tmp_path: Path) -> None:
+        """Script strips .git suffix from GitHub URLs."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        (project / ".copier-answers.yml").write_text(
+            "_commit: 0.0.0\n_src_path: https://github.com/detailobsessed/copier-uv-bleeding.git\n"
+        )
+        result = self._run(project)
+        assert "Template update available" in result.stdout
+
+    def test_api_failure_exits_silently(self, tmp_path: Path) -> None:
+        """Script exits 0 silently when API returns no tag."""
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        mock_curl = project / "mock-bin" / "curl"
+        mock_curl.write_text("#!/bin/bash\necho 'rate limited'\n")
+        result = self._run(project)
+        assert result.returncode == 0
+        assert not result.stdout.strip()
+
+    # -- Git hook integration --------------------------------------------------
+
+    @pytest.mark.slow
+    def test_raw_git_hook_delivers_output(self, tmp_path: Path) -> None:
+        """A raw git post-checkout hook (without prek) delivers the notification.
+
+        This test verifies the baseline: git itself does not swallow hook output.
+        The actual problem is gt wrapping git and capturing its output.
+        """
+        project = self._setup(tmp_path)
+        self._cleanup_cache(project)
+        git_env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "test",
+            "GIT_AUTHOR_EMAIL": "test@test.com",
+            "GIT_COMMITTER_NAME": "test",
+            "GIT_COMMITTER_EMAIL": "test@test.com",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "HOME": str(tmp_path),
+        }
+        # Init repo
+        subprocess.run(["git", "init", "-b", "main"], cwd=project, capture_output=True, check=True, env=git_env)
+        subprocess.run(["git", "add", "."], cwd=project, capture_output=True, check=True, env=git_env)
+        subprocess.run(["git", "commit", "-m", "init"], cwd=project, capture_output=True, check=True, env=git_env)
+        # Install raw post-checkout hook (bypassing prek)
+        hook = project / ".git" / "hooks" / "post-checkout"
+        hook.parent.mkdir(parents=True, exist_ok=True)
+        hook.write_text(
+            f"#!/bin/bash\n"
+            f'export PATH="{project / "mock-bin"}:$PATH"\n'
+            f"export COPIER_CHECK_INTERVAL=0\n"
+            f'bash scripts/check-template-update.sh "$@"\n'
+        )
+        hook.chmod(0o755)
+        # Create branch and switch back to trigger post-checkout
+        subprocess.run(
+            ["git", "checkout", "-b", "test"],
+            cwd=project,
+            capture_output=True,
+            check=True,
+            env=git_env,
+            start_new_session=True,
+        )
+        result = subprocess.run(
+            ["git", "checkout", "main"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+            env=git_env,
+            start_new_session=True,
+        )
+        combined = result.stdout + result.stderr
+        assert "Template update available" in combined
 
 
 class TestGitLabSupport:
