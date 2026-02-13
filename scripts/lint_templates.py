@@ -22,7 +22,7 @@ import re
 import sys
 import tomllib
 import unicodedata
-from datetime import date
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -48,7 +48,7 @@ def slugify(value: str, separator: str = "-") -> str:
 # ---------------------------------------------------------------------------
 
 _COMMON = {
-    "current_year": date.today().year,
+    "current_year": datetime.now(UTC).year,
     "giscus_repo_id": "PLACEHOLDER_REPO_ID",
     "giscus_discussion_category_id": "PLACEHOLDER_CATEGORY_ID",
 }
@@ -69,7 +69,7 @@ def _build_context(overrides: dict) -> dict:
         "repository_name": "my-test-project",
         "copyright_holder": "Test Author",
         "copyright_holder_email": "test@example.com",
-        "copyright_date": str(date.today().year),
+        "copyright_date": str(datetime.now(UTC).year),
         "copyright_license": "MIT",
         "python_package_distribution_name": "my-test-project",
         "python_package_import_name": "my_test_project",
@@ -263,6 +263,33 @@ def render_template(env: Environment, template_path: Path, context: dict) -> str
 # ---------------------------------------------------------------------------
 
 
+def _should_skip_template(rel_str: str, context: dict) -> bool:
+    """Return True if this template/variant combination should be skipped."""
+    provider = context.get("repository_provider", "github.com")
+
+    # Skip GitHub-only files for GitLab variants and vice versa
+    if rel_str.startswith(".github") and provider != "github.com":
+        return True
+    if "gitlab-ci" in rel_str and provider != "gitlab.com":
+        return True
+    # Skip CI files when CI is disabled
+    ci_files = ("ci.yml", "release.yml", "copier-update.yml", "gitlab-ci")
+    if not context.get("use_ci") and any(x in rel_str for x in ci_files):
+        return True
+    # Skip community/open-source files for internal projects
+    community_files = (
+        "CODE_OF_CONDUCT",
+        "CONTRIBUTING",
+        "SECURITY",
+        "LICENSE",
+        "license.md",
+        "contributing.md",
+        "code_of_conduct.md",
+        "FUNDING",
+    )
+    return context.get("project_visibility") == "internal" and any(x in rel_str for x in community_files)
+
+
 def lint_templates(verbose: bool = False) -> int:
     """Lint all templates. Returns exit code (0=ok, 1=errors)."""
     env = Environment(
@@ -283,33 +310,7 @@ def lint_templates(verbose: bool = False) -> int:
         validator = VALIDATORS.get(ext)
 
         for variant_name, context in CONTEXT_VARIANTS.items():
-            # Skip GitHub-only files for GitLab variants and vice versa
-            rel_str = str(rel)
-            is_github_file = rel_str.startswith(".github")
-            is_gitlab_file = "gitlab-ci" in rel_str
-            provider = context.get("repository_provider", "github.com")
-
-            if is_github_file and provider != "github.com":
-                continue
-            if is_gitlab_file and provider != "gitlab.com":
-                continue
-            # Skip CI files when CI is disabled
-            if not context.get("use_ci") and any(x in rel_str for x in ["ci.yml", "release.yml", "copier-update.yml", "gitlab-ci"]):
-                continue
-            # Skip community/open-source files for internal projects
-            if context.get("project_visibility") == "internal" and any(
-                x in rel_str
-                for x in [
-                    "CODE_OF_CONDUCT",
-                    "CONTRIBUTING",
-                    "SECURITY",
-                    "LICENSE",
-                    "license.md",
-                    "contributing.md",
-                    "code_of_conduct.md",
-                    "FUNDING",
-                ]
-            ):
+            if _should_skip_template(str(rel), context):
                 continue
 
             total_checks += 1

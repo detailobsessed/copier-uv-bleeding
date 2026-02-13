@@ -29,15 +29,15 @@ env = Environment()
 template = env.from_string(Path("project/LICENSE.jinja").read_text(encoding="utf-8"))
 
 
-for license in licenses:
-    print(f"Testing license: {license}")
+for license_id in licenses:
+    print(f"Testing license: {license_id}")
     rendered = template.render(
         project_name="Test Project",
         project_description="Testing this great template",
         author_fullname="Jane Doe",
         author_username="janedoe",
         author_email="jane@example.com",
-        copyright_license=license,
+        copyright_license=license_id,
         copyright_holder="Jane Doe",
         copyright_date="2024",
     )
