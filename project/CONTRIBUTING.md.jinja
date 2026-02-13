@@ -13,7 +13,7 @@ uv sync
 
 This installs all dependencies including dev tools. If `uv` is not installed, see the [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
-{% if project_type == 'package' -%}
+{% if project_type == 'app' -%}
 Run the CLI with `uv run {{ python_package_command_line_name }} [ARGS...]`.
 
 {% endif -%}

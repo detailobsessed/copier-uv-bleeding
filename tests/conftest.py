@@ -32,7 +32,7 @@ def copier_defaults() -> dict:
 def generate_project(
     tmp_path: Path,
     answers: dict,
-    project_type: str = "package",
+    project_type: str = "app",
 ) -> Path:
     """Generate a project using copier.
 
@@ -85,7 +85,7 @@ def project_factory(tmp_path_factory: pytest.TempPathFactory):
     """
     cache: dict[str, Path] = {}
 
-    def _generate(answers: dict, project_type: str = "package") -> Path:
+    def _generate(answers: dict, project_type: str = "app") -> Path:
         key = _cache_key(answers, project_type)
         if key not in cache:
             path = tmp_path_factory.mktemp("project")

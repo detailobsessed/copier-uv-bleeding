@@ -31,8 +31,10 @@ classifiers = [
 ]
 {%- endif %}
 dependencies = [
-{%- if project_type == 'package' and use_typer %}
-    "typer>=0.21",
+{%- if project_type == 'app' and cli_framework == 'typer' %}
+    "typer>=0.23",
+{%- elif project_type == 'app' and cli_framework == 'cyclopts' %}
+    "cyclopts>=4.5",
 {%- endif %}
 ]
 
@@ -55,7 +57,7 @@ Discussions = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repos
 Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 {%- endif %}
 
-{% if project_type == 'package' -%}
+{% if project_type == 'app' -%}
 [project.scripts]
 {{ python_package_command_line_name }} = "{{ python_package_import_name }}.cli:main"
 
