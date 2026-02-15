@@ -114,7 +114,7 @@ priority = 1
 [[repos.hooks]]
 id = "pytest-cov"
 name = "pytest with coverage"
-entry = "uv run pytest --cov=tests --cov-fail-under=90 --cov-report=term-missing:skip-covered"
+entry = "uv run pytest -q --cov=tests --cov-fail-under=90 --cov-report=term-missing:skip-covered"
 language = "system"
 types = ["python"]
 pass_filenames = false
