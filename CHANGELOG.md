@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.28.4 (2026-02-15)
+
+### Bug Fixes
+
+- Add -q flag to pytest hooks for quieter output
+  ([#227](https://github.com/detailobsessed/copier-uv-bleeding/pull/227),
+  [`27c32ab`](https://github.com/detailobsessed/copier-uv-bleeding/commit/27c32ab0ca0bd073597d0e422749ad7a1fc1428f))
+
+
 ## v0.28.3 (2026-02-13)
 
 ### Refactoring
