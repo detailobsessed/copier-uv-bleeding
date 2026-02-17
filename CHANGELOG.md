@@ -14,6 +14,19 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.28.5 (2026-02-17)
+
+### Bug Fixes
+
+- Default use_ci to false for internal projects
+  ([#231](https://github.com/detailobsessed/copier-uv-bleeding/pull/231),
+  [`9d8652e`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9d8652e68fcb02c7d7222b41329acafbd51d0c41))
+
+- Minor template polish — provider-neutral badge text and stale coverage omit
+  ([#230](https://github.com/detailobsessed/copier-uv-bleeding/pull/230),
+  [`0848731`](https://github.com/detailobsessed/copier-uv-bleeding/commit/084873138c5943df5dec541e12b1e0a09286c38b))
+
+
 ## v0.28.4 (2026-02-15)
 
 ### Bug Fixes
