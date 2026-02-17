@@ -14,6 +14,18 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.29.0 (2026-02-17)
+
+### Features
+
+- Add custom PyPI index support without default=true
+  ([#232](https://github.com/detailobsessed/copier-uv-bleeding/pull/232),
+  [`393747a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/393747aa74a493d95130f855df2b8b77827d1dfa))
+
+- Enable auto-merge on repos ([#234](https://github.com/detailobsessed/copier-uv-bleeding/pull/234),
+  [`333396f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/333396f594a8edc2984814fffba2ff3b1214b9a2))
+
+
 ## v0.28.5 (2026-02-17)
 
 ### Bug Fixes
