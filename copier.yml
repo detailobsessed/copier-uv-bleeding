@@ -192,7 +192,7 @@ cli_framework:
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
-  default: true
+  default: "{{ project_visibility == 'public' }}"
 
 use_semantic_release:
   type: bool
