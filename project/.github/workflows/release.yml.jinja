@@ -36,6 +36,7 @@ jobs:
       with:
         python-version: "3.14"
         enable-cache: true
+        github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
 
     - name: Install dependencies
       run: uv sync --only-group maintain
@@ -85,6 +86,7 @@ jobs:
       uses: astral-sh/setup-uv@v7
       with:
         python-version: "3.14"
+        github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
 
     - name: Build and publish
       run: |

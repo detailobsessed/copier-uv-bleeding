@@ -235,6 +235,22 @@ class TestCIWorkflows:
         content = release_yml.read_text()
         assert "uv publish" in content
 
+    def test_release_setup_uv_has_github_token(self, copier_defaults: dict, project_factory) -> None:
+        """Release workflow setup-uv steps should have github-token to avoid rate limiting (#237)."""
+        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "release.yml").read_text()
+        assert "github-token:" in content
+
+    def test_ci_setup_uv_has_github_token(self, copier_defaults: dict, project_factory) -> None:
+        """CI workflow setup-uv steps should have github-token to avoid rate limiting (#237)."""
+        answers = {**copier_defaults, "use_ci": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "ci.yml").read_text()
+        assert "github-token:" in content
+
     def test_pyproject_has_build_system(self, copier_defaults: dict, project_factory) -> None:
         """pyproject.toml should have build-system section."""
         project = project_factory(copier_defaults)
