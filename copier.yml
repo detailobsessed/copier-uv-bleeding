@@ -189,6 +189,11 @@ cli_framework:
     "Cyclopts (https://cyclopts.readthedocs.io/)": cyclopts
     "None (no framework)": none
 
+custom_pypi_index_url:
+  type: str
+  help: "Custom PyPI index URL (e.g. Artifactory, Nexus). Leave empty for public PyPI only."
+  default: ""
+
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
