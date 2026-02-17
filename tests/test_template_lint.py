@@ -77,6 +77,7 @@ def _build_context(overrides: dict) -> dict:
         "use_blacksmith_runners": False,
         "project_visibility": "public",
         "use_polar": False,
+        "custom_pypi_index_url": "",
         "include_template_dev_scripts": False,
         "current_year": datetime.now(UTC).year,
         "giscus_repo_id": "PLACEHOLDER_REPO_ID",
@@ -275,6 +276,13 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "publish_to_pypi": False,
         "use_polar": False,
         "use_blacksmith_runners": False,
+    }),
+    # Custom PyPI index (corporate Artifactory/Nexus)
+    "custom-pypi-index": _build_context({
+        "project_visibility": "internal",
+        "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
+        "publish_to_pypi": False,
+        "use_polar": False,
     }),
 }
 

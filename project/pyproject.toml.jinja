@@ -98,6 +98,11 @@ docs = [
 
 [tool.uv]
 default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "docs", "local"]
+{%- if custom_pypi_index_url %}
+
+[[tool.uv.index]]
+url = "{{ custom_pypi_index_url }}"
+{%- endif %}
 
 [tool.ruff]
 target-version = "py314"
