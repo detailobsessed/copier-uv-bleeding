@@ -1083,6 +1083,40 @@ class TestGitLabSupport:
         content = mkdocs.read_text()
         assert "-/edit/main/docs/" in content
 
+    def test_gitlab_semantic_release_remote(self, copier_defaults: dict, project_factory) -> None:
+        """GitLab projects should have [tool.semantic_release.remote] with type=gitlab (#236)."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_ci": True, "use_semantic_release": True}
+        project = project_factory(answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "[tool.semantic_release.remote]" in content
+        assert 'type = "gitlab"' in content
+        assert "domain" not in content
+
+    def test_gitlab_selfhosted_semantic_release_remote_domain(self, copier_defaults: dict, project_factory) -> None:
+        """Self-hosted GitLab should include domain in semantic_release.remote (#236)."""
+        answers = {
+            **copier_defaults,
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.company.com",
+            "use_ci": True,
+            "use_semantic_release": True,
+        }
+        project = project_factory(answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "[tool.semantic_release.remote]" in content
+        assert 'type = "gitlab"' in content
+        assert 'domain = "gitlab.company.com"' in content
+
+    def test_github_no_semantic_release_remote(self, copier_defaults: dict, project_factory) -> None:
+        """GitHub projects should NOT have [tool.semantic_release.remote] section."""
+        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
+        project = project_factory(answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert "[tool.semantic_release.remote]" not in content
+
     def test_github_edit_uri_no_dash_prefix(self, copier_defaults: dict, project_factory) -> None:
         """GitHub projects should have plain edit/ in edit_uri (#164)."""
         project = project_factory(copier_defaults)

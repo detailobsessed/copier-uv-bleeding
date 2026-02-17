@@ -303,4 +303,12 @@ mode = "update"
 allowed_tags = ["build", "chore", "ci", "deps", "docs", "feat", "fix", "perf", "refactor", "style", "test"]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
+{%- if repository_provider == "gitlab.com" %}
+
+[tool.semantic_release.remote]
+type = "gitlab"
+{%- if repository_host != "gitlab.com" %}
+domain = "{{ repository_host }}"
+{%- endif %}
+{%- endif %}
 {%- endif %}
