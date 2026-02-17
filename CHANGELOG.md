@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.29.1 (2026-02-17)
+
+### Bug Fixes
+
+- Add --defaults to copier update in update-template poe task
+  ([#235](https://github.com/detailobsessed/copier-uv-bleeding/pull/235),
+  [`e8e4db8`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e8e4db84f7896076d26ad9e4b4f69703e1b3bb5d))
+
+
 ## v0.29.0 (2026-02-17)
 
 ### Features
