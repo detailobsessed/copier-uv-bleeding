@@ -14,6 +14,19 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.29.2 (2026-02-17)
+
+### Bug Fixes
+
+- Add github-token to setup-uv steps in CI and release workflows
+  ([#239](https://github.com/detailobsessed/copier-uv-bleeding/pull/239),
+  [`c20d756`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c20d75662313ecc9d7535617ec4c0a3d22fbc191))
+
+- Add semantic_release.remote config for GitLab projects
+  ([#238](https://github.com/detailobsessed/copier-uv-bleeding/pull/238),
+  [`7c51d44`](https://github.com/detailobsessed/copier-uv-bleeding/commit/7c51d44ee276c8d6d83af10477d33cff4ebc91e9))
+
+
 ## v0.29.1 (2026-02-17)
 
 ### Bug Fixes
