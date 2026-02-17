@@ -243,6 +243,14 @@ class TestCIWorkflows:
         content = (project / ".github" / "workflows" / "release.yml").read_text()
         assert "github-token:" in content
 
+    def test_release_setup_uv_has_github_token_no_pypi(self, copier_defaults: dict, project_factory) -> None:
+        """Release workflow release job setup-uv should have github-token even without pypi-publish job (#237)."""
+        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": False}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "release.yml").read_text()
+        assert "github-token:" in content
+
     def test_ci_setup_uv_has_github_token(self, copier_defaults: dict, project_factory) -> None:
         """CI workflow setup-uv steps should have github-token to avoid rate limiting (#237)."""
         answers = {**copier_defaults, "use_ci": True}
