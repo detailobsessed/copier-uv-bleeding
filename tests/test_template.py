@@ -594,6 +594,7 @@ class TestTemplateUpdateCheck:
         content = pyproject.read_text()
         assert "update-template" in content
         assert "copier update" in content
+        assert "--defaults" in content
         assert "uv sync --upgrade" in content
         assert "prek autoupdate" in content
 
@@ -1411,7 +1412,7 @@ class TestSkipIfExists:
 
         # Re-apply template
         result = subprocess.run(
-            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--overwrite"],
+            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--defaults", "--overwrite"],
             cwd=project,
             capture_output=True,
             text=True,
