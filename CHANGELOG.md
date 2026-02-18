@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.29.3 (2026-02-18)
+
+### Documentation
+
+- Link to ci-components workflow permissions guide
+  ([#241](https://github.com/detailobsessed/copier-uv-bleeding/pull/241),
+  [`b5f6908`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b5f6908db9e3a210ab42b790fc4e0dc930423a3b))
+
+### Testing
+
+- Add publish_to_pypi=False case for release setup-uv github-token
+  ([#240](https://github.com/detailobsessed/copier-uv-bleeding/pull/240),
+  [`f60913d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f60913dafacbab442b45d62d8114823b2bf078cb))
+
+
 ## v0.29.2 (2026-02-17)
 
 ### Bug Fixes
