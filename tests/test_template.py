@@ -267,13 +267,13 @@ class TestCIWorkflows:
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
         assert "j178/prek-action" in content
 
-    def test_ci_prek_skips_testmon(self, copier_defaults: dict, project_factory) -> None:
-        """CI prek job should skip pytest-testmon (redundant with tests job)."""
+    def test_ci_prek_skips_redundant_hooks(self, copier_defaults: dict, project_factory) -> None:
+        """CI prek job should skip hooks redundant with dedicated CI jobs."""
         answers = {**copier_defaults, "use_ci": True}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
-        assert "SKIP: pytest-testmon" in content
+        assert "SKIP: no-commit-to-branch,pytest-testmon,lychee" in content
 
     def test_pyproject_has_build_system(self, copier_defaults: dict, project_factory) -> None:
         """pyproject.toml should have build-system section."""
