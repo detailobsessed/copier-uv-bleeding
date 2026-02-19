@@ -64,7 +64,7 @@ jobs:
       uses: lycheeverse/lychee-action@v2
       with:
         fail: true
-        args: --no-progress .
+        args: --config .lychee.toml --no-progress .
 
   prek:
 {%- if use_blacksmith_runners %}
