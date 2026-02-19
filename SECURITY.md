@@ -6,7 +6,7 @@ If you discover a security vulnerability in this project, please report it respo
 
 **Do NOT open a public issue.**
 
-Instead, please email [dev@ichoosetoaccept.com](mailto:dev@ichoosetoaccept.com) with:
+Instead, please email [dev@detailobsessed.com](mailto:dev@detailobsessed.com) with:
 
 - Description of the vulnerability
 - Steps to reproduce

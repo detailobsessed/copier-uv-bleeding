@@ -36,10 +36,10 @@ And the file looks like this:
 ```yaml
 # Changes here will be overwritten by Copier
 _commit: 0.1.10
-_src_path: gh:ichoosetoaccept/copier-uv-bleeding
+_src_path: gh:detailobsessed/copier-uv-bleeding
 author_email: ismar@gmail.com
 author_fullname: Ismar Iljazovic
-author_username: ichoosetoaccept
+author_username: detailobsessed
 copyright_date: '2020'
 copyright_holder: Ismar Iljazovic
 copyright_holder_email: ismar@gmail.com

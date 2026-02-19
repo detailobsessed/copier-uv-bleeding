@@ -259,6 +259,22 @@ class TestCIWorkflows:
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
         assert "github-token:" in content
 
+    def test_ci_has_prek_action(self, copier_defaults: dict, project_factory) -> None:
+        """CI workflow should use prek-action for comprehensive quality checks."""
+        answers = {**copier_defaults, "use_ci": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "ci.yml").read_text()
+        assert "j178/prek-action" in content
+
+    def test_ci_prek_skips_testmon(self, copier_defaults: dict, project_factory) -> None:
+        """CI prek job should skip pytest-testmon (redundant with tests job)."""
+        answers = {**copier_defaults, "use_ci": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "ci.yml").read_text()
+        assert "SKIP: pytest-testmon" in content
+
     def test_pyproject_has_build_system(self, copier_defaults: dict, project_factory) -> None:
         """pyproject.toml should have build-system section."""
         project = project_factory(copier_defaults)

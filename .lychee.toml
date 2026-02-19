@@ -21,6 +21,10 @@ exclude = [
     '^https://pypi\.org/p/$',
     # Localhost URLs (e.g. docs preview in CONTRIBUTING.md)
     '^http://localhost',
+    # Copier template: CONTRIBUTING.md.jinja doesn't exist as plain .md in the template repo
+    '^file://.*CONTRIBUTING\.md',
+    # GitHub Pages site may not be deployed yet
+    '^https://detailobsessed\.github\.io/',
 ]
 
 # Exclude local/private addresses
