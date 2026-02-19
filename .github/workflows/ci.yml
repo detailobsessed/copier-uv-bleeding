@@ -58,6 +58,21 @@ jobs:
         fail: true
         args: --config .lychee.toml --no-progress .
 
+  prek:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+      with:
+        python-version: "3.14"
+        enable-cache: true
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: j178/prek-action@0bb87d7f00b0c99306c8bcb8b8beba1eb581c037 # v1.1.1
+      env:
+        SKIP: pytest-testmon
+      with:
+        extra-args: '--all-files'
+
   test-project:
     needs: changes
     if: ${{ github.event_name == 'push' || needs.changes.outputs.src == 'true' }}
@@ -73,7 +88,7 @@ jobs:
     - name: Configure Git
       run: |
         git config --global init.defaultBranch main
-        git config --global user.email "dev@ichoosetoaccept.com"
+        git config --global user.email "dev@detailobsessed.com"
         git config --global user.name "I Choose to Accept"
 
     - name: Setup uv and Python
@@ -110,7 +125,7 @@ jobs:
 
   ci-pass:
     if: always()
-    needs: [links, test-project]
+    needs: [links, prek, test-project]
     runs-on: ubuntu-latest
     steps:
     - name: Check all jobs passed
