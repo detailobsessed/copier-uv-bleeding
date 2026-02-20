@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.29.5 (2026-02-20)
+
+### Bug Fixes
+
+- Update test for unified update notification
+  ([#248](https://github.com/detailobsessed/copier-uv-bleeding/pull/248),
+  [`1031a3f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1031a3fbdf3045328a2b3260a67e728a32b16094))
+
+### Documentation
+
+- Unify update instructions to use poe update-template
+  ([#247](https://github.com/detailobsessed/copier-uv-bleeding/pull/247),
+  [`cb497f7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/cb497f7f67b2e892252832ae7997e4dd6f061628))
+
+
 ## v0.29.4 (2026-02-20)
 
 ### Bug Fixes
