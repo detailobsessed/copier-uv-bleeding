@@ -49,8 +49,10 @@ This project was generated with [copier-uv-bleeding](https://github.com/detailob
 To pull the latest template changes (smart 3-way merge that respects your project changes):
 
 ```bash
-copier update --trust .
+poe update-template
 ```
+
+This runs `copier update --trust . --skip-answered --defaults` followed by `uv sync --upgrade` and `prek autoupdate` to keep dependencies and hooks current.
 
 To re-apply the template from scratch (ignores your project diff):
 
