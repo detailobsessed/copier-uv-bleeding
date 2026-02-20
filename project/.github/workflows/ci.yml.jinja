@@ -81,7 +81,7 @@ jobs:
         github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
     - uses: j178/prek-action@v1
       env:
-        SKIP: pytest-testmon,lychee
+        SKIP: no-commit-to-branch,pytest-testmon,lychee
       with:
         extra-args: '--all-files'
 
