@@ -226,6 +226,14 @@ class TestCIWorkflows:
         content = release_yml.read_text()
         assert "semantic-release" in content
 
+    def test_release_checks_out_main(self, copier_defaults: dict, project_factory) -> None:
+        """Release workflow should checkout main explicitly (workflow_run defaults to PR branch)."""
+        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "release.yml").read_text()
+        assert "ref: main" in content
+
     def test_release_has_uv_publish(self, copier_defaults: dict, project_factory) -> None:
         """Release workflow should use uv publish in separate pypi-publish job."""
         answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
@@ -853,11 +861,10 @@ class TestTemplateUpdateNotification:
         assert "1.2.3" in result.stdout
 
     def test_notification_includes_update_commands(self, tmp_path: Path) -> None:
-        """Notification shows both copier and poe update commands."""
+        """Notification shows poe update-template command."""
         project = self._setup(tmp_path)
         self._cleanup_cache(project)
         result = self._run(project)
-        assert "copier update" in result.stdout
         assert "poe update-template" in result.stdout
 
     def test_silent_when_up_to_date(self, tmp_path: Path) -> None:
