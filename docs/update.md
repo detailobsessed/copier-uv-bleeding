@@ -54,9 +54,17 @@ repository_namespace: mkdocstrings
 repository_provider: github.com
 ```
 
-If you want to use all previous answers
-without copier prompting you for each answer,
-run `copier update --force`.
+Generated projects ship a `poe update-template` task that handles the full update flow:
+
+```bash
+poe update-template
+```
+
+This runs:
+
+1. `copier update --trust . --skip-answered --defaults` — pull template changes without prompting
+2. `uv sync --upgrade` — upgrade all dependencies
+3. `prek autoupdate` — update hook versions
 
 Since we are generally using Git in our projects,
 my recommendation is to not think at all
