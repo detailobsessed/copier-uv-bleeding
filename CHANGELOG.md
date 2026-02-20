@@ -36,7 +36,6 @@ See the original repository for historical changes before version 2.0.0.
   ([#246](https://github.com/detailobsessed/copier-uv-bleeding/pull/246),
   [`5d7441d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/5d7441db45237bbf6f7b2d15e5434d1ab3554555))
 
-
 ## v0.29.3 (2026-02-18)
 
 ### Documentation
