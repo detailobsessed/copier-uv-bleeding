@@ -14,6 +14,29 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.29.4 (2026-02-20)
+
+### Bug Fixes
+
+- Add explicit --config flag to lychee-action in CI template
+  ([#244](https://github.com/detailobsessed/copier-uv-bleeding/pull/244),
+  [`4fa629d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4fa629db9498953700a336dedce212ae9cf982fd))
+
+### Continuous Integration
+
+- Add prek-action job to CI workflows
+  ([#242](https://github.com/detailobsessed/copier-uv-bleeding/pull/242),
+  [`288c7e3`](https://github.com/detailobsessed/copier-uv-bleeding/commit/288c7e3e6f48b364f0b2d99f7bca2a236d7d727e))
+
+- Fix SKIP env to use correct hook IDs (pytest-cov, lychee)
+  ([#245](https://github.com/detailobsessed/copier-uv-bleeding/pull/245),
+  [`d6e2751`](https://github.com/detailobsessed/copier-uv-bleeding/commit/d6e2751760cede225605fb672c36b0433c51cf1c))
+
+- Skip no-commit-to-branch hook in CI prek job
+  ([#246](https://github.com/detailobsessed/copier-uv-bleeding/pull/246),
+  [`5d7441d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/5d7441db45237bbf6f7b2d15e5434d1ab3554555))
+
+
 ## v0.29.3 (2026-02-18)
 
 ### Documentation
