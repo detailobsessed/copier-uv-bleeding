@@ -76,7 +76,6 @@ def _build_context(overrides: dict) -> dict:
         "publish_to_pypi": True,
         "use_blacksmith_runners": False,
         "project_visibility": "public",
-        "use_polar": False,
         "custom_pypi_index_url": "",
         "include_template_dev_scripts": False,
         "current_year": datetime.now(UTC).year,
@@ -253,20 +252,16 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     # CLI frameworks
     "cyclopts": _build_context({"cli_framework": "cyclopts"}),
     "no-cli-framework": _build_context({"cli_framework": "none"}),
-    # Polar enabled (previously untested)
-    "polar-enabled": _build_context({"use_polar": True}),
     # Visibility
     "internal": _build_context({
         "project_visibility": "internal",
         "publish_to_pypi": False,
-        "use_polar": False,
     }),
     "internal-selfhosted-gitlab": _build_context({
         "project_visibility": "internal",
         "repository_provider": "gitlab.com",
         "repository_host": "gitlab.company.com",
         "publish_to_pypi": False,
-        "use_polar": False,
         "use_blacksmith_runners": False,
     }),
     "internal-selfhosted-github": _build_context({
@@ -274,7 +269,6 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "repository_provider": "github.com",
         "repository_host": "github.company.com",
         "publish_to_pypi": False,
-        "use_polar": False,
         "use_blacksmith_runners": False,
     }),
     # Custom PyPI index (corporate Artifactory/Nexus)
@@ -282,7 +276,6 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "project_visibility": "internal",
         "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
         "publish_to_pypi": False,
-        "use_polar": False,
     }),
 }
 

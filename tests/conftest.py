@@ -25,7 +25,6 @@ def copier_defaults() -> dict:
         "use_semantic_release": True,
         "publish_to_pypi": False,
         "use_blacksmith_runners": False,
-        "use_polar": False,
     }
 
 

@@ -56,7 +56,6 @@ When you run `copier copy`, you'll be asked:
 | **Enable semantic-release?** | Automated versioning and changelog |
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
-| **Enable Polar.sh?** | Sponsorship integration |
 
 ## Quick Start
 

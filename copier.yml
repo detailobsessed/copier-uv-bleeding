@@ -217,12 +217,6 @@ use_blacksmith_runners:
   default: "{{ use_ci and repository_provider == 'github.com' }}"
   when: "{{ use_ci and repository_provider == 'github.com' }}"
 
-use_polar:
-  type: bool
-  help: Enable Polar.sh sponsorship? (requires account at polar.sh)
-  default: false
-  when: "{{ project_visibility == 'public' }}"
-
 
 # TASKS --------------------------------
 _tasks:
