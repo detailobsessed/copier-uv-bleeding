@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.30.0 (2026-02-21)
+
+### Features
+
+- Add GitHub Sponsors FUNDING.yml and remove Polar.sh integration
+  ([#250](https://github.com/detailobsessed/copier-uv-bleeding/pull/250),
+  [`939c4c4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/939c4c425cc13d88abba7ea03e5f010deb365d47))
+
+
 ## v0.29.5 (2026-02-20)
 
 ### Bug Fixes
