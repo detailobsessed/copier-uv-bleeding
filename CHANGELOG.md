@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.30.1 (2026-02-21)
+
+### Chores
+
+- Remove check-pathlib-encoding hook — ruff PLW1514 now handles indirect paths
+  ([#251](https://github.com/detailobsessed/copier-uv-bleeding/pull/251),
+  [`105d959`](https://github.com/detailobsessed/copier-uv-bleeding/commit/105d959a883b30a14a7e5f17158fcf771c7c0673))
+
+
 ## v0.30.0 (2026-02-21)
 
 ### Features
