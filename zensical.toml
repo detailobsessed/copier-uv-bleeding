@@ -70,6 +70,8 @@ name = "Switch to system preference"
 [project.markdown_extensions.admonition]
 [project.markdown_extensions.callouts]
 [project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"
 [project.markdown_extensions.pymdownx.magiclink]
 [project.markdown_extensions.pymdownx.snippets]
 check_paths = true
