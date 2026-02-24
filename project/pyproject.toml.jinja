@@ -85,15 +85,13 @@ local = [
 docs = [
     "markdown-callouts>=0.4",
     "markdown-exec>=1.10",
-    "mkdocs>=1.6",
     "mkdocs-coverage>=1.1",
     "mkdocs-git-revision-date-localized-plugin>=1.4",
     "mkdocs-llmstxt>=0.4",
-    "mkdocs-material>=9.6",
     "mkdocs-minify-plugin>=0.8",
-    "mkdocs-material-extensions>=1.3",
     "mkdocs-section-index>=0.3.9",
     "mkdocstrings[python]>=0.27",
+    "zensical",
 ]
 
 [tool.uv]
@@ -253,11 +251,8 @@ check.ignore_fail = "return_non_zero"
 fix = ["lint --fix", "format"]
 
 # Documentation
-docs = "mkdocs serve"
-docs-build = "mkdocs build -s"
-{%- if repository_provider == "github.com" %}
-docs-deploy = "mkdocs gh-deploy"
-{%- endif %}
+docs = "zensical serve"
+docs-build = "zensical build"
 
 # Pre-commit
 prek = "prek run --all-files"
