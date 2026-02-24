@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.1 (2026-02-24)
+
+### Bug Fixes
+
+- Add missing emoji extension config to zensical.toml
+  ([#254](https://github.com/detailobsessed/copier-uv-bleeding/pull/254),
+  [`924a86d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/924a86da18e46c38f9624eae57fde99aa62c6333))
+
+
 ## v0.31.0 (2026-02-24)
 
 ### Features
