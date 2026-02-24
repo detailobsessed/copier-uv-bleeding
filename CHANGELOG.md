@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.30.2 (2026-02-24)
+
+### Chores
+
+- Depdendency bump for poethepoet
+  ([#252](https://github.com/detailobsessed/copier-uv-bleeding/pull/252),
+  [`8c19c6f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/8c19c6fb21d95a89b39f3976fefebc149e30df62))
+
+
 ## v0.30.1 (2026-02-21)
 
 ### Chores
