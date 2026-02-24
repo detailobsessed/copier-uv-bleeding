@@ -14,11 +14,11 @@ The generated project has this structure:
 │   ├── 📄 contributing.md -------- #
 │   ├── 📁 css -------------------- # extra CSS files
 │   │   ├── 📄 material.css ------- #
-│   │   └── 📄 mkdocstrings.css --- #
+│   │   └── 📄 mkdocstrings.css --- # mkdocstrings plugin styles
 │   ├── 📄 index.md --------------- #
 │   └── 📄 license.md ------------- #
 ├── 📄 LICENSE -------------------- #
-├── 📄 mkdocs.yml ----------------- # docs configuration
+├── 📄 zensical.toml -------------- # docs configuration
 ├── 📄 pyproject.toml ------------- # project metadata, dependencies, tools config, and tasks
 ├── 📄 README.md ------------------ #
 └── 📁 scripts -------------------- # helper scripts (setup, verification)
@@ -87,7 +87,7 @@ Example:
 
 ```toml title="pyproject.toml"
 [tool.poe.tasks]
-check_docs = "mkdocs build -s"
+check_docs = "zensical build"
 ```
 
 To run a task, use `poe TASK [ARGS...]`.
@@ -413,8 +413,7 @@ the GitHub Actions workflow will:
 
 ## Documentation
 
-The documentation is built with [Mkdocs](https://www.mkdocs.org/),
-the [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/) theme,
+The documentation is built with [Zensical](https://zensical.org/)
 and the [mkdocstrings](https://mkdocstrings.github.io/) plugin.
 
 ### Writing
@@ -425,11 +424,11 @@ even your Python docstrings can be written in Markdown.
 [Google-style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)
 for docstrings.
 
-The documentation configuration is written into `mkdocs.yml`,
+The documentation configuration is written into `zensical.toml`,
 at the root of the project. The Markdown pages are written
 in the `docs/` directory. You can use any level of nesting you want.
 The left-sidebar navigation is configured through the `nav` key
-in `mkdocs.yml`.
+in `zensical.toml`.
 
 For example, with these docs structure:
 
@@ -442,21 +441,24 @@ For example, with these docs structure:
     └── 📄 logic.md
 ```
 
-...you can have these navigation items in `mkdocs.yml`:
+...you can have these navigation items in `zensical.toml`:
 
-```yaml title="mkdocs.yml"
-nav:
-- Overview: index.md
-- Code Reference:
-  - cli.py: reference/cli.md
-  - logic.py: reference/logic.md
-- Changelog: changelog.md
+```toml title="zensical.toml"
+[project]
+nav = [
+  {"Overview" = "index.md"},
+  {"Code Reference" = [
+    {"cli.py" = "reference/cli.md"},
+    {"logic.py" = "reference/logic.md"},
+  ]},
+  {"Changelog" = "changelog.md"},
+]
 ```
 
 Note that we matched the sections in the navigation with the folder tree,
 but that is not mandatory.
 
-`mkdocstrings` allows you to inject documentation of Python objects
+The `mkdocstrings` plugin allows you to inject documentation of Python objects
 in Markdown pages with the following syntax:
 
 ```md
@@ -481,17 +483,15 @@ add a new page for each one of these submodules.
 
 For more information about `mkdocstrings`,
 check [its documentation](https://mkdocstrings.github.io).
+For more information about Zensical,
+check [its documentation](https://zensical.org/docs/).
 
 ### Serving
 
-MkDocs provides a development server with files watching and live-reload.
+Zensical provides a development server with live-reload.
 Run `poe docs` to serve your documentation on `localhost:8000`.
 
 ### Deploying
 
-MkDocs has a `gh-deploy` command that will deploy
-your documentation on GitHub pages:
-
-```bash
-poe docs-deploy
-```
+Documentation is automatically deployed to GitHub Pages via the
+`docs.yml` GitHub Actions workflow when you push to the `main` branch.

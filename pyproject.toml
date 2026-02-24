@@ -11,8 +11,7 @@ dev = [
     "copier-templates-extensions",
     "jinja2",
     "markdown-callouts",
-    "mkdocs",
-    "mkdocs-material",
+    "zensical",
     "poethepoet",
     "hypothesis>=6.0",
     "pytest>=9.0.2",
@@ -179,9 +178,8 @@ test-all = "pytest tests/ -v"
 test-cov = "pytest tests/ -v --cov=tests --cov-report=term-missing"
 
 # Documentation
-docs = "mkdocs serve"
-docs-build = "mkdocs build -s"
-docs-deploy = "mkdocs gh-deploy"
+docs = "zensical serve"
+docs-build = "zensical build"
 
 # Pre-commit
 prek = "prek run --all-files"

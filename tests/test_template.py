@@ -347,22 +347,22 @@ class TestCIWorkflows:
         content = readme.read_text()
         assert "pypi.org/project/" in content
 
-    def test_pypi_false_no_mkdocs_social_link(self, copier_defaults: dict, project_factory) -> None:
-        """When publish_to_pypi is false, mkdocs.yml should not have PyPI social link (#165)."""
+    def test_pypi_false_no_zensical_social_link(self, copier_defaults: dict, project_factory) -> None:
+        """When publish_to_pypi is false, zensical.toml should not have PyPI social link (#165)."""
         answers = {**copier_defaults, "publish_to_pypi": False}
         project = project_factory(answers)
 
-        mkdocs = project / "mkdocs.yml"
-        content = mkdocs.read_text()
+        config = project / "zensical.toml"
+        content = config.read_text()
         assert "pypi.org/project/" not in content
 
-    def test_pypi_true_has_mkdocs_social_link(self, copier_defaults: dict, project_factory) -> None:
-        """When publish_to_pypi is true, mkdocs.yml should have PyPI social link."""
+    def test_pypi_true_has_zensical_social_link(self, copier_defaults: dict, project_factory) -> None:
+        """When publish_to_pypi is true, zensical.toml should have PyPI social link."""
         answers = {**copier_defaults, "publish_to_pypi": True}
         project = project_factory(answers)
 
-        mkdocs = project / "mkdocs.yml"
-        content = mkdocs.read_text()
+        config = project / "zensical.toml"
+        content = config.read_text()
         assert "pypi.org/project/" in content
 
 
@@ -576,14 +576,14 @@ class TestTemplateCleanup:
         content = pyproject.read_text()
         assert "tests/fixtures" not in content
 
-    def test_github_has_docs_deploy(self, copier_defaults: dict, project_factory) -> None:
-        """GitHub projects should have docs-deploy poe task."""
+    def test_github_no_docs_deploy(self, copier_defaults: dict, project_factory) -> None:
+        """GitHub projects should not have docs-deploy poe task (deployment via GitHub Actions)."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert "docs-deploy" in content
-        assert "gh-deploy" in content
+        assert "docs-deploy" not in content
+        assert "gh-deploy" not in content
 
     def test_github_has_gh_cli_tasks(self, copier_defaults: dict, project_factory) -> None:
         """GitHub projects should have gh CLI poe tasks."""
@@ -1126,8 +1126,8 @@ class TestGitLabSupport:
         answers = {**copier_defaults, "repository_provider": "gitlab.com"}
         project = project_factory(answers)
 
-        mkdocs = project / "mkdocs.yml"
-        content = mkdocs.read_text()
+        config = project / "zensical.toml"
+        content = config.read_text()
         assert "-/edit/main/docs/" in content
 
     def test_gitlab_semantic_release_remote(self, copier_defaults: dict, project_factory) -> None:
@@ -1168,8 +1168,8 @@ class TestGitLabSupport:
         """GitHub projects should have plain edit/ in edit_uri (#164)."""
         project = project_factory(copier_defaults)
 
-        mkdocs = project / "mkdocs.yml"
-        content = mkdocs.read_text()
+        config = project / "zensical.toml"
+        content = config.read_text()
         assert "edit/main/docs/" in content
         assert "-/edit/" not in content
 
@@ -1237,7 +1237,7 @@ class TestProjectVisibility:
     When project_visibility=internal, community files (LICENSE, CODE_OF_CONDUCT,
     CONTRIBUTING, SECURITY) and their docs counterparts should be excluded.
     pyproject.toml should omit license metadata and Funding URL.
-    mkdocs.yml should omit community pages from nav.
+    zensical.toml should omit community pages from nav.
     """
 
     # -- Files that should be EXCLUDED for internal projects --
@@ -1326,44 +1326,44 @@ class TestProjectVisibility:
         content = (project / "pyproject.toml").read_text()
         assert "Funding" in content
 
-    # -- mkdocs.yml nav --
+    # -- zensical.toml nav --
 
-    def test_internal_mkdocs_no_community_nav(self, copier_defaults: dict, project_factory) -> None:
-        """Internal projects mkdocs.yml should not have community pages in nav."""
+    def test_internal_zensical_no_community_nav(self, copier_defaults: dict, project_factory) -> None:
+        """Internal projects zensical.toml should not have community pages in nav."""
         answers = {**copier_defaults, "project_visibility": "internal"}
         project = project_factory(answers)
 
-        content = (project / "mkdocs.yml").read_text()
-        assert "License:" not in content
-        assert "Contributing:" not in content
-        assert "Code of Conduct:" not in content
-        assert "copyright:" not in content.lower().split("nav")[0]  # no copyright line
+        content = (project / "zensical.toml").read_text()
+        assert '"License"' not in content
+        assert '"Contributing"' not in content
+        assert '"Code of Conduct"' not in content
+        assert "copyright =" not in content.lower().split("nav")[0]  # no copyright line
 
-    def test_public_mkdocs_has_community_nav(self, copier_defaults: dict, project_factory) -> None:
-        """Public projects mkdocs.yml should have community pages in nav."""
+    def test_public_zensical_has_community_nav(self, copier_defaults: dict, project_factory) -> None:
+        """Public projects zensical.toml should have community pages in nav."""
         answers = {**copier_defaults, "project_visibility": "public"}
         project = project_factory(answers)
 
-        content = (project / "mkdocs.yml").read_text()
-        assert "License: license.md" in content
-        assert "Contributing: contributing.md" in content
-        assert "Code of Conduct: code_of_conduct.md" in content
+        content = (project / "zensical.toml").read_text()
+        assert '"License" = "license.md"' in content
+        assert '"Contributing" = "contributing.md"' in content
+        assert '"Code of Conduct" = "code_of_conduct.md"' in content
 
-    def test_internal_mkdocs_no_copyright(self, copier_defaults: dict, project_factory) -> None:
-        """Internal projects mkdocs.yml should not have copyright line."""
+    def test_internal_zensical_no_copyright(self, copier_defaults: dict, project_factory) -> None:
+        """Internal projects zensical.toml should not have copyright line."""
         answers = {**copier_defaults, "project_visibility": "internal"}
         project = project_factory(answers)
 
-        content = (project / "mkdocs.yml").read_text()
-        assert "copyright:" not in content
+        content = (project / "zensical.toml").read_text()
+        assert "copyright =" not in content
 
-    def test_public_mkdocs_has_copyright(self, copier_defaults: dict, project_factory) -> None:
-        """Public projects mkdocs.yml should have copyright line."""
+    def test_public_zensical_has_copyright(self, copier_defaults: dict, project_factory) -> None:
+        """Public projects zensical.toml should have copyright line."""
         answers = {**copier_defaults, "project_visibility": "public"}
         project = project_factory(answers)
 
-        content = (project / "mkdocs.yml").read_text()
-        assert "copyright:" in content
+        content = (project / "zensical.toml").read_text()
+        assert "copyright =" in content
 
     # -- Core files still present for internal --
 
@@ -1378,21 +1378,19 @@ class TestProjectVisibility:
         assert (project / "CHANGELOG.md").exists()
         assert (project / "prek.toml").exists()
         assert (project / ".editorconfig").exists()
-        assert (project / "mkdocs.yml").exists()
+        assert (project / "zensical.toml").exists()
         assert (project / "src").is_dir()
 
-    # -- mkdocs.yml is valid YAML for both --
+    # -- zensical.toml is valid TOML for both --
 
-    def test_internal_mkdocs_valid_yaml(self, copier_defaults: dict, project_factory) -> None:
-        """Internal projects mkdocs.yml should be valid YAML."""
-        import yaml
-
+    def test_internal_zensical_valid_toml(self, copier_defaults: dict, project_factory) -> None:
+        """Internal projects zensical.toml should be valid TOML."""
         answers = {**copier_defaults, "project_visibility": "internal"}
         project = project_factory(answers)
 
-        content = (project / "mkdocs.yml").read_text()
-        data = yaml.compose(content)
-        assert data is not None
+        with (project / "zensical.toml").open("rb") as f:
+            data = tomllib.load(f)
+        assert "project" in data
 
     def test_internal_pyproject_valid_toml(self, copier_defaults: dict, project_factory) -> None:
         """Internal projects pyproject.toml should be valid TOML."""
@@ -1449,8 +1447,8 @@ class TestProjectVisibility:
         # No Pages URL pattern for self-hosted
         assert ".gitlab.io" not in content
 
-    def test_selfhosted_mkdocs_urls(self, copier_defaults: dict, project_factory) -> None:
-        """Self-hosted GitLab should use repository_host in mkdocs.yml."""
+    def test_selfhosted_zensical_urls(self, copier_defaults: dict, project_factory) -> None:
+        """Self-hosted GitLab should use repository_host in zensical.toml."""
         answers = {
             **copier_defaults,
             "project_visibility": "internal",
@@ -1459,7 +1457,7 @@ class TestProjectVisibility:
         }
         project = project_factory(answers)
 
-        content = (project / "mkdocs.yml").read_text()
+        content = (project / "zensical.toml").read_text()
         assert "gitlab.company.com" in content
         # No Pages URL pattern for self-hosted
         assert ".gitlab.io" not in content

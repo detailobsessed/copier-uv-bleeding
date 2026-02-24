@@ -1,0 +1,62 @@
+name: docs
+
+"on":
+  push:
+    branches:
+    - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: {% raw %}${{ steps.deployment.outputs.page_url }}{% endraw %}
+
+{%- if use_blacksmith_runners %}
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+{%- else %}
+    runs-on: ubuntu-latest
+{%- endif %}
+
+    steps:
+    - uses: actions/configure-pages@v5
+
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Setup uv and Python
+      uses: astral-sh/setup-uv@v7
+      with:
+        python-version: "3.14"
+        enable-cache: true
+        cache-dependency-glob: pyproject.toml
+        github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+
+    - name: Install dependencies
+      run: uv sync --only-group docs
+
+    - name: Build documentation
+      env:
+        DEPLOY: "true"
+      run: |
+        mkdir -p htmlcov
+        echo '<html><body>No coverage report yet</body></html>' > htmlcov/index.html
+        uv run zensical build --clean
+
+    - uses: actions/upload-pages-artifact@v4
+      with:
+        path: site
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
