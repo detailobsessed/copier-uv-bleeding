@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.0 (2026-02-24)
+
+### Features
+
+- Migrate documentation system from MkDocs to Zensical
+  ([#253](https://github.com/detailobsessed/copier-uv-bleeding/pull/253),
+  [`b51a6e3`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b51a6e32554709c83dd70a21e3d3b5e8321dd236))
+
+
 ## v0.30.2 (2026-02-24)
 
 ### Chores
