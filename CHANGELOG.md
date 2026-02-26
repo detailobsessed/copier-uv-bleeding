@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.2 (2026-02-26)
+
+### Bug Fixes
+
+- Add mcp-registry-publish template, fix PSR v10 changelog config, accept empty cli_framework
+  ([#260](https://github.com/detailobsessed/copier-uv-bleeding/pull/260),
+  [`6635880`](https://github.com/detailobsessed/copier-uv-bleeding/commit/6635880f2c3a2fb04190f78484f612ef12c70f07))
+
+
 ## v0.31.1 (2026-02-24)
 
 ### Bug Fixes
