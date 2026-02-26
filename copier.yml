@@ -30,6 +30,7 @@ _exclude:
 - "{% if not use_ci %}.github/workflows/copier-update.yml{% endif %}"
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
+- "{% if not publish_to_mcp_registry %}.github/workflows/mcp-registry-publish.yml{% endif %}"
 - "{% if project_visibility == 'internal' %}CODE_OF_CONDUCT.md{% endif %}"
 - "{% if project_visibility == 'internal' %}CONTRIBUTING.md{% endif %}"
 - "{% if project_visibility == 'internal' %}SECURITY.md{% endif %}"
@@ -188,6 +189,7 @@ cli_framework:
     "Typer (https://typer.tiangolo.com/)": typer
     "Cyclopts (https://cyclopts.readthedocs.io/)": cyclopts
     "None (no framework)": none
+    "(legacy — equivalent to none)": ""
 
 custom_pypi_index_url:
   type: str
@@ -209,6 +211,12 @@ publish_to_pypi:
   type: bool
   help: Will you publish this package to PyPI?
   default: "{{ use_semantic_release and project_visibility == 'public' }}"
+  when: "{{ use_semantic_release }}"
+
+publish_to_mcp_registry:
+  type: bool
+  help: Will you publish this server to the MCP Registry?
+  default: false
   when: "{{ use_semantic_release }}"
 
 use_blacksmith_runners:
