@@ -1,0 +1,15 @@
+name: mcp-registry-publish
+
+"on":
+  workflow_run:
+    workflows: [release]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  mcp-registry-publish:
+    if: {% raw %}${{ github.event.workflow_run.conclusion == 'success' }}{% endraw %}
+
+    uses: detailobsessed/ci-components/.github/workflows/mcp-registry-publish.yml@main
+    with:
+      runner: "{{ 'blacksmith-4vcpu-ubuntu-2404' if use_blacksmith_runners else 'ubuntu-latest' }}"
