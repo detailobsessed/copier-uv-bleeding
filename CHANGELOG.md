@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.4 (2026-02-27)
+
+### Refactoring
+
+- Drop cli_framework question — users manage CLI deps themselves
+  ([#263](https://github.com/detailobsessed/copier-uv-bleeding/pull/263),
+  [`0177aa3`](https://github.com/detailobsessed/copier-uv-bleeding/commit/0177aa3f56ab5f98264ce48e39917ce54580b929))
+
+
 ## v0.31.3 (2026-02-27)
 
 ### Bug Fixes
