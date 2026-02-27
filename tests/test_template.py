@@ -1191,42 +1191,7 @@ class TestGitLabSupport:
 
 
 class TestCLIFramework:
-    """Test cli_framework question (typer, cyclopts, none)."""
-
-    def test_typer_has_dependency(self, copier_defaults: dict, project_factory) -> None:
-        """Typer framework should add typer dependency."""
-        answers = {**copier_defaults, "cli_framework": "typer"}
-        project = project_factory(answers, "app")
-
-        content = (project / "pyproject.toml").read_text()
-        assert '"typer>=' in content
-        assert "cyclopts" not in content
-
-    def test_cyclopts_has_dependency(self, copier_defaults: dict, project_factory) -> None:
-        """Cyclopts framework should add cyclopts dependency."""
-        answers = {**copier_defaults, "cli_framework": "cyclopts"}
-        project = project_factory(answers, "app")
-
-        content = (project / "pyproject.toml").read_text()
-        assert '"cyclopts>=' in content
-        assert "typer" not in content
-
-    def test_none_no_cli_dependency(self, copier_defaults: dict, project_factory) -> None:
-        """No framework should not add any CLI dependency."""
-        answers = {**copier_defaults, "cli_framework": "none"}
-        project = project_factory(answers, "app")
-
-        content = (project / "pyproject.toml").read_text()
-        assert "typer" not in content
-        assert "cyclopts" not in content
-
-    def test_none_still_has_scripts_entry(self, copier_defaults: dict, project_factory) -> None:
-        """App with no framework still gets [project.scripts] — user wires their own CLI."""
-        answers = {**copier_defaults, "cli_framework": "none"}
-        project = project_factory(answers, "app")
-
-        content = (project / "pyproject.toml").read_text()
-        assert "[project.scripts]" in content
+    """Test app project type scaffolding."""
 
     def test_app_type_no_scaffold_code(self, copier_defaults: dict, project_factory) -> None:
         """App type should not generate scaffold source files (users create their own via uv init)."""

@@ -180,17 +180,6 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
-cli_framework:
-  type: str
-  help: CLI framework
-  default: typer
-  when: "{{ project_type == 'app' }}"
-  choices:
-    "Typer (https://typer.tiangolo.com/)": typer
-    "Cyclopts (https://cyclopts.readthedocs.io/)": cyclopts
-    "None (no framework)": none
-    "(legacy — equivalent to none)": ""
-
 custom_pypi_index_url:
   type: str
   help: "Custom PyPI index URL (e.g. Artifactory, Nexus). Leave empty for public PyPI only."

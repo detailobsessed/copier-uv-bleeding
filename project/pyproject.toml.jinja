@@ -30,13 +30,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 {%- endif %}
-dependencies = [
-{%- if project_type == 'app' and cli_framework == 'typer' %}
-    "typer>=0.23",
-{%- elif project_type == 'app' and cli_framework == 'cyclopts' %}
-    "cyclopts>=4.5",
-{%- endif %}
-]
+dependencies = []
 
 [project.urls]
 {%- if repository_host in ['github.com', 'gitlab.com'] %}
