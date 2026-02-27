@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.3 (2026-02-27)
+
+### Bug Fixes
+
+- Move changelog_file to correct [tool.semantic_release.changelog] section
+  ([#262](https://github.com/detailobsessed/copier-uv-bleeding/pull/262),
+  [`8edc341`](https://github.com/detailobsessed/copier-uv-bleeding/commit/8edc3411fe28e833346785ca5e40a7bd157da221))
+
+
 ## v0.31.2 (2026-02-26)
 
 ### Bug Fixes
