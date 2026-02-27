@@ -40,9 +40,6 @@ _src_path: gh:detailobsessed/copier-uv-bleeding
 author_email: ismar@gmail.com
 author_fullname: Ismar Iljazovic
 author_username: detailobsessed
-copyright_date: '2020'
-copyright_holder: Ismar Iljazovic
-copyright_holder_email: ismar@gmail.com
 copyright_license: ISC License
 project_description: Automatic documentation from sources, for MkDocs.
 project_name: mkdocstrings

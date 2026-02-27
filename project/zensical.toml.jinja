@@ -10,7 +10,7 @@ repo_url = "https://{{ repository_host }}/{{ repository_namespace }}/{{ reposito
 repo_name = "{{ repository_namespace }}/{{ repository_name }}"
 site_dir = "site"
 {%- if project_visibility == 'public' %}
-copyright = "Copyright &copy; {{ copyright_date }} {{ copyright_holder }}"
+copyright = "Copyright &copy; {{ current_year }} {{ author_fullname | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
 {%- endif %}
 {%- if repository_provider == 'gitlab.com' %}
 edit_uri = "-/edit/main/docs/"
