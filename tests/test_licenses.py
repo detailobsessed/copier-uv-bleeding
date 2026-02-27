@@ -38,8 +38,7 @@ for license_id in licenses:
         author_username="janedoe",
         author_email="jane@example.com",
         copyright_license=license_id,
-        copyright_holder="Jane Doe",
-        copyright_date="2024",
+        current_year="2026",
     )
 
     assert rendered, "License is empty!"

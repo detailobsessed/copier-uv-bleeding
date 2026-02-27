@@ -63,9 +63,6 @@ def _build_context(overrides: dict) -> dict:
         "repository_host": "github.com",
         "repository_namespace": "testuser",
         "repository_name": "my-test-project",
-        "copyright_holder": "Test Author",
-        "copyright_holder_email": "test@example.com",
-        "copyright_date": str(datetime.now(UTC).year),
         "copyright_license": "MIT",
         "python_package_distribution_name": "my-test-project",
         "python_package_import_name": "my_test_project",
@@ -73,6 +70,8 @@ def _build_context(overrides: dict) -> dict:
         "use_ci": True,
         "use_semantic_release": True,
         "publish_to_pypi": True,
+        "publish_to_mcp_registry": False,
+        "use_custom_pypi_index": False,
         "use_blacksmith_runners": False,
         "project_visibility": "public",
         "custom_pypi_index_url": "",
@@ -270,6 +269,7 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     # Custom PyPI index (corporate Artifactory/Nexus)
     "custom-pypi-index": _build_context({
         "project_visibility": "internal",
+        "use_custom_pypi_index": True,
         "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
         "publish_to_pypi": False,
     }),

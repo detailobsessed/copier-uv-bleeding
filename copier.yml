@@ -104,24 +104,6 @@ repository_name:
   default: "{{ project_name | slugify }}"
   when: false
 
-copyright_holder:
-  type: str
-  help: The name of the person/entity holding the copyright
-  default: "{{ author_fullname }}"
-  when: false
-
-copyright_holder_email:
-  type: str
-  help: The email of the person/entity holding the copyright
-  default: "{{ author_email }}"
-  when: false
-
-copyright_date:
-  type: str
-  help: The copyright date
-  default: "{{ current_year }}"
-  when: false
-
 copyright_license:
   type: str
   help: Your project's license
@@ -180,11 +162,6 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
-custom_pypi_index_url:
-  type: str
-  help: "Custom PyPI index URL (e.g. Artifactory, Nexus). Leave empty for public PyPI only."
-  default: ""
-
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
@@ -207,6 +184,17 @@ publish_to_mcp_registry:
   help: Will you publish this server to the MCP Registry?
   default: false
   when: "{{ use_semantic_release }}"
+
+use_custom_pypi_index:
+  type: bool
+  help: "Use a custom/private PyPI index? (Artifactory, Nexus, etc.)"
+  default: false
+
+custom_pypi_index_url:
+  type: str
+  help: "Custom PyPI index URL"
+  default: ""
+  when: "{{ use_custom_pypi_index }}"
 
 use_blacksmith_runners:
   type: bool

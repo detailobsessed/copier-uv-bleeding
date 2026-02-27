@@ -114,39 +114,6 @@ It defaults to a slugified version of your project's name.
 ---
 
 ```
-The name of the person/entity holding the copyright
-copyright_holder? Format: str
-🎤 [Jane Doe]:
-```
-
-The name of the person or entity holding the copyright on the project.
-It defaults to the full name your provided.
-
----
-
-```
-The email of the person/entity holding the copyright
-copyright_holder_email? Format: str
-🎤 [jane@example.com]:
-```
-
-The email of the person or entity holding the copyright on the project.
-It defaults to the email your provided.
-
----
-
-```
-The copyright date
-copyright_date? Format: str
-🎤 [2021]:
-```
-
-The date to apply to the copyright.
-It defaults to the current year.
-
----
-
-```
 Your project's license
 copyright_license? Format: str
 🎤
