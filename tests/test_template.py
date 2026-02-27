@@ -512,6 +512,15 @@ class TestCascadingBooleanDefaults:
         assert "python-semantic-release" not in content
         assert "maintain" not in content
 
+    def test_changelog_file_under_changelog_not_default_templates(self, copier_defaults: dict, project_factory) -> None:
+        """changelog_file should be under [tool.semantic_release.changelog], not default_templates (#261)."""
+        answers = {**copier_defaults, "use_semantic_release": True}
+        project = project_factory(answers)
+
+        content = (project / "pyproject.toml").read_text()
+        assert 'changelog_file = "CHANGELOG.md"' in content
+        assert "[tool.semantic_release.changelog.default_templates]" not in content
+
     def test_use_semantic_release_true_has_config(self, copier_defaults: dict, project_factory) -> None:
         """When use_semantic_release=true, semantic_release config and maintain group should appear."""
         answers = {
