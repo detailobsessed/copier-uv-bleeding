@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.5 (2026-02-27)
+
+### Refactoring
+
+- Remove copyright tombstones and gate custom PyPI index behind bool (#264, #267)
+  ([#269](https://github.com/detailobsessed/copier-uv-bleeding/pull/269),
+  [`02ef8d0`](https://github.com/detailobsessed/copier-uv-bleeding/commit/02ef8d0d1c8e0c4ceeb65349528db7f5f76a392f))
+
+
 ## v0.31.4 (2026-02-27)
 
 ### Refactoring
