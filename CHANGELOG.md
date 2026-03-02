@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.10 (2026-03-02)
+
+### Bug Fixes
+
+- Exclude own PR/issue URLs from lychee to avoid GitHub 500 in CI
+  ([#274](https://github.com/detailobsessed/copier-uv-bleeding/pull/274),
+  [`453f048`](https://github.com/detailobsessed/copier-uv-bleeding/commit/453f048922756c9ec52876917314e572fbf7590b))
+
+
 ## v0.31.9 (2026-03-02)
 
 ### Bug Fixes
