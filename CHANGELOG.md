@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.11 (2026-03-02)
+
+### Bug Fixes
+
+- Use lychee-action token input instead of env var
+  ([#275](https://github.com/detailobsessed/copier-uv-bleeding/pull/275),
+  [`9b81f68`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9b81f68e0801e80c9ab18396b45b270f35d96cf5))
+
+
 ## v0.31.10 (2026-03-02)
 
 ### Bug Fixes
