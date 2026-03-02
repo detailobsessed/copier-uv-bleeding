@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.9 (2026-03-02)
+
+### Bug Fixes
+
+- Move dependencies above publish_to_pypi block to prevent copier merge reset
+  ([#273](https://github.com/detailobsessed/copier-uv-bleeding/pull/273),
+  [`a9102de`](https://github.com/detailobsessed/copier-uv-bleeding/commit/a9102de0d84f49fb923bc97fbbf9f4dc04018119))
+
+
 ## v0.31.8 (2026-03-02)
 
 ### Bug Fixes
