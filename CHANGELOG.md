@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.8 (2026-03-02)
+
+### Bug Fixes
+
+- Restore dev group in default-groups to prevent silent dep loss
+  ([#272](https://github.com/detailobsessed/copier-uv-bleeding/pull/272),
+  [`5b51af0`](https://github.com/detailobsessed/copier-uv-bleeding/commit/5b51af0ddd8b2ea5b51e397036b94d81f37d4e41))
+
+
 ## v0.31.7 (2026-03-02)
 
 ### Bug Fixes
