@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.7 (2026-03-02)
+
+### Bug Fixes
+
+- Restore backlinks=tree in zensical mkdocstrings options
+  ([#271](https://github.com/detailobsessed/copier-uv-bleeding/pull/271),
+  [`d4b8197`](https://github.com/detailobsessed/copier-uv-bleeding/commit/d4b8197775743b70e2f64f5b8cf21a2ff02d7b84))
+
+
 ## v0.31.6 (2026-03-02)
 
 ### Bug Fixes
