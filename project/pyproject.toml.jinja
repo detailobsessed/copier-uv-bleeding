@@ -72,6 +72,7 @@ ci = [
     "ty>=0.0.14",
     "poethepoet>=0.41",
 ]
+dev = []
 local = [
     "prek>=0.3.1",
     "pytest-testmon>=2.2",
@@ -89,7 +90,7 @@ docs = [
 ]
 
 [tool.uv]
-default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "docs", "local"]
+default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", "docs", "local"]
 {%- if custom_pypi_index_url %}
 
 [[tool.uv.index]]
