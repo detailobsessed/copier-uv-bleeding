@@ -331,6 +331,30 @@ _user_text = st.text(
 )
 
 
+class TestPyprojectGroups:
+    """Assertions about dependency groups in rendered pyproject.toml."""
+
+    def _render_pyproject(self, context: dict) -> dict:
+        template = _ENV.get_template("pyproject.toml.jinja")
+        rendered = template.render(context)
+        return tomllib.loads(rendered)
+
+    def test_dev_group_in_default_groups(self) -> None:
+        """dev group must be in default-groups so existing projects keep their deps after copier update."""
+        data = self._render_pyproject(_build_context({}))
+        default_groups = data["tool"]["uv"]["default-groups"]
+        assert "dev" in default_groups, f"'dev' missing from default-groups: {default_groups}"
+
+    def test_all_default_groups_are_defined(self) -> None:
+        """Every group listed in default-groups must exist in [dependency-groups]."""
+        for variant_name, context in CONTEXT_VARIANTS.items():
+            data = self._render_pyproject(context)
+            default_groups = data["tool"]["uv"]["default-groups"]
+            defined_groups = set(data.get("dependency-groups", {}).keys())
+            missing = [g for g in default_groups if g not in defined_groups]
+            assert not missing, f"[{variant_name}] groups in default-groups but not defined: {missing}"
+
+
 class TestStringFuzzing:
     """TOML and YAML templates produce valid output for arbitrary string inputs."""
 
