@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.6 (2026-03-02)
+
+### Bug Fixes
+
+- Re-add S105 to test ruff per-file-ignores
+  ([#270](https://github.com/detailobsessed/copier-uv-bleeding/pull/270),
+  [`c70bc16`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c70bc16e3fcdbdab3a0929d7b11082b859928927))
+
+
 ## v0.31.5 (2026-02-27)
 
 ### Refactoring
