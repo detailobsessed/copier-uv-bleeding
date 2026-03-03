@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.12 (2026-03-03)
+
+### Bug Fixes
+
+- Docs.yml --only-group docs, .envrc shellcheck, zensical.toml hooks+validation
+  ([#276](https://github.com/detailobsessed/copier-uv-bleeding/pull/276),
+  [`1efbcc2`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1efbcc25870732ac22ba75ccaf8d07d3d0131d35))
+
+
 ## v0.31.11 (2026-03-02)
 
 ### Bug Fixes
