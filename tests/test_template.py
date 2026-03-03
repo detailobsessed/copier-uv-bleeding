@@ -281,7 +281,7 @@ class TestCIWorkflows:
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
-        assert "SKIP: no-commit-to-branch,pytest-testmon,lychee" in content
+        assert "SKIP: no-commit-to-main,pytest-testmon,lychee" in content
 
     def test_pyproject_has_build_system(self, copier_defaults: dict, project_factory) -> None:
         """pyproject.toml should have build-system section."""
