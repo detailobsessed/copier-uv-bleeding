@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.13 (2026-03-03)
+
+### Bug Fixes
+
+- Workflow_dispatch in docs.yml, docs-build --clean, SKIP hook ID, snippets base_path
+  ([#277](https://github.com/detailobsessed/copier-uv-bleeding/pull/277),
+  [`5cd8718`](https://github.com/detailobsessed/copier-uv-bleeding/commit/5cd8718a3343141e4443b77d35b077a20c7e7ab1))
+
+
 ## v0.31.12 (2026-03-03)
 
 ### Bug Fixes
