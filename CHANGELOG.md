@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.14 (2026-03-04)
+
+### Bug Fixes
+
+- Inline mcp-registry-publish in release.yml, conditioned on released == true
+  ([#278](https://github.com/detailobsessed/copier-uv-bleeding/pull/278),
+  [`b37cd93`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b37cd93ae4727d49af604a21283a720d6f6fbc3a))
+
+
 ## v0.31.13 (2026-03-03)
 
 ### Bug Fixes
