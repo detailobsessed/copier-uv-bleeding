@@ -101,3 +101,16 @@ jobs:
   #    - Workflow: release.yml, Environment: pypi
   # 3. Create 'pypi' environment in GitHub repo settings
 {%- endif %}
+{%- if publish_to_mcp_registry %}
+
+  mcp-registry-publish:
+    needs: release
+    if: {% raw %}${{ needs.release.outputs.released == 'true' }}{% endraw %}
+
+    permissions:
+      id-token: write
+      contents: read
+    uses: detailobsessed/ci-components/.github/workflows/mcp-registry-publish.yml@main
+    with:
+      runner: "{{ 'blacksmith-4vcpu-ubuntu-2404' if use_blacksmith_runners else 'ubuntu-latest' }}"
+{%- endif %}

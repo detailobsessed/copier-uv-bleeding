@@ -181,6 +181,8 @@ def _should_skip(rel_str: str, context: dict) -> bool:
         return True
     if not context.get("use_semantic_release") and "release.yml" in rel_str:
         return True
+    if not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str:
+        return True
     community_files = (
         "CODE_OF_CONDUCT",
         "CONTRIBUTING",
@@ -265,6 +267,10 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "repository_host": "github.company.com",
         "publish_to_pypi": False,
         "use_blacksmith_runners": False,
+    }),
+    # MCP registry publishing
+    "mcp-registry-publish": _build_context({
+        "publish_to_mcp_registry": True,
     }),
     # Custom PyPI index (corporate Artifactory/Nexus)
     "custom-pypi-index": _build_context({
