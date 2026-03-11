@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.15 (2026-03-11)
+
+### Chores
+
+- Upgrade dependencies, remove AGENTS.md
+  ([#279](https://github.com/detailobsessed/copier-uv-bleeding/pull/279),
+  [`62d1076`](https://github.com/detailobsessed/copier-uv-bleeding/commit/62d1076f622f0417caca4effa0d90d79c9de4b00))
+
+
 ## v0.31.14 (2026-03-04)
 
 ### Bug Fixes
