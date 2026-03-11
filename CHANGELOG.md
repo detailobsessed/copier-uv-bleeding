@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.17 (2026-03-11)
+
+### Bug Fixes
+
+- Update Codecov badge URL to current format
+  ([#281](https://github.com/detailobsessed/copier-uv-bleeding/pull/281),
+  [`19d511a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/19d511abcb1b9964e3976560d731f4721b833cd4))
+
+
 ## v0.31.16 (2026-03-11)
 
 ### Bug Fixes
