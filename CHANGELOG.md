@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.19 (2026-03-11)
+
+### Chores
+
+- Update github actions to latest versions
+  ([#284](https://github.com/detailobsessed/copier-uv-bleeding/pull/284),
+  [`fc299c2`](https://github.com/detailobsessed/copier-uv-bleeding/commit/fc299c276fefbb3aa331269d7db779ad43ac3839))
+
+
 ## v0.31.18 (2026-03-11)
 
 ### Refactoring
