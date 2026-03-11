@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.20 (2026-03-11)
+
+### Documentation
+
+- Add REVIEW.md with targeted PR review guidance
+  ([#283](https://github.com/detailobsessed/copier-uv-bleeding/pull/283),
+  [`6052fd4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/6052fd4fc224a480a4a91faabb94474b58df2c51))
+
+
 ## v0.31.19 (2026-03-11)
 
 ### Chores
