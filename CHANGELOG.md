@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.18 (2026-03-11)
+
+### Refactoring
+
+- Replace check-template-update.sh with copier check-update
+  ([#282](https://github.com/detailobsessed/copier-uv-bleeding/pull/282),
+  [`94c7e36`](https://github.com/detailobsessed/copier-uv-bleeding/commit/94c7e36b0f6fc610b793507d5d2326a0a03880b1))
+
+
 ## v0.31.17 (2026-03-11)
 
 ### Bug Fixes
