@@ -38,3 +38,10 @@ tests/tmp/
 # project-specific
 .perles/
 .stakpak/session*
+
+# byterover — commit knowledge files, ignore auto-generated/local files
+.brv/config.json
+.brv/context-tree/.snapshot.json
+.brv/context-tree/_manifest.json
+.brv/context-tree/**/_index.md
+.brv/context-tree/_index.md
