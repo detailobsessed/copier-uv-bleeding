@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.31.16 (2026-03-11)
+
+### Bug Fixes
+
+- Remove base_path from zensical.toml template
+  ([#280](https://github.com/detailobsessed/copier-uv-bleeding/pull/280),
+  [`28f9be6`](https://github.com/detailobsessed/copier-uv-bleeding/commit/28f9be6fd3eafd70b8e54d3b1a2b9d9207e466fa))
+
+
 ## v0.31.15 (2026-03-11)
 
 ### Chores
