@@ -141,6 +141,9 @@ select = [
     # Error messages
     "EM",   # flake8-errmsg — variables in exception constructors (better tracebacks)
 
+    # Complexity
+    "C9",   # mccabe — cyclomatic complexity (max-complexity = 10)
+
     # Pylint — uses default thresholds; do not inflate to hide violations
     "PLC",  # pylint conventions
     "PLE",  # pylint errors
@@ -181,6 +184,9 @@ ignore = [
     "DTZ005",     # Naive datetime in tests is fine
     "PLR0904",    # Test classes naturally have many test methods
 ]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.lint.pylint]
 # All values are pylint defaults — do not inflate to hide violations.

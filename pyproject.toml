@@ -106,6 +106,9 @@ select = [
     # Error messages
     "EM",   # flake8-errmsg — variables in exception constructors (better tracebacks)
 
+    # Complexity
+    "C9",   # mccabe — cyclomatic complexity (max-complexity = 10)
+
     # Pylint — uses default thresholds; do not inflate to hide violations
     "PLC",  # pylint conventions
     "PLE",  # pylint errors
@@ -150,6 +153,9 @@ known-first-party = ["tests"]
     "PLR0904",    # Test classes naturally have many test methods
 ]
 "extensions.py" = ["S404", "S602", "S605", "S607"]  # Template extensions use subprocess for git commands
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
