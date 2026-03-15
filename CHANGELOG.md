@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.32.0 (2026-03-15)
+
+### Features
+
+- Add C9 mccabe cyclomatic complexity rule (max-complexity = 10)
+  ([#285](https://github.com/detailobsessed/copier-uv-bleeding/pull/285),
+  [`210e221`](https://github.com/detailobsessed/copier-uv-bleeding/commit/210e2211479c395c7aba1ee1987e8755058c71ad))
+
+
 ## v0.31.20 (2026-03-11)
 
 ### Documentation
