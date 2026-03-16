@@ -173,7 +173,7 @@ class TestDependencies:
         assert "tomli" not in content
 
     def test_prek_version_updated(self, copier_defaults: dict, project_factory) -> None:
-        """prek dependency should be >= 0.3.1."""
+        """prek dependency should be >= 0.3.6."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
@@ -1141,7 +1141,7 @@ class TestSkipIfExists:
 
         # Re-apply template
         result = subprocess.run(
-            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--defaults", "--overwrite"],
+            ["copier", "recopy", "--trust", "--skip-tasks", "-r", "HEAD", "--skip-answered", "--defaults", "--overwrite"],
             cwd=project,
             capture_output=True,
             text=True,
