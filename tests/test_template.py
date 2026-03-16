@@ -134,7 +134,7 @@ class TestPreCommitConfig:
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.3.2"' in content
+        assert 'minimum_prek_version = "0.3.6"' in content
 
     def test_has_gitleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have gitleaks."""
@@ -178,7 +178,7 @@ class TestDependencies:
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.3.1"' in content
+        assert '"prek>=0.3.6"' in content
 
 
 class TestCIWorkflows:
