@@ -14,6 +14,20 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.32.2 (2026-03-16)
+
+### Chores
+
+- Update uv.lock ([#287](https://github.com/detailobsessed/copier-uv-bleeding/pull/287),
+  [`c644d00`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c644d00feb736647910899116fa044846e376693))
+
+### Documentation
+
+- Expand CONTRIBUTING.md with all required tools and test prereqs
+  ([#287](https://github.com/detailobsessed/copier-uv-bleeding/pull/287),
+  [`c644d00`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c644d00feb736647910899116fa044846e376693))
+
+
 ## v0.32.1 (2026-03-16)
 
 ### Chores
