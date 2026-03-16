@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.32.1 (2026-03-16)
+
+### Chores
+
+- Bump minimum_prek_version to 0.3.6
+  ([#286](https://github.com/detailobsessed/copier-uv-bleeding/pull/286),
+  [`0d8a686`](https://github.com/detailobsessed/copier-uv-bleeding/commit/0d8a686135e761be917fffccbadc9ac092520f5d))
+
+
 ## v0.32.0 (2026-03-15)
 
 ### Features
