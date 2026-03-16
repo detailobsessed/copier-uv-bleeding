@@ -41,6 +41,11 @@ def generate_project(
     files under ``project/`` are overlaid automatically, but ``copier.yml`` itself is
     read from the ref.  Without ``-r HEAD``, tests would silently run against the last
     *tagged* release and miss any uncommitted configuration changes.
+
+    We use ``--skip-tasks`` to prevent copier's ``_tasks`` (which include ``uv sync
+    --upgrade``) from running on every generated project.  Those tasks require Python
+    3.14 and network access; skipping them keeps the test suite fast and portable.
+    The ``TestIntegration`` tests explicitly call ``uv sync`` where needed.
     """
     answers = {**answers, "project_type": project_type}
 
@@ -48,6 +53,7 @@ def generate_project(
         "copier",
         "copy",
         "--trust",
+        "--skip-tasks",
         "-f",
         "-r",
         "HEAD",

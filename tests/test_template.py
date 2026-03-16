@@ -1141,7 +1141,7 @@ class TestSkipIfExists:
 
         # Re-apply template
         result = subprocess.run(
-            ["copier", "recopy", "--trust", "-r", "HEAD", "--skip-answered", "--defaults", "--overwrite"],
+            ["copier", "recopy", "--trust", "--skip-tasks", "-r", "HEAD", "--skip-answered", "--defaults", "--overwrite"],
             cwd=project,
             capture_output=True,
             text=True,
