@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.1 (2026-03-17)
+
+### Bug Fixes
+
+- Update gh workflow versions
+  ([#290](https://github.com/detailobsessed/copier-uv-bleeding/pull/290),
+  [`462ec38`](https://github.com/detailobsessed/copier-uv-bleeding/commit/462ec38dc28e956cb4ba26bc20804b3aa8292b65))
+
+
 ## v0.33.0 (2026-03-17)
 
 ### Bug Fixes
