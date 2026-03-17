@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.0 (2026-03-17)
+
+### Bug Fixes
+
+- Accept 503 status code in lychee config
+  ([#289](https://github.com/detailobsessed/copier-uv-bleeding/pull/289),
+  [`6b084ac`](https://github.com/detailobsessed/copier-uv-bleeding/commit/6b084ac4d3097c3e2a11c2d309f7ba7f3e4675ef))
+
+### Features
+
+- Replace gitleaks with betterleaks
+  ([#288](https://github.com/detailobsessed/copier-uv-bleeding/pull/288),
+  [`f5a297d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f5a297d70da5e63da166d4cb4f1c665b984ca31a))
+
+
 ## v0.32.2 (2026-03-16)
 
 ### Chores
