@@ -33,6 +33,7 @@ It is designed to be used as a starting point for new Python projects, providing
 - **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage and randomization
 - **[Zensical](https://zensical.org/)** — beautiful documentation with API autodoc
 - **[semantic-release](https://github.com/python-semantic-release/python-semantic-release)** — automated versioning and changelogs from conventional commits
+- **[betterleaks](https://github.com/betterleaks/betterleaks)** — secret scanning on every commit (detects API keys, tokens, and credentials in staged changes)
 - **[lychee](https://github.com/lycheeverse/lychee)** — fast link checking in CI
 - **[sync-with-uv](https://github.com/tsvikas/sync-with-uv)** — auto-sync pre-commit hook versions from `uv.lock`
 - **GitHub Actions / GitLab CI** — fully configured CI with Dependabot, Codecov, and optional Blacksmith runners
