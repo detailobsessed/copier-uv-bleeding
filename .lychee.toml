@@ -34,8 +34,8 @@ exclude_all_private = true
 include_mail = false
 
 # Accept common status codes
-# 502: GitHub commit/release URLs transiently return Bad Gateway
-accept = [200, 204, 301, 302, 403, 429, 502]
+# 502/503: GitHub commit/release URLs transiently return Bad Gateway / Service Unavailable
+accept = [200, 204, 301, 302, 403, 429, 502, 503]
 
 # Timeout per request
 timeout = 30
