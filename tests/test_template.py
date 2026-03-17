@@ -136,13 +136,22 @@ class TestPreCommitConfig:
         content = config.read_text()
         assert 'minimum_prek_version = "0.3.6"' in content
 
-    def test_has_gitleaks(self, copier_defaults: dict, project_factory) -> None:
-        """Pre-commit config should have gitleaks."""
+    def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
+        """Pre-commit config should have betterleaks."""
         project = project_factory(copier_defaults)
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert "gitleaks" in content
+        assert "betterleaks" in content
+
+    def test_has_betterleaks_config(self, copier_defaults: dict, project_factory) -> None:
+        """Generated project should have a .betterleaks.toml config file."""
+        project = project_factory(copier_defaults)
+
+        config = project / ".betterleaks.toml"
+        assert config.exists()
+        content = config.read_text()
+        assert "[[allowlists]]" in content
 
     def test_no_pyupgrade(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should not have pyupgrade (replaced by ruff UP)."""
