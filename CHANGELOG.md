@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.2 (2026-03-18)
+
+### Bug Fixes
+
+- Migrate to copier-template-extensions and fix identified template bugs
+  ([#291](https://github.com/detailobsessed/copier-uv-bleeding/pull/291),
+  [`3beb00f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3beb00f307954c13492ed2389dddea3629706729))
+
+
 ## v0.33.1 (2026-03-17)
 
 ### Bug Fixes
