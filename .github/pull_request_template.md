@@ -1,14 +1,9 @@
-## Description
+<!-- Closes #, Related to # -->
 
-<!-- Brief description of what this PR does -->
+## Why
 
-## Checklist
+<!-- What problem does this solve, or what improvement does it make? -->
 
-- [ ] Tests added/updated
-- [ ] Documentation updated (if applicable)
-- [ ] `poe check` passes
-- [ ] Commit messages follow [conventional commits](../CONTRIBUTING.md#commit-message-convention)
+## Notes for reviewer
 
-## Related Issues
-
-<!-- Link related issues: Fixes #123, Related to #456 -->
+<!-- Anything non-obvious: trade-offs made, things to look out for, follow-up work left. Delete if nothing to add. -->
