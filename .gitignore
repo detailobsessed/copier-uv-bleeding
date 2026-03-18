@@ -45,3 +45,4 @@ tests/tmp/
 .brv/context-tree/_manifest.json
 .brv/context-tree/**/_index.md
 .brv/context-tree/_index.md
+.gitnexus

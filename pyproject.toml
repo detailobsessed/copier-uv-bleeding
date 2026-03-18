@@ -8,7 +8,6 @@ requires-python = ">=3.14"
 [dependency-groups]
 dev = [
     "copier",
-    "copier-templates-extensions",
     "jinja2",
     "markdown-callouts",
     "zensical",
@@ -23,6 +22,7 @@ dev = [
     "reuse",
     "ruff",
     "ty>=0.0.14",
+    "copier-template-extensions>=0.3.3",
 ]
 
 [tool.uv]
@@ -30,6 +30,7 @@ default-groups = ["dev"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]

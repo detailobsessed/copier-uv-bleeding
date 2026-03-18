@@ -18,5 +18,5 @@ uv python install 3.14
 To install Copier, use [`uv`](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install copier --with copier-templates-extensions
+uv tool install copier --with copier-template-extensions
 ```

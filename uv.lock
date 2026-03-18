@@ -149,18 +149,6 @@ wheels = [
 ]
 
 [[package]]
-name = "copier-templates-extensions"
-version = "0.3.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "copier-template-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/59/f7/fc2724189696f71f6f49a3418c67243a469d21a5f6529085a5a7b733fdd8/copier_templates_extensions-0.3.2.tar.gz", hash = "sha256:8a24826b656499605c0d2283a9a63d087fb68d735c6fc12f862bfe9d97d990d5", size = 2261, upload-time = "2025-07-15T10:07:59.315Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/66/71ca710da97f61d9aa219631c2f3c86b99fc22ce40f536d6109fb4c71a79/copier_templates_extensions-0.3.2-py3-none-any.whl", hash = "sha256:a177ee34f3388ab1152ac8260a81bb8e798894df62567c40afcad7b4bd387f64", size = 3177, upload-time = "2025-07-15T10:07:58.178Z" },
-]
-
-[[package]]
 name = "copier-uv-bleeding"
 version = "0.33.1"
 source = { virtual = "." }
@@ -168,7 +156,7 @@ source = { virtual = "." }
 [package.dev-dependencies]
 dev = [
     { name = "copier" },
-    { name = "copier-templates-extensions" },
+    { name = "copier-template-extensions" },
     { name = "hypothesis" },
     { name = "jinja2" },
     { name = "markdown-callouts" },
@@ -190,7 +178,7 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "copier" },
-    { name = "copier-templates-extensions" },
+    { name = "copier-template-extensions", specifier = ">=0.3.3" },
     { name = "hypothesis", specifier = ">=6.0" },
     { name = "jinja2" },
     { name = "markdown-callouts" },

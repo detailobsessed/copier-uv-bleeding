@@ -15,7 +15,7 @@ copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/pro
 You can even generate a project without installing Copier, using [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uvx --with copier-templates-extensions copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/project
+uvx --with copier-template-extensions copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/project
 ```
 
 ## Questions

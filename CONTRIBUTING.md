@@ -14,7 +14,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. Install copier with its required Jinja extensions
 #    copier must be on PATH — the test suite calls it as a subprocess
-uv tool install copier --with copier-templates-extensions
+uv tool install copier --with copier-template-extensions
 
 # 3. Install prek (git hook runner)
 curl -LsSf https://github.com/j178/prek/releases/latest/download/prek-installer.sh | sh
