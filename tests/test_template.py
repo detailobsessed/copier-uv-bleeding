@@ -1129,6 +1129,46 @@ class TestProjectVisibility:
         assert ".github.io" in content
 
 
+class TestMcpRegistry:
+    """Test publish_to_mcp_registry question gates MCP registry publishing workflow.
+
+    When publish_to_mcp_registry=true (requires use_semantic_release=true),
+    a standalone mcp-registry-publish.yml workflow should be generated and the
+    release.yml should include an mcp-registry-publish job.
+    """
+
+    def test_mcp_registry_workflow_exists_when_enabled(self, copier_defaults: dict, project_factory) -> None:
+        """publish_to_mcp_registry=true should generate mcp-registry-publish.yml."""
+        answers = {**copier_defaults, "publish_to_mcp_registry": True}
+        project = project_factory(answers)
+
+        assert (project / ".github" / "workflows" / "mcp-registry-publish.yml").exists()
+
+    def test_mcp_registry_workflow_absent_when_disabled(self, copier_defaults: dict, project_factory) -> None:
+        """publish_to_mcp_registry=false should not generate mcp-registry-publish.yml."""
+        answers = {**copier_defaults, "publish_to_mcp_registry": False}
+        project = project_factory(answers)
+
+        assert not (project / ".github" / "workflows" / "mcp-registry-publish.yml").exists()
+
+    def test_release_yml_has_mcp_job_when_enabled(self, copier_defaults: dict, project_factory) -> None:
+        """publish_to_mcp_registry=true should add mcp-registry-publish job to release.yml."""
+        answers = {**copier_defaults, "publish_to_mcp_registry": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "release.yml").read_text()
+        assert "mcp-registry-publish" in content
+        assert "mcp-registry-publish.yml" in content
+
+    def test_release_yml_no_mcp_job_when_disabled(self, copier_defaults: dict, project_factory) -> None:
+        """publish_to_mcp_registry=false should not add mcp-registry-publish job to release.yml."""
+        answers = {**copier_defaults, "publish_to_mcp_registry": False}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "release.yml").read_text()
+        assert "mcp-registry-publish" not in content
+
+
 class TestSkipIfExists:
     """Test _skip_if_exists preserves user changes across copier recopy.
 

@@ -13,7 +13,6 @@ from __future__ import annotations
 import ast
 import re
 import tomllib
-import unicodedata
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -23,19 +22,10 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
+from extensions import slugify
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = REPO_ROOT / "project"
-
-# ---------------------------------------------------------------------------
-# Jinja filter (mirrors extensions.py)
-# ---------------------------------------------------------------------------
-
-
-def slugify(value: str, separator: str = "-") -> str:
-    value = unicodedata.normalize("NFKD", str(value)).encode("ascii", "ignore").decode("ascii")
-    value = re.sub(r"[^\w\s-]", "", value.lower())
-    return re.sub(r"[-_\s]+", separator, value).strip("-_")
-
 
 # ---------------------------------------------------------------------------
 # Template rendering infrastructure
@@ -75,7 +65,6 @@ def _build_context(overrides: dict) -> dict:
         "use_blacksmith_runners": False,
         "project_visibility": "public",
         "custom_pypi_index_url": "",
-        "include_template_dev_scripts": False,
         "current_year": datetime.now(UTC).year,
         "giscus_repo_id": "PLACEHOLDER_REPO_ID",
         "giscus_discussion_category_id": "PLACEHOLDER_CATEGORY_ID",

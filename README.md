@@ -64,7 +64,7 @@ When you run `copier copy`, you'll be asked:
 
 ```bash
 # Install copier with required Jinja extensions
-uv tool install copier --with copier-templates-extensions
+uv tool install copier --with copier-template-extensions
 ```
 
 ### Create a new project
@@ -76,7 +76,7 @@ copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/pro
 ### Or use uvx for zero-install one-shot runs
 
 ```bash
-uvx --with copier-templates-extensions \
+uvx --with copier-template-extensions \
   copier copy --trust https://github.com/detailobsessed/copier-uv-bleeding.git my-project
 ```
 
@@ -88,7 +88,7 @@ uvx --with copier-templates-extensions \
 # Install the fork with adopt support
 uv tool install copier \
   --from "git+https://github.com/detailobsessed/copier.git@feat/adopt-command" \
-  --with copier-templates-extensions
+  --with copier-template-extensions
 
 # Adopt the template in your existing project
 copier adopt --trust --conflict inline https://github.com/detailobsessed/copier-uv-bleeding.git .

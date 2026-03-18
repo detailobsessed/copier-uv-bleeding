@@ -5,7 +5,7 @@ import subprocess
 import unicodedata
 from datetime import UTC, datetime
 
-from copier_templates_extensions import ContextHook
+from copier_template_extensions import ContextHook
 from jinja2.ext import Extension
 
 
@@ -15,6 +15,10 @@ def git_user_name(default: str) -> str:
 
 def git_user_email(default: str) -> str:
     return subprocess.getoutput("git config user.email").strip() or default
+
+
+def git_user_username(default: str) -> str:
+    return subprocess.getoutput("git config user.username").strip() or default
 
 
 def slugify(value, separator="-"):
@@ -28,6 +32,7 @@ class GitExtension(Extension):
         super().__init__(environment)
         environment.filters["git_user_name"] = git_user_name
         environment.filters["git_user_email"] = git_user_email
+        environment.filters["git_user_username"] = git_user_username
 
 
 class SlugifyExtension(Extension):
