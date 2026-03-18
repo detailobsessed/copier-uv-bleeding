@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.3 (2026-03-18)
+
+### Chores
+
+- Simplify PR template to focus on why and reviewer context
+  ([#292](https://github.com/detailobsessed/copier-uv-bleeding/pull/292),
+  [`472ef51`](https://github.com/detailobsessed/copier-uv-bleeding/commit/472ef51f89814dc76558baa29e95eb6d9134a06c))
+
+
 ## v0.33.2 (2026-03-18)
 
 ### Bug Fixes
