@@ -134,7 +134,7 @@ class TestPreCommitConfig:
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.3.6"' in content
+        assert 'minimum_prek_version = "0.3.8"' in content
 
     def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have betterleaks."""
@@ -182,12 +182,12 @@ class TestDependencies:
         assert "tomli" not in content
 
     def test_prek_version_updated(self, copier_defaults: dict, project_factory) -> None:
-        """prek dependency should be >= 0.3.6."""
+        """prek dependency should be >= 0.3.8."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.3.6"' in content
+        assert '"prek>=0.3.8"' in content
 
 
 class TestCIWorkflows:
