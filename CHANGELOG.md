@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.4 (2026-03-23)
+
+### Chores
+
+- Upgrade prek to 0.3.8, add new builtins, use builtin shebang hook
+  ([#293](https://github.com/detailobsessed/copier-uv-bleeding/pull/293),
+  [`1c3ec14`](https://github.com/detailobsessed/copier-uv-bleeding/commit/1c3ec14a91b980aa433048ffd39899e1abd42fa5))
+
+
 ## v0.33.3 (2026-03-18)
 
 ### Chores
