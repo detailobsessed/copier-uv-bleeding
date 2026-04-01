@@ -86,10 +86,8 @@ class GitHubIDsforGiscusExtension(ContextHook):
 
         if self.category_id is None:
             jq_filter = "--jq '.data.repository.discussionCategories.nodes[] | select(.name == \"Documentation\") | .id'"
-            command = f"gh api graphql -f query='{self.query}' {jq_filter}" % {
-                "owner": repository_namespace,
-                "name": repository_name,
-            }
+            formatted_query = self.query % {"owner": repository_namespace, "name": repository_name}
+            command = f"gh api graphql -f query='{formatted_query}' {jq_filter}"
             try:
                 process = subprocess.run(command, shell=True, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             except subprocess.CalledProcessError:

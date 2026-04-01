@@ -15,7 +15,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
-!.env.example.jinja
 
 # tools
 .coverage*
@@ -46,4 +45,4 @@ tests/tmp/
 .brv/context-tree/**/_index.md
 .brv/context-tree/_index.md
 .gitnexus
-/.claude/settings.local.json
+.claude/settings.local.json
