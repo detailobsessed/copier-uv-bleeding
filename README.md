@@ -109,11 +109,6 @@ Generated projects include a **post-checkout git hook** that automatically check
 - **Manual check:** `poe check-template` (bypasses cooldown)
 - **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge)
 
-Generated projects ship two README files:
-
-- **`README.md`** — your project's landing page (badges, description). Owned by you, never overwritten by template updates.
-- **`README_TEMPLATE.md`** — template documentation (installation, update commands, copyable badge block). Kept up to date on every `copier update`.
-
 ## Available Tasks
 
 All projects come with pre-configured [poethepoet](https://github.com/nat-n/poethepoet) tasks:

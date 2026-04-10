@@ -1033,7 +1033,6 @@ class TestProjectVisibility:
 
         assert (project / "pyproject.toml").exists()
         assert (project / "README.md").exists()
-        assert (project / "README_TEMPLATE.md").exists()
         assert (project / "CHANGELOG.md").exists()
         assert (project / "prek.toml").exists()
         assert (project / ".editorconfig").exists()
