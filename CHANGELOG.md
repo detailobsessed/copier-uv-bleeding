@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.6 (2026-04-10)
+
+### Continuous Integration
+
+- Use allowed-failures for lychee and add token to template
+  ([#296](https://github.com/detailobsessed/copier-uv-bleeding/pull/296),
+  [`e9a9005`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e9a9005ca779e567b475a4cfc48c096225ebf3fd))
+
+
 ## v0.33.5 (2026-04-10)
 
 ### Chores
