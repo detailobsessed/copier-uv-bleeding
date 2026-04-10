@@ -54,7 +54,6 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Check links
       uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
-      continue-on-error: true
       with:
         fail: true
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -64,12 +63,12 @@ jobs:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+    - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
       with:
         python-version: "3.14"
         enable-cache: true
         github-token: ${{ secrets.GITHUB_TOKEN }}
-    - uses: j178/prek-action@0bb87d7f00b0c99306c8bcb8b8beba1eb581c037 # v1.1.1
+    - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
       env:
         SKIP: no-commit-to-branch,pytest-cov,lychee
       with:
@@ -94,11 +93,12 @@ jobs:
         git config --global user.name "I Choose to Accept"
 
     - name: Setup uv and Python
-      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+      uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
       with:
         python-version: "3.14"
         enable-cache: true
         cache-dependency-glob: project/pyproject.toml.jinja
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install Copier
       env:
@@ -117,7 +117,7 @@ jobs:
       run: uv run pytest tests/test_template.py tests/test_template_lint.py -v --cov=tests --cov-report=term-missing
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
@@ -131,4 +131,5 @@ jobs:
       uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
       with:
         allowed-skips: test-project
+        allowed-failures: links
         jobs: ${{ toJSON(needs) }}
