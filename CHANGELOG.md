@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.7 (2026-04-10)
+
+### Build System
+
+- Add pyrightconfig.json for pyright LSP + uv compatibility
+  ([#297](https://github.com/detailobsessed/copier-uv-bleeding/pull/297),
+  [`584b71f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/584b71ff2f43d7090a9099144e3c81ca5e8fac8d))
+
+
 ## v0.33.6 (2026-04-10)
 
 ### Continuous Integration
