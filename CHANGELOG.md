@@ -14,6 +14,20 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.5 (2026-04-10)
+
+### Chores
+
+- Housekeeping and cleanup ([#294](https://github.com/detailobsessed/copier-uv-bleeding/pull/294),
+  [`96d4705`](https://github.com/detailobsessed/copier-uv-bleeding/commit/96d4705008fef3f3309095961b8ce0f532d8af87))
+
+### Continuous Integration
+
+- Make lychee link checker warn instead of fail
+  ([#295](https://github.com/detailobsessed/copier-uv-bleeding/pull/295),
+  [`67cf0c9`](https://github.com/detailobsessed/copier-uv-bleeding/commit/67cf0c96e2ecedb0cd4bce949fe6cb3dbd596f81))
+
+
 ## v0.33.4 (2026-03-23)
 
 ### Chores
