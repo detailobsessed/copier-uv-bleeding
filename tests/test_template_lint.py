@@ -11,6 +11,7 @@ Tests two properties:
 from __future__ import annotations
 
 import ast
+import json
 import re
 import tomllib
 from datetime import UTC, datetime
@@ -127,10 +128,19 @@ def _validate_python(content: str) -> str | None:
     return None
 
 
+def _validate_json(content: str) -> str | None:
+    try:
+        json.loads(content)
+    except json.JSONDecodeError as exc:
+        return f"Invalid JSON: {exc}"
+    return None
+
+
 _VALIDATORS = {
     ".toml": _validate_toml,
     ".yml": _validate_yaml,
     ".yaml": _validate_yaml,
+    ".json": _validate_json,
     ".md": _validate_markdown,
     ".py": _validate_python,
 }
