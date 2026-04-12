@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.13 (2026-04-12)
+
+### Bug Fixes
+
+- Warn if build_command is missing git add uv.lock after template update
+  ([#304](https://github.com/detailobsessed/copier-uv-bleeding/pull/304),
+  [`f5ebe27`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f5ebe27c33219340a535dfe8ea2a40a2beafa7a3))
+
+### Testing
+
+- **ci**: Add assertion for uv lock refresh step in CI workflow
+  ([#303](https://github.com/detailobsessed/copier-uv-bleeding/pull/303),
+  [`87b38f0`](https://github.com/detailobsessed/copier-uv-bleeding/commit/87b38f02fbc172a950c1fe8cf3930f622f568ba8))
+
+
 ## v0.33.12 (2026-04-12)
 
 ### Bug Fixes
