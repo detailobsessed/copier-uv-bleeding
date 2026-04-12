@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.8 (2026-04-12)
+
+### Bug Fixes
+
+- Restore strict mode in docs-build and fix deprecated --only-group flag
+  ([#298](https://github.com/detailobsessed/copier-uv-bleeding/pull/298),
+  [`10dd517`](https://github.com/detailobsessed/copier-uv-bleeding/commit/10dd517787f29e5d9176a7c843e2b2a4106aa2a9))
+
+
 ## v0.33.7 (2026-04-10)
 
 ### Build System
