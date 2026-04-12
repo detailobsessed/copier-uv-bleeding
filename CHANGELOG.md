@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.9 (2026-04-12)
+
+### Chores
+
+- Slim down PR description template and update deps
+  ([#299](https://github.com/detailobsessed/copier-uv-bleeding/pull/299),
+  [`b6cfbc7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b6cfbc7bdaef36fe62b0c85acd7811170af1caac))
+
+
 ## v0.33.8 (2026-04-12)
 
 ### Bug Fixes
