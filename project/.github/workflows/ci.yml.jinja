@@ -80,9 +80,11 @@ jobs:
         python-version: "3.14"
         enable-cache: true
         github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+    - name: Refresh lockfile
+      run: uv lock
     - uses: j178/prek-action@v1
       env:
-        SKIP: no-commit-to-main,pytest-testmon,lychee
+        SKIP: no-commit-to-main,pytest-testmon,lychee,uv-lock
       with:
         extra-args: '--all-files'
 
