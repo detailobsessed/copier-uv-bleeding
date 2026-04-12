@@ -40,7 +40,7 @@ jobs:
         github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
 
     - name: Install dependencies
-      run: uv sync --only-group maintain
+      run: uv sync --no-default-groups --group maintain
 
     - name: Semantic Release
       id: release
