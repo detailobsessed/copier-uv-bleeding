@@ -211,9 +211,8 @@ _tasks:
   # Update only — reinstall hooks (fresh copy has no .git yet)
   - command: "if [ -d .git ]; then uv run prek install; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
-  # Copy only — one-time GitHub repo setup
+  # GitHub repo settings — idempotent, runs on copy and update
   - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
-    when: "{{ _copier_operation == 'copy' }}"
   # Copy — setup instructions
   - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && uv run prek autoupdate\\n  Create your source files in src/ and tests/\\n'"
     when: "{{ _copier_operation == 'copy' }}"
