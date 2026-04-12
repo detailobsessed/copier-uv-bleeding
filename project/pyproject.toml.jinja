@@ -256,7 +256,7 @@ prek = "prek run --all-files"
 
 # Template utilities
 check-template = { shell = "copier check-update || true" }
-update-template = { shell = "copier update --trust . --skip-answered --defaults && uv sync --upgrade && prek autoupdate && echo '  ✓ Dependencies upgraded and hook versions updated'" }
+update-template = { shell = "copier update --trust . --skip-answered --defaults && uv sync --upgrade && prek autoupdate && echo '  ✓ Dependencies upgraded and hook versions updated'{% if use_semantic_release %} && { grep -q 'git add uv.lock' pyproject.toml || echo '  ⚠ WARNING: build_command in pyproject.toml is missing \"git add uv.lock\" — releases will produce stale lockfiles. Add \"git add uv.lock CHANGELOG.md\" to build_command.'; }{% endif %}" }
 
 # Git utilities
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
