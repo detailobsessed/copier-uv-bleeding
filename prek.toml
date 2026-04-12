@@ -33,7 +33,7 @@ hooks = [{ id = "sync-with-uv", priority = 0 }]
 
 [[repos]]
 repo = "https://github.com/betterleaks/betterleaks"
-rev = "v1.1.1"
+rev = "v1.1.2"
 hooks = [{ id = "betterleaks", priority = 1 }]
 
 [[repos]]
@@ -58,7 +58,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.15.8"
+rev = "v0.15.10"
 hooks = [
   { id = "ruff", args = ["--fix"], priority = 1 },
   { id = "ruff-format", priority = 1 },
@@ -71,17 +71,17 @@ hooks = [{ id = "shellcheck", priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
-rev = "0.10.10"
+rev = "0.11.6"
 hooks = [{ id = "uv-lock", priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/rhysd/actionlint"
-rev = "v1.7.11"
+rev = "v1.7.12"
 hooks = [{ id = "actionlint", priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/crate-ci/typos"
-rev = "v1.44.0"
+rev = "v1.45.0"
 hooks = [{ id = "typos", priority = 1 }]
 
 [[repos]]
