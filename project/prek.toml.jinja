@@ -2,7 +2,7 @@
 default_stages = ["pre-commit"]
 minimum_prek_version = "0.3.8"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
-default_install_hook_types = ["commit-msg", "post-checkout", "pre-commit", "pre-push"]
+default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
 [[repos]]
 repo = "builtin"
@@ -45,7 +45,10 @@ hooks = [
 [[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
 rev = ""  # prek autoupdate will fill this
-hooks = [{ id = "uv-lock", priority = 1 }]
+hooks = [
+  { id = "uv-lock", priority = 1 },
+  { id = "uv-sync", stages = ["post-checkout", "post-merge", "post-rewrite"], priority = 1 },
+]
 
 [[repos]]
 repo = "https://github.com/shellcheck-py/shellcheck-py"
