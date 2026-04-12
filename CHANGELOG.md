@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.12 (2026-04-12)
+
+### Bug Fixes
+
+- **ci**: Refresh uv.lock before prek to fix stacked PR breakage
+  ([#302](https://github.com/detailobsessed/copier-uv-bleeding/pull/302),
+  [`79e0f81`](https://github.com/detailobsessed/copier-uv-bleeding/commit/79e0f818234ad2a4b842a931dbe5f243fca05782))
+
+
 ## v0.33.11 (2026-04-12)
 
 ### Bug Fixes
