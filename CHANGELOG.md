@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.33.10 (2026-04-12)
+
+### Bug Fixes
+
+- Add post-rebase uv-sync hook to prevent stale uv.lock after restack
+  ([#300](https://github.com/detailobsessed/copier-uv-bleeding/pull/300),
+  [`a2fc265`](https://github.com/detailobsessed/copier-uv-bleeding/commit/a2fc265735f54a931b6f6102238ee6726f29f69b))
+
+
 ## v0.33.9 (2026-04-12)
 
 ### Chores
