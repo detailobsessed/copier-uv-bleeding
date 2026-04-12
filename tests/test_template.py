@@ -292,6 +292,17 @@ class TestCIWorkflows:
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
         assert "SKIP: no-commit-to-main,pytest-testmon,lychee,uv-lock" in content
 
+    def test_ci_prek_refreshes_lockfile(self, copier_defaults: dict, project_factory) -> None:
+        """CI prek job should refresh the lockfile before running hooks."""
+        answers = {**copier_defaults, "use_ci": True}
+        project = project_factory(answers)
+
+        content = (project / ".github" / "workflows" / "ci.yml").read_text()
+        assert "run: uv lock\n" in content
+        lock_idx = content.index("run: uv lock")
+        prek_idx = content.index("j178/prek-action")
+        assert lock_idx < prek_idx
+
     def test_pyproject_has_build_system(self, copier_defaults: dict, project_factory) -> None:
         """pyproject.toml should have build-system section."""
         project = project_factory(copier_defaults)
