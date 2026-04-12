@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.34.0 (2026-04-12)
+
+### Features
+
+- Run delete-branch-on-merge setup on copier update too
+  ([#305](https://github.com/detailobsessed/copier-uv-bleeding/pull/305),
+  [`96c83e4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/96c83e44ad2621a48c31ef8de6193c3939b32031))
+
+
 ## v0.33.13 (2026-04-12)
 
 ### Bug Fixes
