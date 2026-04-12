@@ -43,7 +43,7 @@ version_toml = ["pyproject.toml:project.version"]
 branch = "main"
 build_command = """
 uv lock --upgrade-package "$PACKAGE_NAME"
-git add uv.lock
+git add uv.lock CHANGELOG.md
 """
 commit_message = "chore(release): {version}"
 tag_format = "{version}"
