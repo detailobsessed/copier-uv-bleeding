@@ -46,3 +46,4 @@ tests/tmp/
 .brv/context-tree/_index.md
 .gitnexus
 .claude/settings.local.json
+/.serena

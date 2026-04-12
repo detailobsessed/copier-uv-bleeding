@@ -186,7 +186,7 @@ test-cov = "pytest tests/ -v --cov=tests --cov-report=term-missing"
 
 # Documentation
 docs = "zensical serve"
-docs-build = "zensical build --clean"
+docs-build = "zensical build -s --clean"
 
 # Pre-commit
 prek = "prek run --all-files"

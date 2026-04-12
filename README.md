@@ -80,22 +80,6 @@ uvx --with copier-template-extensions \
   copier copy --trust https://github.com/detailobsessed/copier-uv-bleeding.git my-project
 ```
 
-### Adopt into an existing project
-
-> **Note:** The `adopt` command is available via [my fork](https://github.com/detailobsessed/copier/tree/feat/adopt-command) while the [upstream PR](https://github.com/copier-org/copier/pull/2487) ([issue](https://github.com/copier-org/copier/issues/2486)) is in review.
-
-```bash
-# Install the fork with adopt support
-uv tool install copier \
-  --from "git+https://github.com/detailobsessed/copier.git@feat/adopt-command" \
-  --with copier-template-extensions
-
-# Adopt the template in your existing project
-copier adopt --trust --conflict inline https://github.com/detailobsessed/copier-uv-bleeding.git .
-```
-
-To update the fork later, re-run the install command with `--force`.
-
 The template automatically runs `uv sync --upgrade` and `prek install` after scaffolding.
 Create your source files in `src/<package_name>/` and tests in `tests/`.
 
