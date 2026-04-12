@@ -1,9 +1,4 @@
-<!-- Closes #, Related to # -->
+Closes #
 
-## Why
-
-<!-- What problem does this solve, or what improvement does it make? -->
-
-## Notes for reviewer
-
-<!-- Anything non-obvious: trade-offs made, things to look out for, follow-up work left. Delete if nothing to add. -->
+<!-- Replace # with the issue this PR closes (e.g., "Closes #123" or "Closes PROJ-123").
+     Use "Ref" to link without closing. Delete the line for PRs with no issue. -->
