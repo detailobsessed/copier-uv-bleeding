@@ -1279,3 +1279,76 @@ class TestIntegration:
         # Run uv sync
         result = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
         assert result.returncode == 0, f"uv sync failed: {result.stderr}"
+
+    @pytest.mark.slow
+    def test_first_commit_succeeds_with_prek_hooks(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """First `git commit` on a freshly scaffolded project must succeed.
+
+        Reproduces the exact user flow from a fresh folder:
+            copier copy ... && cd <dest>
+            uv sync
+            git init && uv run prek install && bash scripts/prek-autoupdate.sh
+            git add -A && git commit -m "feat: init commit"
+
+        Originally added as a regression test for DOT-491 (pytest-testmon hook exited 5
+        because the template shipped no tests/). Intentionally runs the FULL prek hook
+        chain with no SKIP -- if any hook fails on a freshly scaffolded project, the
+        template is broken from the user's perspective and we have work to do.
+        """
+        project = generate_project(tmp_path, copier_defaults)
+
+        sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
+        assert sync.returncode == 0, f"uv sync failed: {sync.stderr}"
+
+        git_env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@test.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@test.com",
+        }
+        # An ambient SKIP=... in the developer's shell or CI step would silently
+        # disable prek hooks and defeat the whole point of this regression test.
+        git_env.pop("SKIP", None)
+
+        subprocess.run(
+            ["git", "init", "--initial-branch=main"],
+            cwd=project,
+            check=True,
+            capture_output=True,
+        )
+        install = subprocess.run(
+            ["uv", "run", "prek", "install"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert install.returncode == 0, f"prek install failed: {install.stderr}"
+        autoupdate = subprocess.run(
+            ["bash", "scripts/prek-autoupdate.sh"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert autoupdate.returncode == 0, f"prek-autoupdate.sh failed: {autoupdate.stderr}"
+
+        # Mirror the real user flow: hooks may auto-fix files (formatters, lockfile sync)
+        # on the first run, abort the commit, and the user re-stages and retries.
+        # Allow up to 2 attempts; the second must succeed.
+        for attempt in (1, 2):
+            subprocess.run(["git", "add", "-A"], cwd=project, check=True, capture_output=True)
+            commit = subprocess.run(
+                ["git", "commit", "-m", "feat: init commit"],
+                cwd=project,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=git_env,
+            )
+            if commit.returncode == 0:
+                break
+            assert attempt == 1, (
+                f"first commit on freshly scaffolded project failed after re-stage:\nstdout:\n{commit.stdout}\nstderr:\n{commit.stderr}"
+            )
