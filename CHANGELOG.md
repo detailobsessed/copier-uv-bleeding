@@ -14,6 +14,19 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.34.3 (2026-04-16)
+
+### Bug Fixes
+
+- **lychee**: Exclude self-referential URLs and fix stale GitHub branch-protection docs link
+  ([#309](https://github.com/detailobsessed/copier-uv-bleeding/pull/309),
+  [`f8ad1ef`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f8ad1ef5d9e1906d6c9a24f46221710b17c3f23a))
+
+- **scaffold**: Ship placeholder pytest file so first commit succeeds (DOT-491)
+  ([#308](https://github.com/detailobsessed/copier-uv-bleeding/pull/308),
+  [`679aa1c`](https://github.com/detailobsessed/copier-uv-bleeding/commit/679aa1c296879cdf47ade032281e622c60fc9696))
+
+
 ## v0.34.2 (2026-04-16)
 
 ### Bug Fixes
