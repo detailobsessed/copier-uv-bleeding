@@ -673,7 +673,8 @@ class TestTemplateUpdateCheck:
         assert "copier update" in content
         assert "--defaults" in content
         assert "uv sync --upgrade" in content
-        assert "prek autoupdate" in content
+        assert "scripts/prek-autoupdate.sh" in content
+        assert (project / "scripts" / "prek-autoupdate.sh").exists()
 
     def test_lychee_rev_is_pinned_not_empty(self, copier_defaults: dict, project_factory) -> None:
         """Lychee should have a pinned rev (not empty) since its 'nightly' tag is mutable."""
@@ -686,6 +687,24 @@ class TestTemplateUpdateCheck:
         rev = lychee_repos[0]["rev"]
         assert rev, "Lychee rev should be pinned, not empty"
         assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
+
+    def test_prek_autoupdate_script_has_lychee_workaround(self, copier_defaults: dict, project_factory) -> None:
+        """scripts/prek-autoupdate.sh wraps `prek autoupdate` with the lychee `nightly` workaround (DOT-492).
+
+        Verifies the script exists, is executable, calls plain `prek autoupdate` once, and
+        follows up with a lychee-scoped pass using --cooldown-days 7. Without the second pass,
+        lychee's `rev` flips to `nightly` and lychee's own hook then rejects the next commit.
+        """
+        project = project_factory(copier_defaults)
+
+        script = project / "scripts" / "prek-autoupdate.sh"
+        assert script.exists(), "prek-autoupdate.sh must ship in the scaffolded project"
+        assert os.access(script, os.X_OK), "prek-autoupdate.sh must be executable"
+
+        body = script.read_text()
+        assert "prek autoupdate" in body, "script must invoke `prek autoupdate`"
+        assert "--repo https://github.com/lycheeverse/lychee" in body, "script must scope the second pass to the lychee repo"
+        assert "--cooldown-days 7" in body, "script must use --cooldown-days 7 so prek skips the daily-republished `nightly` tag"
 
 
 class TestTemplateUpdateNotification:
