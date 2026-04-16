@@ -13,6 +13,16 @@ exclude = [
     '^mailto:',
     # Localhost URLs (e.g. docs preview in CONTRIBUTING.md)
     '^http://localhost',
+    # Self-referential URLs to this repo and its GitHub Pages site.
+    # These don't exist on a fresh scaffold (before `gh repo create` / first CI run / docs deploy)
+    # and they're user-owned anyway -- lychee can't tell us anything we don't already know.
+    '^https?://{{ repository_host | replace(".", "\\.") }}/{{ repository_namespace }}/{{ repository_name }}(/|$)',
+{%- if repository_host in ['github.com', 'gitlab.com'] %}
+    '^https?://{{ repository_namespace }}\.{{ repository_host.rsplit(".", 1)[0] }}\.io/{{ repository_name }}(/|$)',
+{%- endif %}
+{%- if publish_to_pypi %}
+    '^https://pypi\.org/project/{{ python_package_distribution_name }}/?$',
+{%- endif %}
 ]
 
 # Exclude local/private addresses
