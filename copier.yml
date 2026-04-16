@@ -22,6 +22,8 @@ _skip_if_exists:
 - CHANGELOG.md
 - README.md
 - "src/{{ python_package_import_name }}/__init__.py"
+- "tests/__init__.py"
+- "tests/test_{{ python_package_import_name }}.py"
 
 _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
