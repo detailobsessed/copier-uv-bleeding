@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.34.1 (2026-04-16)
+
+### Bug Fixes
+
+- Scaffolded files end with single trailing newline
+  ([#306](https://github.com/detailobsessed/copier-uv-bleeding/pull/306),
+  [`c071edb`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c071edb9fe9844ff5d4648cf99203fa6248aa0c8))
+
+
 ## v0.34.0 (2026-04-12)
 
 ### Features
