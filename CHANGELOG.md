@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.34.2 (2026-04-16)
+
+### Bug Fixes
+
+- **prek**: Keep lychee on a versioned tag after autoupdate (DOT-492)
+  ([#307](https://github.com/detailobsessed/copier-uv-bleeding/pull/307),
+  [`aa0ccfa`](https://github.com/detailobsessed/copier-uv-bleeding/commit/aa0ccfadef5d42523eec1ea175fdbd04f7415b36))
+
+
 ## v0.34.1 (2026-04-16)
 
 ### Bug Fixes
