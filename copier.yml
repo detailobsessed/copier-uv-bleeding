@@ -31,6 +31,7 @@ _exclude:
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not publish_to_mcp_registry %}.github/workflows/mcp-registry-publish.yml{% endif %}"
+- "{% if not use_blacksmith_runners %}.github/actionlint.yaml{% endif %}"
 - "{% if project_visibility == 'internal' %}CODE_OF_CONDUCT.md{% endif %}"
 - "{% if project_visibility == 'internal' %}CONTRIBUTING.md{% endif %}"
 - "{% if project_visibility == 'internal' %}SECURITY.md{% endif %}"
