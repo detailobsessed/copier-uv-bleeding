@@ -61,7 +61,7 @@ This runs:
 
 1. `copier update --trust . --skip-answered --defaults` — pull template changes without prompting
 2. `uv sync --upgrade` — upgrade all dependencies
-3. `prek autoupdate` — update hook versions
+3. `bash scripts/prek-autoupdate.sh` — update hook versions (wraps `prek autoupdate` with a lychee `nightly` workaround; see `scripts/prek-autoupdate.sh`)
 
 Since we are generally using Git in our projects,
 my recommendation is to not think at all
