@@ -71,10 +71,23 @@ class TestCoreFiles:
         project = project_factory(copier_defaults)
         assert (project / "src").is_dir()
 
-    def test_tests_directory_not_generated(self, copier_defaults: dict, project_factory) -> None:
-        """tests directory should not be generated (users create via uv init)."""
-        project = project_factory(copier_defaults)
-        assert not (project / "tests").is_dir()
+    def test_tests_directory_has_placeholder(self, copier_defaults: dict, project_factory) -> None:
+        """tests/ ships with a placeholder so the first commit doesn't fail on pytest exit 5.
+
+        Both `app` and `lib` project types must get the placeholder -- there's no
+        conditional `_exclude`, so a missing file in either would be a regression.
+        """
+        for project_type in ("app", "lib"):
+            project = project_factory(copier_defaults, project_type)
+            tests_dir = project / "tests"
+            assert tests_dir.is_dir(), f"tests/ missing for {project_type} project"
+            assert (tests_dir / "__init__.py").exists(), f"tests/__init__.py missing for {project_type}"
+            # python_package_import_name = "Test Project" | slugify("_") = "test_project"
+            placeholder = tests_dir / "test_test_project.py"
+            assert placeholder.exists(), f"placeholder test missing for {project_type}"
+            content = placeholder.read_text()
+            assert "import test_project" in content
+            assert "def test_" in content
 
 
 class TestCIConfiguration:
@@ -909,12 +922,16 @@ class TestCLIFramework:
     """Test app project type scaffolding."""
 
     def test_app_type_no_scaffold_code(self, copier_defaults: dict, project_factory) -> None:
-        """App type should not generate scaffold source files (users create their own via uv init)."""
+        """App type should not generate scaffold source files (users create their own via uv init).
+
+        Note: ``tests/__init__.py`` and ``tests/test_<package>.py`` ARE generated as
+        a placeholder so the first commit doesn't fail the pytest-testmon hook.
+        See test_tests_directory_has_placeholder.
+        """
         project = project_factory(copier_defaults, "app")
         assert not (project / "src" / "test_project" / "_internal").exists()
         assert not (project / "src" / "test_project" / "__main__.py").exists()
         assert not (project / "src" / "test_project" / "py.typed").exists()
-        assert not (project / "tests" / "__init__.py").exists()
         assert not (project / "tests" / "test_cli.py").exists()
         assert not (project / "tests" / "test_api.py").exists()
         assert not (project / "tests" / "conftest.py").exists()

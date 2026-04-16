@@ -1,0 +1,12 @@
+"""Placeholder smoke test for {{ project_name }}.
+
+Ensures pytest collects at least one test on a freshly scaffolded project so the
+pre-commit `pytest-testmon` hook does not exit with code 5 on the first commit.
+Replace with real tests as the project grows.
+"""
+
+import {{ python_package_import_name }}
+
+
+def test_package_importable() -> None:
+    assert {{ python_package_import_name }}.__name__ == "{{ python_package_import_name }}"
