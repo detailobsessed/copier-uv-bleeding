@@ -1,6 +1,6 @@
-"$schema" = "https://raw.githubusercontent.com/j178/prek/v0.3.8/prek.schema.json"
+"$schema" = "https://raw.githubusercontent.com/j178/prek/v0.3.11/prek.schema.json"
 default_stages = ["pre-commit"]
-minimum_prek_version = "0.3.8"
+minimum_prek_version = "0.3.11"  # 0.3.11 introduced --repo-exclude-tag (scripts/prek-autoupdate.sh)
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
@@ -74,7 +74,7 @@ hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], pr
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
-rev = "lychee-v0.23.0"  # use scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492)
+rev = "lychee-v0.24.2"  # use scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492)
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
 
 [[repos]]

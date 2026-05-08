@@ -142,12 +142,12 @@ class TestPreCommitConfig:
     """Test pre-commit configuration."""
 
     def test_prek_version(self, copier_defaults: dict, project_factory) -> None:
-        """Pre-commit config should have correct prek version."""
+        """Pre-commit config should pin prek to 0.3.11+ (provides --repo-exclude-tag)."""
         project = project_factory(copier_defaults)
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.3.8"' in content
+        assert 'minimum_prek_version = "0.3.11"' in content
 
     def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have betterleaks."""
@@ -195,12 +195,12 @@ class TestDependencies:
         assert "tomli" not in content
 
     def test_prek_version_updated(self, copier_defaults: dict, project_factory) -> None:
-        """prek dependency should be >= 0.3.8."""
+        """prek dependency should be >= 0.3.11 (introduces --repo-exclude-tag, used by scripts/prek-autoupdate.sh)."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.3.8"' in content
+        assert '"prek>=0.3.11"' in content
 
 
 class TestCIWorkflows:
@@ -694,11 +694,11 @@ class TestTemplateUpdateCheck:
         assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
 
     def test_prek_autoupdate_script_has_lychee_workaround(self, copier_defaults: dict, project_factory) -> None:
-        """scripts/prek-autoupdate.sh wraps `prek autoupdate` with the lychee `nightly` workaround (DOT-492).
+        """scripts/prek-autoupdate.sh wraps `prek autoupdate` with the lychee `nightly` workaround (DOT-492, DOT-540).
 
-        Verifies the script exists, is executable, calls plain `prek autoupdate` once, and
-        follows up with a lychee-scoped pass using --cooldown-days 7. Without the second pass,
-        lychee's `rev` flips to `nightly` and lychee's own hook then rejects the next commit.
+        Verifies the script exists, is executable, and uses prek 0.3.11+ `--repo-exclude-tag` to
+        prevent lychee's `rev` from flipping to `nightly` (which lychee's own hook then rejects).
+        Tracks lycheeverse/lychee#1601 — remove the flag once upstream closes that issue (DOT-504).
         """
         project = project_factory(copier_defaults)
 
@@ -708,8 +708,9 @@ class TestTemplateUpdateCheck:
 
         body = script.read_text()
         assert "prek autoupdate" in body, "script must invoke `prek autoupdate`"
-        assert "--repo https://github.com/lycheeverse/lychee" in body, "script must scope the second pass to the lychee repo"
-        assert "--cooldown-days 7" in body, "script must use --cooldown-days 7 so prek skips the daily-republished `nightly` tag"
+        assert "--repo-exclude-tag https://github.com/lycheeverse/lychee=nightly" in body, (
+            "script must exclude the lychee `nightly` tag so prek picks the latest versioned tag"
+        )
 
 
 class TestTemplateUpdateNotification:
