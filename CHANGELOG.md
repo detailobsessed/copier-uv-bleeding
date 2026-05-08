@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.35.0 (2026-05-08)
+
+### Features
+
+- **scaffold**: Drop .envrc — uv handles venv activation, no direnv prompt on fresh projects
+  (DOT-496) ([#311](https://github.com/detailobsessed/copier-uv-bleeding/pull/311),
+  [`c3ab0ef`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c3ab0ef7e795fa2bc1ed2ff9323ac0064d635819))
+
+### Testing
+
+- **scaffold**: Add full first-commit e2e regression test
+  ([#310](https://github.com/detailobsessed/copier-uv-bleeding/pull/310),
+  [`a7cbe93`](https://github.com/detailobsessed/copier-uv-bleeding/commit/a7cbe93b0a90c5a3aba49c61e2a08ceaf15ccd9d))
+
+
 ## v0.34.3 (2026-04-16)
 
 ### Bug Fixes
