@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.35.2 (2026-05-08)
+
+### Chores
+
+- **prek**: Collapse autoupdate workaround to single --repo-exclude-tag pass (DOT-540)
+  ([#313](https://github.com/detailobsessed/copier-uv-bleeding/pull/313),
+  [`e452c32`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e452c32e9f596c0cbffa2d7be26a70f5ff37a393))
+
+
 ## v0.35.1 (2026-05-08)
 
 ### Chores
