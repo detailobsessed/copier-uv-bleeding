@@ -89,8 +89,7 @@ Create your source files in `src/<package_name>/` and tests in `tests/`.
 
 Generated projects include a **post-checkout git hook** that automatically checks for template updates. When a newer version is available, you'll see a notification after `git checkout` / `git pull` / `git rebase`.
 
-- **Default check interval:** 15 minutes (`COPIER_CHECK_INTERVAL=900` in `.envrc`)
-- **Manual check:** `poe check-template` (bypasses cooldown)
+- **Manual check:** `poe check-template`
 - **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge)
 
 ## Available Tasks

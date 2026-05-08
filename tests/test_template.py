@@ -602,14 +602,6 @@ class TestTemplateCleanup:
             data = tomllib.load(f)
         assert data["project"]["description"] == 'Helps you "close the loop"'
 
-    def test_envrc_activates_venv(self, copier_defaults: dict, project_factory) -> None:
-        """Generated .envrc should activate the uv-managed virtualenv (#59)."""
-        project = project_factory(copier_defaults)
-
-        envrc = project / ".envrc"
-        content = envrc.read_text()
-        assert "VIRTUAL_ENV" in content
-
     def test_no_ty_src_exclude_fixtures(self, copier_defaults: dict, project_factory) -> None:
         """Generated pyproject.toml should not have ty.src.exclude for fixtures."""
         project = project_factory(copier_defaults)
