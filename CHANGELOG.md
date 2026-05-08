@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.35.1 (2026-05-08)
+
+### Chores
+
+- **deps**: Refresh uv.lock via uv sync --upgrade
+  ([#312](https://github.com/detailobsessed/copier-uv-bleeding/pull/312),
+  [`31cb3f1`](https://github.com/detailobsessed/copier-uv-bleeding/commit/31cb3f171478393c17c79c92fe42d583b5a02ee9))
+
+
 ## v0.35.0 (2026-05-08)
 
 ### Features
