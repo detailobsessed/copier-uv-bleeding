@@ -51,22 +51,6 @@ jobs:
             - 'zensical.toml'
             - '*.md'
 
-  links:
-{%- if use_blacksmith_runners %}
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-{%- else %}
-    runs-on: ubuntu-latest
-{%- endif %}
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-    - name: Check links
-      uses: lycheeverse/lychee-action@v2
-      with:
-        fail: true
-        args: --config .lychee.toml --no-progress .
-        token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
-
   prek:
 {%- if use_blacksmith_runners %}
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -84,7 +68,7 @@ jobs:
       run: uv lock
     - uses: j178/prek-action@v1
       env:
-        SKIP: no-commit-to-main,pytest-testmon,lychee,uv-lock
+        SKIP: no-commit-to-main,pytest-testmon,uv-lock
       with:
         extra-args: '--all-files'
 
@@ -114,6 +98,7 @@ jobs:
 
     - name: Install dependencies
       run: uv run poe setup
+{%- if use_docs %}
 
     - name: Check if the documentation builds correctly
       run: |
@@ -126,6 +111,7 @@ jobs:
       with:
         name: objects.inv
         path: site/objects.inv
+{%- endif %}
 
   tests:
 
@@ -197,12 +183,14 @@ jobs:
         UV_RESOLUTION: {% raw %}${{ matrix.resolution }}{% endraw %}
 {%- endif %}
       run: uv run poe setup
+{%- if use_docs %}
 
     - name: Download objects inventory
       uses: actions/download-artifact@v7
       with:
         name: objects.inv
         path: site/
+{%- endif %}
 
     - name: Run the test suite
       run: uv run poe test-cov
@@ -222,12 +210,11 @@ jobs:
 
   ci-pass:
     if: always()
-    needs: [links, prek, quality, tests]
+    needs: [prek, quality, tests]
     runs-on: ubuntu-latest
     steps:
     - name: Check all jobs passed
       uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
       with:
         allowed-skips: quality, tests
-        allowed-failures: links
         jobs: {% raw %}${{ toJSON(needs) }}{% endraw %}

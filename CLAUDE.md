@@ -26,7 +26,7 @@ pytest tests/test_template.py::TestProjectTypes::test_app_type_has_cli -v
 
 - **`project/`** -- Template source. Files ending in `.jinja` are rendered by Copier with user answers. This is the main editing surface.
 - **`copier.yml`** -- Controls all scaffolding: prompts, defaults, conditional excludes, post-generation tasks. Boolean questions cascade: `use_ci` -> `use_semantic_release` -> `publish_to_pypi` / `publish_to_mcp_registry` -> `use_blacksmith_runners`.
-- **`extensions.py`** -- Custom Jinja filters (`slugify`, `git_user_name/email/username`) and context hooks (`GitHubIDsforGiscusExtension` for Giscus setup).
+- **`extensions.py`** -- Custom Jinja filters (`slugify`, `git_user_name/email/username`, `current_year`).
 - **`tests/`** -- Template validation suite:
   - `conftest.py` -- `copier_defaults` fixture and `project_factory` (module-scoped, caches generated projects by answer key). Tests must be **read-only** on generated projects.
   - `test_template.py` -- Integration tests: generates real projects via `copier copy -r HEAD --skip-tasks`, asserts on output.

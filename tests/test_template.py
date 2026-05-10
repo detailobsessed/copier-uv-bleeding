@@ -303,7 +303,7 @@ class TestCIWorkflows:
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
-        assert "SKIP: no-commit-to-main,pytest-testmon,lychee,uv-lock" in content
+        assert "SKIP: no-commit-to-main,pytest-testmon,uv-lock" in content
 
     def test_ci_prek_refreshes_lockfile(self, copier_defaults: dict, project_factory) -> None:
         """CI prek job should refresh the lockfile before running hooks."""
@@ -801,15 +801,6 @@ class TestGitLabSupport:
             data = tomllib.load(f)
         repo_urls = [r["repo"] for r in data["repos"]]
         assert "https://github.com/crate-ci/typos" in repo_urls
-
-    def test_gitlab_no_giscus(self, copier_defaults: dict, project_factory) -> None:
-        """GitLab projects should not have Giscus comments."""
-        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
-        project = project_factory(answers)
-
-        comments = project / "docs" / ".overrides" / "partials" / "comments.html"
-        content = comments.read_text()
-        assert "giscus" not in content
 
     def test_gitlab_no_gh_cli_tasks(self, copier_defaults: dict, project_factory) -> None:
         """GitLab projects should not have gh CLI poe tasks."""

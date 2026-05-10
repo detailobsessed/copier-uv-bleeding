@@ -1,7 +1,5 @@
 ---
 title: License
-hide:
-- feedback
 ---
 
 # License

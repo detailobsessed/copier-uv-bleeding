@@ -11,7 +11,6 @@ _jinja_extensions:
 - extensions.py:CurrentYearExtension
 - extensions.py:GitExtension
 - extensions.py:SlugifyExtension
-- extensions.py:GitHubIDsforGiscusExtension
 # Files to skip if they already exist in the destination.
 # NOTE: pyproject.toml and prek.toml are intentionally NOT here.
 # During `copier adopt`, we want these to merge with conflict markers so users
@@ -31,6 +30,9 @@ _exclude:
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
 - "{% if not use_ci %}.github/workflows/copier-update.yml{% endif %}"
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
+- "{% if not use_docs %}.github/workflows/docs.yml{% endif %}"
+- "{% if not use_docs %}zensical.toml{% endif %}"
+- "{% if not use_docs %}docs{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not publish_to_mcp_registry %}.github/workflows/mcp-registry-publish.yml{% endif %}"
 - "{% if not use_blacksmith_runners %}.github/actionlint.yaml{% endif %}"
@@ -165,6 +167,11 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
+use_docs:
+  type: bool
+  help: "Generate docs site scaffolding? (zensical, docs/, GitHub Pages workflow)"
+  default: true
+
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
@@ -205,6 +212,12 @@ use_blacksmith_runners:
   default: "{{ use_ci and repository_provider == 'github.com' }}"
   when: "{{ use_ci and repository_provider == 'github.com' }}"
 
+configure_repo_settings:
+  type: bool
+  help: "Configure GitHub repo settings on copy/update? (delete-branch-on-merge, enable-auto-merge — runs `gh repo edit`)"
+  default: true
+  when: "{{ repository_provider == 'github.com' }}"
+
 
 # TASKS --------------------------------
 _tasks:
@@ -216,6 +229,7 @@ _tasks:
     when: "{{ _copier_operation in ('update', 'recopy') }}"
   # GitHub repo settings — idempotent, runs on copy and update
   - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
+    when: "{{ configure_repo_settings | default(false) }}"
   # Copy — setup instructions
   - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && bash scripts/prek-autoupdate.sh\\n  Create your source files in src/ and tests/\\n'"
     when: "{{ _copier_operation == 'copy' }}"

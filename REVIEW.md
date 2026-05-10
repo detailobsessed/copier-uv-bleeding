@@ -26,10 +26,9 @@ This file controls the entire scaffolding behavior.
 
 ### 3. Template Extensions (`extensions.py`)
 
-Custom Jinja filters and context hooks used during rendering.
+Custom Jinja filters used during rendering.
 
 - **`slugify`** — Used to derive package names, CLI names, and repository names from `project_name`. Changes here affect every generated file that uses these derived values.
-- **`GitHubIDsforGiscusExtension`** — Makes network calls to GitHub API during generation. Verify graceful fallback when `gh` CLI is unavailable or the repo doesn't exist yet.
 
 ### 4. CI Workflows (`.github/workflows/` and `project/.github/workflows/`)
 
