@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.36.0 (2026-05-10)
+
+### Features
+
+- **template**: Trim defaults for rendered projects
+  ([#314](https://github.com/detailobsessed/copier-uv-bleeding/pull/314),
+  [`cec54ce`](https://github.com/detailobsessed/copier-uv-bleeding/commit/cec54ce0b9b022e2897078b104f76de5e8676aa6))
+
+
 ## v0.35.2 (2026-05-08)
 
 ### Chores
