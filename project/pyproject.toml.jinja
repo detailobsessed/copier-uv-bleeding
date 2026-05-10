@@ -31,14 +31,16 @@ classifiers = [
 {%- endif %}
 
 [project.urls]
-{%- if repository_host in ['github.com', 'gitlab.com'] %}
+{%- if use_docs and repository_host in ['github.com', 'gitlab.com'] %}
 Homepage = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
 Documentation = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
 Changelog = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}/changelog"
 {%- else %}
 Homepage = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
+{%- if use_docs %}
 Documentation = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
 Changelog = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/changelog"
+{%- endif %}
 {%- endif %}
 Repository = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
 Issues = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/issues"
@@ -75,6 +77,7 @@ local = [
     "prek>=0.3.11",
     "pytest-testmon>=2.2",
 ]
+{%- if use_docs %}
 docs = [
     "markdown-callouts>=0.4",
     "markdown-exec>=1.10",
@@ -83,9 +86,10 @@ docs = [
     "mkdocstrings[python]>=0.27",
     "zensical",
 ]
+{%- endif %}
 
 [tool.uv]
-default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", "docs", "local"]
+default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", {% if use_docs %}"docs", {% endif %}"local"]
 {%- if custom_pypi_index_url %}
 
 [[tool.uv.index]]
@@ -167,6 +171,11 @@ select = [
 ]
 ignore = [
     "TRY003",  # Overly strict — forces custom exception classes for every error message
+    "TRY300",  # try-consider-else — `try: return x` is often clearer than the else form
+    "EM101",   # Raw string in exception — extracting to a local adds noise without bug-catching value
+    "EM102",   # F-string in exception — same
+    "EM103",   # `.format()` in exception — same
+    "RUF012",  # Mutable class default — false positives with pydantic, sqlalchemy, dataclasses
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -206,7 +215,11 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 filterwarnings = [
+    # Treat warnings as errors so we notice new ones in our own code,
+    # but tolerate deprecation warnings from third-party packages we don't control.
     "error",
+    "default::DeprecationWarning",
+    "default::PendingDeprecationWarning",
 ]
 
 [tool.coverage.run]
@@ -245,10 +258,12 @@ test-cov = "pytest --cov --cov-report=term-missing --cov-report=html"
 check.parallel = ["lint", "typecheck"]
 check.ignore_fail = "return_non_zero"
 fix = ["lint --fix", "format"]
+{%- if use_docs %}
 
 # Documentation
 docs = "zensical serve"
 docs-build = "zensical build -s --clean"
+{%- endif %}
 
 # Pre-commit
 prek = "prek run --all-files"

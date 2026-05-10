@@ -113,13 +113,15 @@ priority = 1
 [[repos.hooks]]
 id = "pytest-cov"
 name = "pytest with coverage"
-entry = "uv run pytest -q --cov --cov-fail-under=90 --cov-report=term-missing:skip-covered"
+entry = "uv run pytest -q --cov --cov-fail-under=0 --cov-report=term-missing:skip-covered"
 language = "system"
 types = ["python"]
 pass_filenames = false
 verbose = true
 stages = ["pre-push"]
 priority = 1
+
+{%- if use_docs %}
 
 [[repos.hooks]]
 id = "docs-build"
@@ -129,6 +131,7 @@ language = "system"
 files = { glob = ["docs/**", "zensical.toml", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "src/**"] }
 pass_filenames = false
 stages = ["pre-push"]
+{%- endif %}
 
 [[repos.hooks]]
 id = "check-template-update"

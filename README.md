@@ -53,10 +53,12 @@ When you run `copier copy`, you'll be asked:
 | **Repository provider** | `github.com` or `gitlab.com` |
 | **Repository namespace** | GitHub/GitLab username or organization |
 | **License** | Choose from 40+ open source licenses |
+| **Generate docs site?** | Zensical scaffolding, `docs/`, GitHub Pages workflow |
 | **Enable CI?** | GitHub Actions or GitLab CI |
 | **Enable semantic-release?** | Automated versioning and changelog |
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
+| **Configure GitHub repo settings?** | Run `gh repo edit` to enable delete-branch-on-merge and auto-merge |
 
 ## Quick Start
 
@@ -84,6 +86,22 @@ The template automatically runs `uv sync --upgrade` and `prek install` after sca
 Create your source files in `src/<package_name>/` and tests in `tests/`.
 
 > **⚠️ Workflow permissions:** If semantic-release fails with 401 Unauthorized, your org or repo likely defaults `GITHUB_TOKEN` to read-only. See [Workflow Permissions](https://github.com/detailobsessed/ci-components#workflow-permissions) in ci-components for the fix.
+
+## Adopting in an Existing Project
+
+Already have a Python project and want to retrofit this template onto it? Copier supports adoption today, though it's not yet a first-class workflow — see the open feature request [`copier-org/copier#2486`](https://github.com/copier-org/copier/issues/2486).
+
+From inside your existing project:
+
+```bash
+copier copy --trust "gh:detailobsessed/copier-uv-bleeding" .
+```
+
+Copier prompts on every file conflict. The template's `_skip_if_exists` list auto-preserves the files you actually own: `README.md`, `CHANGELOG.md`, your `src/` package, and your existing tests. For shared config like `pyproject.toml` and `prek.toml`, accept the template version and merge your project-specific bits (dependencies, custom hooks, ruff overrides) back in afterwards via `git diff`.
+
+That first run writes `.copier-answers.yml`. From then on, `poe update-template` performs a proper 3-way merge that preserves your customizations.
+
+> **Tip:** Run inside a clean working tree so `git diff` is your single source of truth for what changed. Pass `-f` to skip all prompts and overwrite everything not in `_skip_if_exists` — fastest path, but you'll be reconciling more by hand.
 
 ## Automatic Template Update Checking
 

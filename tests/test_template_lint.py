@@ -58,17 +58,17 @@ def _build_context(overrides: dict) -> dict:
         "python_package_distribution_name": "my-test-project",
         "python_package_import_name": "my_test_project",
         "python_package_command_line_name": "my-test-project",
+        "use_docs": True,
         "use_ci": True,
         "use_semantic_release": True,
         "publish_to_pypi": True,
         "publish_to_mcp_registry": False,
         "use_custom_pypi_index": False,
         "use_blacksmith_runners": False,
+        "configure_repo_settings": False,
         "project_visibility": "public",
         "custom_pypi_index_url": "",
         "current_year": datetime.now(UTC).year,
-        "giscus_repo_id": "PLACEHOLDER_REPO_ID",
-        "giscus_discussion_category_id": "PLACEHOLDER_CATEGORY_ID",
     }
     base.update(overrides)
     if "repository_provider" in overrides and "repository_host" not in overrides:
@@ -169,30 +169,30 @@ def _collect_templates() -> list[Path]:
     return templates
 
 
+_COMMUNITY_FILES = (
+    "CODE_OF_CONDUCT",
+    "CONTRIBUTING",
+    "SECURITY",
+    "LICENSE",
+    "license.md",
+    "contributing.md",
+    "code_of_conduct.md",
+    "FUNDING",
+)
+
+
 def _should_skip(rel_str: str, context: dict) -> bool:
     provider = context.get("repository_provider", "github.com")
-    if rel_str.startswith(".github") and provider != "github.com":
-        return True
-    if "gitlab-ci" in rel_str and provider != "gitlab.com":
-        return True
-    ci_files = ("ci.yml", "copier-update.yml", "gitlab-ci")
-    if not context.get("use_ci") and any(x in rel_str for x in ci_files):
-        return True
-    if not context.get("use_semantic_release") and "release.yml" in rel_str:
-        return True
-    if not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str:
-        return True
-    community_files = (
-        "CODE_OF_CONDUCT",
-        "CONTRIBUTING",
-        "SECURITY",
-        "LICENSE",
-        "license.md",
-        "contributing.md",
-        "code_of_conduct.md",
-        "FUNDING",
+    skip_rules = (
+        (rel_str.startswith(".github") and provider != "github.com"),
+        ("gitlab-ci" in rel_str and provider != "gitlab.com"),
+        (not context.get("use_ci") and any(x in rel_str for x in ("ci.yml", "copier-update.yml", "gitlab-ci"))),
+        (not context.get("use_semantic_release") and "release.yml" in rel_str),
+        (not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str),
+        (not context.get("use_docs") and any(x in rel_str for x in ("docs/", "docs.yml", "zensical.toml"))),
+        (context.get("project_visibility") == "internal" and any(x in rel_str for x in _COMMUNITY_FILES)),
     )
-    return context.get("project_visibility") == "internal" and any(x in rel_str for x in community_files)
+    return any(skip_rules)
 
 
 _TEMPLATES = _collect_templates()
@@ -237,6 +237,16 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     "ci-no-pypi": _build_context({
         "use_semantic_release": True,
         "publish_to_pypi": False,
+    }),
+    "no-docs": _build_context({
+        "use_docs": False,
+    }),
+    "no-docs-no-ci": _build_context({
+        "use_docs": False,
+        "use_ci": False,
+        "use_semantic_release": False,
+        "publish_to_pypi": False,
+        "use_blacksmith_runners": False,
     }),
     # Blacksmith runners (previously untested)
     "blacksmith-runners": _build_context({

@@ -6,10 +6,12 @@
 {% elif repository_provider == "gitlab.com" -%}
 [![pipeline](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/badges/main/pipeline.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/-/pipelines)
 {% endif -%}
+{%- if use_docs -%}
 {%- if repository_host in ['github.com', 'gitlab.com'] -%}
 [![documentation](https://img.shields.io/badge/docs-mkdocs-708FCC.svg?style=flat)](https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}/)
 {%- else -%}
 [![documentation](https://img.shields.io/badge/docs-mkdocs-708FCC.svg?style=flat)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }})
+{%- endif %}
 {%- endif %}
 {%- if publish_to_pypi %}
 [![pypi version](https://img.shields.io/pypi/v/{{ python_package_distribution_name }}.svg)](https://pypi.org/project/{{ python_package_distribution_name }}/)

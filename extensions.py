@@ -5,7 +5,6 @@ import subprocess
 import unicodedata
 from datetime import UTC, datetime
 
-from copier_template_extensions import ContextHook
 from jinja2.ext import Extension
 
 
@@ -45,53 +44,3 @@ class CurrentYearExtension(Extension):
     def __init__(self, environment):
         super().__init__(environment)
         environment.globals["current_year"] = datetime.now(UTC).year
-
-
-class GitHubIDsforGiscusExtension(ContextHook):
-    repo_placeholder = "REPLACE WITH REPOSITORY NODE ID"
-    category_placeholder = "REPLACE WITH DISCUSSION CATEGORY ID"
-    update = False
-    query = """
-    {
-        repository(owner: "%(owner)s", name: "%(name)s") {
-            discussionCategories(first: 100) {
-                nodes {
-                    id
-                    name
-                }
-            }
-        }
-    }
-    """
-
-    repo_id: str | None = None
-    category_id: str | None = None
-
-    def hook(self, context):
-        try:
-            repository_namespace = context["repository_namespace"]
-            repository_name = context["repository_name"]
-        except KeyError:
-            return
-
-        if self.repo_id is None:
-            command = f"gh api repos/{repository_namespace}/{repository_name} --jq .node_id"
-            try:
-                process = subprocess.run(command, shell=True, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            except subprocess.CalledProcessError:
-                self.repo_id = self.repo_placeholder
-            else:
-                self.repo_id = process.stdout.strip() or self.repo_placeholder
-        context["giscus_repo_id"] = self.repo_id
-
-        if self.category_id is None:
-            jq_filter = "--jq '.data.repository.discussionCategories.nodes[] | select(.name == \"Documentation\") | .id'"
-            formatted_query = self.query % {"owner": repository_namespace, "name": repository_name}
-            command = f"gh api graphql -f query='{formatted_query}' {jq_filter}"
-            try:
-                process = subprocess.run(command, shell=True, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-            except subprocess.CalledProcessError:
-                self.category_id = self.category_placeholder
-            else:
-                self.category_id = process.stdout.strip() or self.category_placeholder
-        context["giscus_discussion_category_id"] = self.category_id

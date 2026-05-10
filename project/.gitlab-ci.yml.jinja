@@ -4,7 +4,9 @@ stages:
 {%- if use_semantic_release %}
   - release
 {%- endif %}
+{%- if use_docs %}
   - pages
+{%- endif %}
 
 default:
   image: ubuntu:24.04
@@ -24,14 +26,18 @@ quality:
   stage: quality
   <<: *uv-setup
   script:
+{%- if use_docs %}
     - mkdir -p htmlcov
     - echo '<html><body>No coverage report yet</body></html>' > htmlcov/index.html
     - uv run poe docs-build
+{%- endif %}
     - uv run poe check
+{%- if use_docs %}
   artifacts:
     paths:
       - site/objects.inv
     expire_in: 1 day
+{%- endif %}
   cache:
     key: uv-cache
     paths:
@@ -74,6 +80,7 @@ release:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 {%- endif %}
+{%- if use_docs %}
 
 pages:
   stage: pages
@@ -91,3 +98,4 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+{%- endif %}
