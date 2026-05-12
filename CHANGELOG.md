@@ -14,6 +14,25 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.36.2 (2026-05-12)
+
+### Bug Fixes
+
+- **template**: Never overwrite uv.lock on copier update
+  ([`3787302`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3787302a870d5a3619f116ef3f192892b87369ca))
+
+- **template**: Restore --defaults to update-template task
+  ([`82a24f2`](https://github.com/detailobsessed/copier-uv-bleeding/commit/82a24f2a485d83b50df9f4ffd6af814b1068cab9))
+
+- **template**: Skip uv sync and update banner in copier's temp render dirs
+  ([`2c60b4b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/2c60b4bc0da66d37ca4f7406014df7514fc15462))
+
+### Testing
+
+- **template**: Require --defaults in update-template task
+  ([`e73dc02`](https://github.com/detailobsessed/copier-uv-bleeding/commit/e73dc02ca60c3809025550f4012f89045df4b078))
+
+
 ## v0.36.1 (2026-05-12)
 
 ### Bug Fixes
