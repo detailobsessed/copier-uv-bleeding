@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.36.1 (2026-05-12)
+
+### Bug Fixes
+
+- **template**: Drop --defaults, use --conflict rej, guard .rej commits (DOT-542)
+  ([#315](https://github.com/detailobsessed/copier-uv-bleeding/pull/315),
+  [`98a228f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/98a228fe9a29943bee34039afb01b6445f3a2866))
+
+
 ## v0.36.0 (2026-05-10)
 
 ### Features
