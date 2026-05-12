@@ -676,7 +676,11 @@ class TestTemplateUpdateCheck:
         content = pyproject.read_text()
         assert "update-template" in content
         assert "copier update" in content
-        assert "--defaults" in content
+        # DOT-542: update-template must NOT pass --defaults (silently picks template
+        # defaults for new questions) and MUST pass --conflict rej (separate .rej
+        # files instead of inline conflict markers in working files).
+        assert "--defaults" not in content
+        assert "--conflict rej" in content
         assert "uv sync --upgrade" in content
         assert "scripts/prek-autoupdate.sh" in content
         assert (project / "scripts" / "prek-autoupdate.sh").exists()
@@ -711,6 +715,43 @@ class TestTemplateUpdateCheck:
         assert "--repo-exclude-tag https://github.com/lycheeverse/lychee=nightly" in body, (
             "script must exclude the lychee `nightly` tag so prek picks the latest versioned tag"
         )
+
+    def test_check_merge_conflict_has_assume_in_merge(self, copier_defaults: dict, project_factory) -> None:
+        """check-merge-conflict must pass --assume-in-merge so it catches markers from `copier update --conflict inline` (DOT-542).
+
+        Without --assume-in-merge, pre-commit-hooks' check-merge-conflict only fires when git
+        records a pending merge (.git/MERGE_MSG). `copier update` doesn't set that state, so the
+        default-args form silently misses inline conflict markers produced by Copier.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        builtin = next(r for r in data["repos"] if r.get("repo") == "builtin")
+        hook = next(h for h in builtin["hooks"] if h["id"] == "check-merge-conflict")
+        assert hook.get("args") == ["--assume-in-merge"], (
+            f"check-merge-conflict must pass --assume-in-merge for copier update conflicts; got {hook.get('args')!r}"
+        )
+
+    def test_no_copier_rej_files_hook(self, copier_defaults: dict, project_factory) -> None:
+        """A local prek hook must block commits containing copier update .rej files (DOT-542).
+
+        Since `update-template` now uses `--conflict rej`, an unresolved conflict produces a
+        `<file>.rej` artifact. Committing those would leave the project half-merged. This hook
+        enforces manual review by failing on any staged path matching `\\.rej$`.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        local_repos = [r for r in data["repos"] if r.get("repo") == "local"]
+        hooks = [h for repo in local_repos for h in repo.get("hooks", [])]
+        rej_hook = next((h for h in hooks if h["id"] == "no-copier-rej-files"), None)
+        assert rej_hook is not None, "Expected a local 'no-copier-rej-files' hook in prek.toml"
+        assert rej_hook["language"] == "fail", "Hook must use language='fail' so any matching file fails the run"
+        assert rej_hook["files"] == r"\.rej$", f"Hook must target .rej files; got {rej_hook['files']!r}"
 
 
 class TestTemplateUpdateNotification:

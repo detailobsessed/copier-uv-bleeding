@@ -13,7 +13,7 @@ hooks = [
   { id = "check-toml", priority = 0 },
   { id = "check-json", priority = 0 },
   { id = "check-added-large-files", priority = 0 },
-  { id = "check-merge-conflict", priority = 0 },
+  { id = "check-merge-conflict", args = ["--assume-in-merge"], priority = 0 },  # --assume-in-merge catches markers from `copier update --conflict inline` (no .git/MERGE_MSG)
   { id = "check-case-conflict", priority = 0 },
   { id = "check-symlinks", priority = 0 },
   { id = "check-executables-have-shebangs", priority = 0 },
@@ -88,6 +88,16 @@ language = "system"
 always_run = true
 pass_filenames = false
 stages = ["pre-push"]
+priority = 0
+
+# Block commits containing .rej files produced by `copier update --conflict rej` (DOT-542).
+# https://copier.readthedocs.io/en/stable/updating/#tips-and-tricks
+[[repos.hooks]]
+id = "no-copier-rej-files"
+name = "block copier .rej files"
+entry = "Found copier update rejection files (.rej). Review the diff, apply changes manually, delete the .rej file, then commit."
+language = "fail"
+files = "\\.rej$"
 priority = 0
 
 [[repos.hooks]]
