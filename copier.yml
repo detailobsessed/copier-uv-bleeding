@@ -223,7 +223,12 @@ configure_repo_settings:
 _tasks:
   # Always run
   - "chmod +x scripts/*.sh scripts/*.py 2>/dev/null || true"
-  - "uv sync --upgrade"
+  # Sync deps in the real destination only. On `copier update` copier renders the OLD and
+  # NEW template versions into temp dirs (copier._main.{old,new}_copy.*) AND merges into
+  # the actual project; tasks fire in all three. Guarding on .git skips the temp dirs
+  # (they have no .git) so sync runs once instead of three times. `copy` operations are a
+  # single render so we run unconditionally there.
+  - "if [ \"{{ _copier_operation }}\" = \"copy\" ] || [ -d .git ]; then uv sync --upgrade; fi"
   # Update only — reinstall hooks (fresh copy has no .git yet)
   - command: "if [ -d .git ]; then uv run prek install; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
@@ -233,6 +238,7 @@ _tasks:
   # Copy — setup instructions
   - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && bash scripts/prek-autoupdate.sh\\n  Create your source files in src/ and tests/\\n'"
     when: "{{ _copier_operation == 'copy' }}"
-  # Update — minimal output (poe update-template handles prek autoupdate)
-  - command: "printf '\\n🎉 Template updated!\\n\\n  ✓ Dependencies synced\\n  ✓ Git hooks reinstalled\\n'"
+  # Update — minimal output (poe update-template handles prek autoupdate).
+  # Same .git guard as uv sync above: skip the temp-dir renders so the 🎉 only prints once.
+  - command: "if [ -d .git ]; then printf '\\n🎉 Template updated!\\n\\n  ✓ Dependencies synced\\n  ✓ Git hooks reinstalled\\n'; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
