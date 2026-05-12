@@ -59,17 +59,15 @@ poe update-template
 
 This runs:
 
-1. `copier update --trust . --skip-answered --defaults` — pull template changes without prompting
+1. `copier update --trust . --skip-answered --conflict rej` — pull template changes; previously-answered questions are kept, new questions are surfaced interactively, conflicts produce `.rej` files instead of inline conflict markers
 2. `uv sync --upgrade` — upgrade all dependencies
 3. `bash scripts/prek-autoupdate.sh` — update hook versions (wraps `prek autoupdate` with a lychee `nightly` workaround; see `scripts/prek-autoupdate.sh`)
 
-Since we are generally using Git in our projects,
-my recommendation is to not think at all
-and blindly apply every change Copier proposes.
-Indeed, you'll be able to see the diff with `git diff`,
-un-apply changes on whole files with `git checkout -- FILE`
-if they are not relevant,
-or do partial, interactive commits with `git add -p`
-or within your IDE interface
-(PyCharm and VSCode have good support and UX
-for selecting and committing changes).
+## Handling conflicts
+
+`copier update` may produce two kinds of artefacts you need to handle before committing:
+
+1. **`.rej` files** — wherever the template's diff couldn't be applied cleanly, Copier writes the rejected hunk to `<file>.rej` alongside the original. The original file keeps your working content; the `.rej` file holds the change the template wanted. Review each `.rej`, apply what's useful by hand, then delete it. A pre-commit hook (`no-copier-rej-files`) refuses to commit while `.rej` files exist.
+2. **Re-rendered templated values** — fields rendered from `.copier-answers.yml` (e.g. `[project.urls]`, `[project.scripts]`, repository paths) are recomputed on every update. If you manually edited those without bumping the matching answer, the update will reset them. Fix the answer in `.copier-answers.yml` instead of editing the rendered file.
+
+Since we use Git, run `git status` and `git diff` after `poe update-template` and review the changes before committing. Use `git checkout -- FILE` to drop unwanted changes, or `git add -p` for partial commits.
