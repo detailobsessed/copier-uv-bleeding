@@ -676,10 +676,17 @@ class TestTemplateUpdateCheck:
         content = pyproject.read_text()
         assert "update-template" in content
         assert "copier update" in content
-        # DOT-542: update-template must NOT pass --defaults (silently picks template
-        # defaults for new questions) and MUST pass --conflict rej (separate .rej
-        # files instead of inline conflict markers in working files).
-        assert "--defaults" not in content
+        # update-template must pass both:
+        #   --defaults    → don't prompt on newly-added questions; use their defaults.
+        #                   Required so the task survives non-TTY contexts (CI, scripted
+        #                   runs, agent sessions); otherwise copier crashes inside
+        #                   questionary trying to open a prompt. DOT-542 originally banned
+        #                   this flag under the wrong premise that it caused pyproject.toml
+        #                   clobbering — verified: clobbering is driven by copier's 3-way
+        #                   merge engine, not by --defaults, which only governs questions.
+        #   --conflict rej → separate .rej files instead of inline conflict markers in
+        #                    working files, so the user sees what copier couldn't apply.
+        assert "--defaults" in content
         assert "--conflict rej" in content
         assert "uv sync --upgrade" in content
         assert "scripts/prek-autoupdate.sh" in content
