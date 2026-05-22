@@ -760,6 +760,66 @@ class TestTemplateUpdateCheck:
         assert rej_hook["language"] == "fail", "Hook must use language='fail' so any matching file fails the run"
         assert rej_hook["files"] == r"\.rej$", f"Hook must target .rej files; got {rej_hook['files']!r}"
 
+    def test_uv_sync_task_runs_in_copier_temp_render_dirs(self) -> None:
+        """`uv sync --upgrade` must run in copier's temp render dirs, skip destination on update.
+
+        Regression guard for DOT-587 (deleted uv.lock) and DOT-588 (broken .venv).
+
+        Background: on `copier update`, copier renders OLD and NEW template versions into temp
+        dirs (`copier._main.old_copy.*` / `copier._main.new_copy.*`), then deletes from the
+        destination anything present in old_copy but absent in new_copy (`_remove_old_files`).
+
+        Old template versions (≤0.34.3) ran an unguarded `uv sync` in `_tasks`, so old_copy
+        ends up with `uv.lock` and a full `.venv/` tree. If NEW's task skips uv sync in
+        new_copy (via a naive `[ -d .git ]` guard — temp dirs have no .git), copier sees those
+        entries as "removed" and wipes the user's real `uv.lock` and `.venv`.
+
+        The fix is the inverted guard: run in temp dirs and on `copy`, skip in destination
+        during update (`poe update-template` handles destination explicitly). This test pins
+        the guard so it cannot regress back to `[ -d .git ]` without an explicit decision.
+        """
+        copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
+        content = copier_yml.read_text()
+
+        # The uv sync task must use the inverted guard: skip destination, run in temp dirs.
+        assert "[ ! -d .git ]; then uv sync --upgrade" in content, (
+            "copier.yml _tasks must run `uv sync --upgrade` in copier's temp render dirs "
+            "(no .git) AND on `copy`, but skip the destination during update. "
+            "Reverting to `[ -d .git ]` would re-introduce DOT-587 (deleted uv.lock) and "
+            "DOT-588 (broken .venv)."
+        )
+
+        # The opposite — `[ -d .git ]; then uv sync` — must NOT be present. (Substring match
+        # is intentional; rules out the naive guard even if other text wraps it.)
+        assert "[ -d .git ]; then uv sync --upgrade" not in content, (
+            "copier.yml _tasks has `[ -d .git ]; then uv sync --upgrade` — the naive guard "
+            "that lets copier delete the user's uv.lock and .venv on update. Use "
+            "`[ ! -d .git ]` instead (see DOT-587 / DOT-588)."
+        )
+
+    def test_update_banner_does_not_claim_deps_synced(self) -> None:
+        """The `🎉 Template updated!` banner must not claim "Dependencies synced" (DOT-587 fix follow-up).
+
+        With the inverted `uv sync` guard (see test_uv_sync_task_runs_in_copier_temp_render_dirs),
+        copier's _tasks no longer run uv sync in the destination during update. The poe
+        `update-template` chain runs `uv sync --upgrade` after copier returns. So the banner
+        — which fires from copier's _tasks before the poe chain finishes — would be lying
+        if it claimed deps were already synced.
+        """
+        copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
+        # Pull just the line(s) containing the update banner's printf, so this only
+        # inspects the user-visible string and isn't tripped by explanatory comments.
+        banner_lines = [line for line in copier_yml.read_text().splitlines() if "🎉 Template updated!" in line]
+        assert banner_lines, "Update banner missing from copier.yml"
+        banner = "\n".join(banner_lines)
+
+        assert "Dependencies synced" not in banner, (
+            f"Update banner claims `Dependencies synced` — but copier's _tasks skip "
+            f"`uv sync` in the destination during update (see DOT-587). The poe "
+            f"`update-template` chain syncs deps AFTER this banner. Drop the line.\n"
+            f"Banner:\n{banner}"
+        )
+
 
 class TestTemplateUpdateNotification:
     """Test the post-checkout hook adapter (check-template-update.sh) behavior."""
@@ -1384,3 +1444,98 @@ class TestIntegration:
             assert attempt == 1, (
                 f"first commit on freshly scaffolded project failed after re-stage:\nstdout:\n{commit.stdout}\nstderr:\n{commit.stderr}"
             )
+
+    @pytest.mark.slow
+    def test_update_preserves_uv_lock_and_venv_across_versions(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """`copier update` from an old template version must not delete the user's `uv.lock` or trash `.venv` (DOT-587, DOT-588).
+
+        Regression scenario:
+          - User's project was scaffolded on template ≤0.34.3, which ran an unguarded
+            `uv sync` in `_tasks`. So copier's `old_copy` temp render produces `uv.lock` and
+            a full `.venv/` tree.
+          - On update to a fixed template, copier compares `old_copy` vs `new_copy` and
+            removes from the destination anything present only in old_copy. Without the
+            inverted-guard fix (see `test_uv_sync_task_runs_in_copier_temp_render_dirs`),
+            new_copy lacks both → `uv.lock` is deleted and `.venv` is mauled.
+
+        This test runs the full flow against the real 0.34.3 tag and the current HEAD,
+        skipping if the tag is absent (e.g. shallow clones in CI).
+        """
+        repo_root = pathlib.Path(__file__).resolve().parent.parent
+
+        # Need the 0.34.3 tag to render the "old" baseline. Skip if a shallow clone is
+        # missing it rather than fail spuriously.
+        tag_check = subprocess.run(
+            ["git", "rev-parse", "--verify", "0.34.3"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if tag_check.returncode != 0:
+            pytest.skip("0.34.3 tag not available in this checkout (shallow clone?)")
+
+        project = tmp_path / "proj"
+
+        # Render at 0.34.3, the version with the unguarded `uv sync` task. `--skip-tasks`
+        # because we'll set up the venv ourselves in a controlled way below.
+        cmd = [
+            "copier",
+            "copy",
+            "--trust",
+            "--skip-tasks",
+            "-f",
+            "-r",
+            "0.34.3",
+            str(repo_root),
+            str(project),
+        ]
+        defaults = {**copier_defaults, "project_type": "app"}
+        for k, v in defaults.items():
+            cmd.extend(["-d", f"{k}={str(v).lower() if isinstance(v, bool) else v}"])
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        assert result.returncode == 0, f"copier copy at 0.34.3 failed: {result.stderr}"
+
+        git_env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "t@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "t@example.com",
+        }
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
+        subprocess.run(["git", "add", "-A"], cwd=project, check=True)
+        subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=project, env=git_env, check=True)
+
+        # Populate the user's local state: real `uv.lock` and `.venv` from `uv sync`.
+        sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
+        assert sync.returncode == 0, f"uv sync failed during setup: {sync.stderr}"
+        assert (project / "uv.lock").is_file(), "Setup precondition: uv.lock should exist after uv sync"
+        assert (project / ".venv" / "pyvenv.cfg").is_file(), "Setup precondition: .venv/pyvenv.cfg should exist after uv sync"
+        subprocess.run(["git", "add", "uv.lock"], cwd=project, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "add uv.lock", "--no-verify"],
+            cwd=project,
+            env=git_env,
+            check=False,
+        )
+
+        # Run the update against current HEAD (which must contain the fix).
+        update = subprocess.run(
+            ["copier", "update", "--trust", "--defaults", "--conflict", "rej", "--vcs-ref", "HEAD"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert update.returncode == 0, f"copier update failed:\nstdout:\n{update.stdout}\nstderr:\n{update.stderr}"
+
+        # Core assertions — both files must survive the update.
+        assert (project / "uv.lock").is_file(), (
+            "uv.lock was deleted by `copier update` — DOT-587 regression. Check the `uv sync` task guard in copier.yml _tasks."
+        )
+        assert (project / ".venv" / "pyvenv.cfg").is_file(), (
+            ".venv/pyvenv.cfg disappeared after `copier update` — DOT-588 regression. "
+            "`uv sync` in the destination's venv would now error with "
+            "'cannot be recreated because it is not a virtual environment'."
+        )
