@@ -1539,3 +1539,86 @@ class TestIntegration:
             "`uv sync` in the destination's venv would now error with "
             "'cannot be recreated because it is not a virtual environment'."
         )
+
+    @pytest.mark.slow
+    def test_semantic_release_writes_gitlab_urls_for_selfhosted(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """semantic-release must write GitLab-format commit URLs into CHANGELOG.md when `repository_provider=gitlab.com` (DOT-590).
+
+        Static config tests (`test_gitlab_semantic_release_remote`,
+        `test_gitlab_selfhosted_semantic_release_remote_domain`) cover the rendered TOML, but
+        they don't catch the case where python-semantic-release ignores or misinterprets the
+        config and falls back to GitHub URL conventions — exactly the symptom the user saw
+        (their existing CHANGELOG had `github.com/<namespace>/<pkg>/commit/<sha>` for a GitLab
+        project). This is the end-to-end check: actually run `semantic-release changelog` on
+        a multi-level GitLab self-hosted setup and verify the URL format.
+        """
+        answers = {
+            **copier_defaults,
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.pnet.ch",
+            "repository_namespace": "kop/ismar",
+            "project_name": "Die Zeit",
+            "project_visibility": "internal",
+        }
+        project = generate_project(tmp_path, answers)
+
+        git_env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "t@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "t@example.com",
+        }
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
+        subprocess.run(
+            ["git", "remote", "add", "origin", "git@gitlab.pnet.ch:kop/ismar/die-zeit.git"],
+            cwd=project,
+            check=True,
+        )
+        subprocess.run(["git", "add", "-A"], cwd=project, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "feat: initial commit", "--no-verify"],
+            cwd=project,
+            env=git_env,
+            check=True,
+        )
+
+        sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
+        assert sync.returncode == 0, f"uv sync failed: {sync.stderr}"
+
+        # Make a real feat commit so semantic-release has something to changelog.
+        (project / "foo.txt").write_text("x\n")
+        subprocess.run(["git", "add", "foo.txt"], cwd=project, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "feat: add foo", "--no-verify"],
+            cwd=project,
+            env=git_env,
+            check=True,
+        )
+
+        result = subprocess.run(
+            ["uv", "run", "semantic-release", "changelog"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"semantic-release changelog failed: {result.stderr}"
+
+        changelog = (project / "CHANGELOG.md").read_text()
+
+        # Positive: at least one correctly-formatted gitlab self-hosted commit URL exists.
+        assert "https://gitlab.pnet.ch/kop/ismar/die-zeit/-/commit/" in changelog, (
+            f"Expected gitlab self-hosted commit URL in CHANGELOG.md. Got:\n{changelog}"
+        )
+
+        # Negative: no github.com URLs leaked into the gitlab project's changelog (DOT-590).
+        assert "github.com" not in changelog, f"github.com URL leaked into a gitlab project's CHANGELOG.md (DOT-590):\n{changelog}"
+
+        # Negative: no underscore form of the repo slug (the user's specific symptom — `die_zeit`
+        # instead of `die-zeit`). semantic-release should derive the slug from the git remote
+        # URL, never from python_package_import_name.
+        assert "die_zeit" not in changelog, (
+            f"Underscored repo slug `die_zeit` leaked into CHANGELOG.md — semantic-release "
+            f"appears to be using python_package_import_name instead of the repo slug:\n{changelog}"
+        )
