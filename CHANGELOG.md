@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.36.4 (2026-05-23)
+
+### Bug Fixes
+
+- **template**: Bound uv_build version in build-system.requires
+  ([#317](https://github.com/detailobsessed/copier-uv-bleeding/pull/317),
+  [`3eb166d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3eb166d00fc7c616a985755e8c20b7b8bf768a0f))
+
+
 ## v0.36.3 (2026-05-23)
 
 ### Bug Fixes
