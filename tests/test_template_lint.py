@@ -360,14 +360,24 @@ class TestPyprojectGroups:
         default_groups = data["tool"]["uv"]["default-groups"]
         assert "dev" in default_groups, f"'dev' missing from default-groups: {default_groups}"
 
-    def test_all_default_groups_are_defined(self) -> None:
-        """Every group listed in default-groups must exist in [dependency-groups]."""
-        for variant_name, context in CONTEXT_VARIANTS.items():
-            data = self._render_pyproject(context)
-            default_groups = data["tool"]["uv"]["default-groups"]
-            defined_groups = set(data.get("dependency-groups", {}).keys())
-            missing = [g for g in default_groups if g not in defined_groups]
-            assert not missing, f"[{variant_name}] groups in default-groups but not defined: {missing}"
+    @pytest.mark.parametrize(
+        ("variant_name", "context"),
+        list(CONTEXT_VARIANTS.items()),
+        ids=list(CONTEXT_VARIANTS.keys()),
+    )
+    def test_all_default_groups_are_defined(self, variant_name: str, context: dict) -> None:
+        """Every group listed in default-groups must exist in [dependency-groups].
+
+        Parametrized over CONTEXT_VARIANTS so each variant gets its own test node;
+        the previous `for`-loop form short-circuited on the first failing variant
+        and hid downstream failures (DOT-284).
+        """
+        del variant_name  # variant identity is carried by the pytest parametrize id
+        data = self._render_pyproject(context)
+        default_groups = data["tool"]["uv"]["default-groups"]
+        defined_groups = set(data.get("dependency-groups", {}).keys())
+        missing = [g for g in default_groups if g not in defined_groups]
+        assert not missing, f"groups in default-groups but not defined: {missing}"
 
 
 class TestStringFuzzing:
