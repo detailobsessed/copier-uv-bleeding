@@ -227,12 +227,25 @@ configure_repo_settings:
 _tasks:
   # Always run
   - "chmod +x scripts/*.sh scripts/*.py 2>/dev/null || true"
-  # Sync deps in the real destination only. On `copier update` copier renders the OLD and
-  # NEW template versions into temp dirs (copier._main.{old,new}_copy.*) AND merges into
-  # the actual project; tasks fire in all three. Guarding on .git skips the temp dirs
-  # (they have no .git) so sync runs once instead of three times. `copy` operations are a
-  # single render so we run unconditionally there.
-  - "if [ \"{{ _copier_operation }}\" = \"copy\" ] || [ -d .git ]; then uv sync --upgrade; fi"
+  # Run `uv sync` in copier's temp render dirs (`old_copy`/`new_copy`) AND on
+  # initial `copy`, but NOT in the real destination during update. Why this
+  # inverted guard (`[ ! -d .git ]`) instead of the more obvious "only sync in
+  # destination":
+  #
+  # On update, copier renders OLD then NEW into two temp dirs, then deletes
+  # from the destination anything present in `old_copy` but absent in `new_copy`
+  # (see copier's `_remove_old_files`). Old template versions (≤0.34.3) shipped
+  # an unguarded `uv sync` in `_tasks`, so `old_copy` ends up with `uv.lock`
+  # and a full `.venv/` tree. If the NEW template's sync is guarded out of
+  # `new_copy`, the dircmp shows those entries as "removed" and copier wipes
+  # them from the user's destination — taking the real `uv.lock` and breaking
+  # `.venv` (DOT-587, DOT-588). Running sync in `new_copy` too keeps the trees
+  # symmetric so `_remove_old_files` leaves the destination alone.
+  #
+  # Skipping the destination during update is intentional: `poe update-template`
+  # runs `uv sync --upgrade` after `copier update` returns, so an inline sync
+  # would be redundant. Raw `copier update` users should follow with `uv sync`.
+  - "if [ \"{{ _copier_operation }}\" = \"copy\" ] || [ ! -d .git ]; then uv sync --upgrade; fi"
   # Update only — reinstall hooks (fresh copy has no .git yet)
   - command: "if [ -d .git ]; then uv run prek install; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
@@ -242,7 +255,10 @@ _tasks:
   # Copy — setup instructions
   - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && bash scripts/prek-autoupdate.sh\\n  Create your source files in src/ and tests/\\n'"
     when: "{{ _copier_operation == 'copy' }}"
-  # Update — minimal output (poe update-template handles prek autoupdate).
-  # Same .git guard as uv sync above: skip the temp-dir renders so the 🎉 only prints once.
-  - command: "if [ -d .git ]; then printf '\\n🎉 Template updated!\\n\\n  ✓ Dependencies synced\\n  ✓ Git hooks reinstalled\\n'; fi"
+  # Update — minimal output. `poe update-template` runs `uv sync --upgrade` and
+  # prek autoupdate after `copier update`, so this banner only confirms what
+  # copier itself did (hooks reinstalled) and doesn't claim "Dependencies synced"
+  # — that's the poe chain's job. Same .git guard as above: only fire in the
+  # destination, never in the temp render dirs.
+  - command: "if [ -d .git ]; then printf '\\n🎉 Template updated!\\n\\n  ✓ Git hooks reinstalled\\n'; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
