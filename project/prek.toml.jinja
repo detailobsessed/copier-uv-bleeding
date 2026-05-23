@@ -80,16 +80,6 @@ hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, typ
 [[repos]]
 repo = "local"
 
-[[repos.hooks]]
-id = "no-commit-to-main"
-name = "prevent pushes to main"
-entry = "bash -c 'test \"$(git rev-parse --abbrev-ref HEAD)\" != main || { echo Direct pushes to main not allowed. Use a branch + PR. && exit 1; }'"
-language = "system"
-always_run = true
-pass_filenames = false
-stages = ["pre-push"]
-priority = 0
-
 # Block commits containing .rej files produced by `copier update --conflict rej` (DOT-542).
 # https://copier.readthedocs.io/en/stable/updating/#tips-and-tricks
 [[repos.hooks]]
