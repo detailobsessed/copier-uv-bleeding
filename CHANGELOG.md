@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.36.3 (2026-05-23)
+
+### Bug Fixes
+
+- **template**: Preserve uv.lock and .venv across copier update
+  ([#316](https://github.com/detailobsessed/copier-uv-bleeding/pull/316),
+  [`92110cc`](https://github.com/detailobsessed/copier-uv-bleeding/commit/92110cc6ab9796b2f5c002392dfad0137f1f50e6))
+
+
 ## v0.36.2 (2026-05-12)
 
 ### Bug Fixes
