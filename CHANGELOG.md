@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.37.0 (2026-05-23)
+
+### Features
+
+- **template**: Drop no-commit-to-main pre-push hook by default
+  ([#319](https://github.com/detailobsessed/copier-uv-bleeding/pull/319),
+  [`93cfdb7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/93cfdb75ae1b185e7537b3fc904e0cb36a822eca))
+
+
 ## v0.36.4 (2026-05-23)
 
 ### Bug Fixes
