@@ -68,7 +68,7 @@ jobs:
       run: uv lock
     - uses: j178/prek-action@v1
       env:
-        SKIP: no-commit-to-main,pytest-testmon,uv-lock
+        SKIP: pytest-testmon,uv-lock
       with:
         extra-args: '--all-files'
 

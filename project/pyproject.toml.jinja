@@ -1,5 +1,9 @@
 [build-system]
-requires = ["uv_build"]
+# uv warns on every `uv sync` / `uv build` if uv_build is unbounded — and a
+# breaking uv_build release would silently break sdist builds in every rendered
+# project. Pin to the current minor series and the next major. Bump the upper
+# bound when uv_build crosses 0.12+ (DOT-589).
+requires = ["uv_build>=0.9,<0.12"]
 build-backend = "uv_build"
 
 [project]

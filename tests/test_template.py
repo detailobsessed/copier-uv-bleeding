@@ -303,7 +303,12 @@ class TestCIWorkflows:
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
-        assert "SKIP: no-commit-to-main,pytest-testmon,uv-lock" in content
+        assert "SKIP: pytest-testmon,uv-lock" in content
+        # `no-commit-to-main` was removed from the template (DOT-541) — must not reappear in SKIP.
+        assert "no-commit-to-main" not in content, (
+            "CI workflow still references `no-commit-to-main` in SKIP — the hook was removed "
+            "from prek.toml (DOT-541), so this entry must go too."
+        )
 
     def test_ci_prek_refreshes_lockfile(self, copier_defaults: dict, project_factory) -> None:
         """CI prek job should refresh the lockfile before running hooks."""
@@ -323,6 +328,33 @@ class TestCIWorkflows:
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
         assert "[build-system]" in content
+
+    def test_uv_build_has_upper_bound(self, copier_defaults: dict, project_factory) -> None:
+        """`build-system.requires` must pin `uv_build` with an upper bound (DOT-589).
+
+        An unbounded `uv_build` makes uv print a noisy warning on every `uv sync`
+        / `uv build` (drowns out real warnings) and risks silent sdist breakage
+        when `uv_build` ships a future major. The template ships with
+        `uv_build>=0.9,<0.12`; bump the upper bound when uv_build crosses 0.12+.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        requires = data["build-system"]["requires"]
+        uv_build_specs = [r for r in requires if r.startswith(("uv_build", "uv-build"))]
+        assert uv_build_specs, f"build-system.requires must list uv_build; got {requires!r}"
+
+        spec = uv_build_specs[0]
+        # Reject bare "uv_build" or specs without an upper bound. The point of
+        # the pin is to keep a future breaking release from being auto-picked
+        # by the build frontend — so an upper bound (`<` or `<=`) is required.
+        assert "<" in spec, (
+            f"uv_build must have an upper version bound to avoid the uv warning and "
+            f"to prevent silent breakage on a future major release. Got {spec!r}; "
+            f"expected something like 'uv_build>=0.9,<0.12'."
+        )
 
     def test_pypi_false_excludes_classifiers_and_keywords(self, copier_defaults: dict, project_factory) -> None:
         """When publish_to_pypi is false, classifiers and keywords should not be in pyproject.toml."""
@@ -818,6 +850,26 @@ class TestTemplateUpdateCheck:
             f"`uv sync` in the destination during update (see DOT-587). The poe "
             f"`update-template` chain syncs deps AFTER this banner. Drop the line.\n"
             f"Banner:\n{banner}"
+        )
+
+    def test_no_commit_to_main_hook_absent(self, copier_defaults: dict, project_factory) -> None:
+        """The `no-commit-to-main` pre-push hook must not ship in prek.toml (DOT-541).
+
+        Solo workflows commit straight to main for trivial / safe changes (typo fixes, doc
+        tweaks, dep bumps). The template used to ship a `no-commit-to-main` pre-push hook
+        that blocked that workflow unconditionally, forcing every change through a PR even
+        when there was no reviewer to wait for. The template no longer ships it; users who
+        want PR-only enforcement can add a six-line local hook themselves.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        all_hook_ids = [h["id"] for repo in data["repos"] for h in repo.get("hooks", [])]
+        assert "no-commit-to-main" not in all_hook_ids, (
+            f"prek.toml ships a `no-commit-to-main` hook — the template was changed to drop it "
+            f"(DOT-541) so solo workflows can commit straight to main. Current hooks: {all_hook_ids!r}"
         )
 
 
@@ -1538,4 +1590,87 @@ class TestIntegration:
             ".venv/pyvenv.cfg disappeared after `copier update` — DOT-588 regression. "
             "`uv sync` in the destination's venv would now error with "
             "'cannot be recreated because it is not a virtual environment'."
+        )
+
+    @pytest.mark.slow
+    def test_semantic_release_writes_gitlab_urls_for_selfhosted(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """semantic-release must write GitLab-format commit URLs into CHANGELOG.md when `repository_provider=gitlab.com` (DOT-590).
+
+        Static config tests (`test_gitlab_semantic_release_remote`,
+        `test_gitlab_selfhosted_semantic_release_remote_domain`) cover the rendered TOML, but
+        they don't catch the case where python-semantic-release ignores or misinterprets the
+        config and falls back to GitHub URL conventions — exactly the symptom the user saw
+        (their existing CHANGELOG had `github.com/<namespace>/<pkg>/commit/<sha>` for a GitLab
+        project). This is the end-to-end check: actually run `semantic-release changelog` on
+        a multi-level GitLab self-hosted setup and verify the URL format.
+        """
+        answers = {
+            **copier_defaults,
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.pnet.ch",
+            "repository_namespace": "kop/ismar",
+            "project_name": "Die Zeit",
+            "project_visibility": "internal",
+        }
+        project = generate_project(tmp_path, answers)
+
+        git_env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "t@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "t@example.com",
+        }
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=project, check=True)
+        subprocess.run(
+            ["git", "remote", "add", "origin", "git@gitlab.pnet.ch:kop/ismar/die-zeit.git"],
+            cwd=project,
+            check=True,
+        )
+        subprocess.run(["git", "add", "-A"], cwd=project, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "feat: initial commit", "--no-verify"],
+            cwd=project,
+            env=git_env,
+            check=True,
+        )
+
+        sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
+        assert sync.returncode == 0, f"uv sync failed: {sync.stderr}"
+
+        # Make a real feat commit so semantic-release has something to changelog.
+        (project / "foo.txt").write_text("x\n")
+        subprocess.run(["git", "add", "foo.txt"], cwd=project, check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "feat: add foo", "--no-verify"],
+            cwd=project,
+            env=git_env,
+            check=True,
+        )
+
+        result = subprocess.run(
+            ["uv", "run", "semantic-release", "changelog"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"semantic-release changelog failed: {result.stderr}"
+
+        changelog = (project / "CHANGELOG.md").read_text()
+
+        # Positive: at least one correctly-formatted gitlab self-hosted commit URL exists.
+        assert "https://gitlab.pnet.ch/kop/ismar/die-zeit/-/commit/" in changelog, (
+            f"Expected gitlab self-hosted commit URL in CHANGELOG.md. Got:\n{changelog}"
+        )
+
+        # Negative: no github.com URLs leaked into the gitlab project's changelog (DOT-590).
+        assert "github.com" not in changelog, f"github.com URL leaked into a gitlab project's CHANGELOG.md (DOT-590):\n{changelog}"
+
+        # Negative: no underscore form of the repo slug (the user's specific symptom — `die_zeit`
+        # instead of `die-zeit`). semantic-release should derive the slug from the git remote
+        # URL, never from python_package_import_name.
+        assert "die_zeit" not in changelog, (
+            f"Underscored repo slug `die_zeit` leaked into CHANGELOG.md — semantic-release "
+            f"appears to be using python_package_import_name instead of the repo slug:\n{changelog}"
         )
