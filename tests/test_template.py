@@ -324,6 +324,33 @@ class TestCIWorkflows:
         content = pyproject.read_text()
         assert "[build-system]" in content
 
+    def test_uv_build_has_upper_bound(self, copier_defaults: dict, project_factory) -> None:
+        """`build-system.requires` must pin `uv_build` with an upper bound (DOT-589).
+
+        An unbounded `uv_build` makes uv print a noisy warning on every `uv sync`
+        / `uv build` (drowns out real warnings) and risks silent sdist breakage
+        when `uv_build` ships a future major. The template ships with
+        `uv_build>=0.9,<0.12`; bump the upper bound when uv_build crosses 0.12+.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        requires = data["build-system"]["requires"]
+        uv_build_specs = [r for r in requires if r.startswith(("uv_build", "uv-build"))]
+        assert uv_build_specs, f"build-system.requires must list uv_build; got {requires!r}"
+
+        spec = uv_build_specs[0]
+        # Reject bare "uv_build" or specs without an upper bound. The point of
+        # the pin is to keep a future breaking release from being auto-picked
+        # by the build frontend — so an upper bound (`<` or `<=`) is required.
+        assert "<" in spec, (
+            f"uv_build must have an upper version bound to avoid the uv warning and "
+            f"to prevent silent breakage on a future major release. Got {spec!r}; "
+            f"expected something like 'uv_build>=0.9,<0.12'."
+        )
+
     def test_pypi_false_excludes_classifiers_and_keywords(self, copier_defaults: dict, project_factory) -> None:
         """When publish_to_pypi is false, classifiers and keywords should not be in pyproject.toml."""
         answers = {**copier_defaults, "publish_to_pypi": False}
