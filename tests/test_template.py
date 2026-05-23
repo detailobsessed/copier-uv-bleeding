@@ -303,7 +303,12 @@ class TestCIWorkflows:
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
-        assert "SKIP: no-commit-to-main,pytest-testmon,uv-lock" in content
+        assert "SKIP: pytest-testmon,uv-lock" in content
+        # `no-commit-to-main` was removed from the template (DOT-541) — must not reappear in SKIP.
+        assert "no-commit-to-main" not in content, (
+            "CI workflow still references `no-commit-to-main` in SKIP — the hook was removed "
+            "from prek.toml (DOT-541), so this entry must go too."
+        )
 
     def test_ci_prek_refreshes_lockfile(self, copier_defaults: dict, project_factory) -> None:
         """CI prek job should refresh the lockfile before running hooks."""
@@ -818,6 +823,26 @@ class TestTemplateUpdateCheck:
             f"`uv sync` in the destination during update (see DOT-587). The poe "
             f"`update-template` chain syncs deps AFTER this banner. Drop the line.\n"
             f"Banner:\n{banner}"
+        )
+
+    def test_no_commit_to_main_hook_absent(self, copier_defaults: dict, project_factory) -> None:
+        """The `no-commit-to-main` pre-push hook must not ship in prek.toml (DOT-541).
+
+        Solo workflows commit straight to main for trivial / safe changes (typo fixes, doc
+        tweaks, dep bumps). The template used to ship a `no-commit-to-main` pre-push hook
+        that blocked that workflow unconditionally, forcing every change through a PR even
+        when there was no reviewer to wait for. The template no longer ships it; users who
+        want PR-only enforcement can add a six-line local hook themselves.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        all_hook_ids = [h["id"] for repo in data["repos"] for h in repo.get("hooks", [])]
+        assert "no-commit-to-main" not in all_hook_ids, (
+            f"prek.toml ships a `no-commit-to-main` hook — the template was changed to drop it "
+            f"(DOT-541) so solo workflows can commit straight to main. Current hooks: {all_hook_ids!r}"
         )
 
 
