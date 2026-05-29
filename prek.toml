@@ -1,4 +1,4 @@
-"$schema" = "https://raw.githubusercontent.com/j178/prek/v0.3.11/prek.schema.json"
+#:schema https://www.schemastore.org/prek.json
 default_stages = ["pre-commit"]
 # Minimum prek version for builtin hooks and TOML config support
 minimum_prek_version = "0.3.11"  # 0.3.11 introduced --repo-exclude-tag (project/scripts/prek-autoupdate.sh)
