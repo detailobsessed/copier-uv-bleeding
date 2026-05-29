@@ -14,6 +14,25 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.37.1 (2026-05-29)
+
+### Bug Fixes
+
+- **template**: Silence two spurious per-run warnings (prek $schema + .rej check)
+  ([#321](https://github.com/detailobsessed/copier-uv-bleeding/pull/321),
+  [`0680e4a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/0680e4a4f1afe2ce045bddc9a05a90c539d79e49))
+
+### Testing
+
+- **template**: Lock down semantic-release CHANGELOG URL format for GitLab
+  ([#318](https://github.com/detailobsessed/copier-uv-bleeding/pull/318),
+  [`3cd5fc3`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3cd5fc345a281a6dbff87dadf7509720774221a9))
+
+- **template**: Parametrize test_all_default_groups_are_defined
+  ([#320](https://github.com/detailobsessed/copier-uv-bleeding/pull/320),
+  [`da44663`](https://github.com/detailobsessed/copier-uv-bleeding/commit/da4466349aee2419a4bc71c529f1473794968c51))
+
+
 ## v0.37.0 (2026-05-23)
 
 ### Features
