@@ -1319,6 +1319,52 @@ class TestProjectVisibility:
         assert ".github.io" in content
 
 
+class TestCommunityHealthFiles:
+    """use_community_health_files gates OSS onboarding files independently of visibility.
+
+    Community-health files (CoC, CONTRIBUTING, SECURITY, issue/PR templates, FUNDING)
+    are a separate axis from licensing (LICENSE), so a public project can opt out of
+    them and an internal project can opt in.
+    """
+
+    HEALTH_FILES: ClassVar[list[str]] = [
+        "CODE_OF_CONDUCT.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        ".github/FUNDING.yml",
+        ".github/pull_request_template.md",
+    ]
+
+    def test_public_without_community_health_excludes_files(self, copier_defaults: dict, project_factory) -> None:
+        """A public project with the toggle off ships no community-health files, but keeps LICENSE."""
+        answers = {
+            **copier_defaults,
+            "project_visibility": "public",
+            "use_community_health_files": False,
+        }
+        project = project_factory(answers)
+
+        for f in self.HEALTH_FILES:
+            assert not (project / f).exists(), f"{f} should be excluded when community-health is off"
+        assert not (project / ".github" / "ISSUE_TEMPLATE").exists()
+        # Licensing is a separate axis — a public project keeps its LICENSE.
+        assert (project / "LICENSE").exists()
+
+    def test_internal_with_community_health_keeps_files(self, copier_defaults: dict, project_factory) -> None:
+        """An internal project can opt into community-health files; LICENSE still follows visibility."""
+        answers = {
+            **copier_defaults,
+            "project_visibility": "internal",
+            "use_community_health_files": True,
+        }
+        project = project_factory(answers)
+
+        assert (project / "CONTRIBUTING.md").exists()
+        assert (project / ".github" / "ISSUE_TEMPLATE").exists()
+        # Licensing still follows visibility — an internal project has no LICENSE.
+        assert not (project / "LICENSE").exists()
+
+
 class TestMcpRegistry:
     """Test publish_to_mcp_registry question gates MCP registry publishing workflow.
 
