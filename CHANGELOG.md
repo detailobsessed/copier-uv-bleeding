@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.40.0 (2026-06-02)
+
+### Features
+
+- **template**: Add project_audience profile, default to solo-internal
+  ([#325](https://github.com/detailobsessed/copier-uv-bleeding/pull/325),
+  [`4cfe9ef`](https://github.com/detailobsessed/copier-uv-bleeding/commit/4cfe9ef4272986e8b31b9d758b6b20a2d282810c))
+
+
 ## v0.39.0 (2026-06-02)
 
 ### Features
