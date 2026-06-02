@@ -175,6 +175,43 @@ class TestPreCommitConfig:
         assert "pyupgrade" not in content
 
 
+class TestHookProfiles:
+    """use_heavy_hooks gates slow git hooks; fast hooks stay always-on."""
+
+    @staticmethod
+    def _hook_ids(project: Path) -> list[str]:
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+        return [hook["id"] for repo in data["repos"] for hook in repo.get("hooks", [])]
+
+    def test_heavy_hooks_default_includes_slow_hooks(self, copier_defaults: dict, project_factory) -> None:
+        """The default profile runs coverage and docs-build as git hooks."""
+        ids = self._hook_ids(project_factory(copier_defaults))
+        assert "pytest-cov" in ids
+        assert "docs-build" in ids
+
+    def test_light_hooks_drop_slow_hooks_keep_fast_ones(self, copier_defaults: dict, project_factory) -> None:
+        """use_heavy_hooks=false removes coverage and docs-build but keeps the fast hooks."""
+        ids = self._hook_ids(project_factory({**copier_defaults, "use_heavy_hooks": False}))
+        assert "pytest-cov" not in ids
+        assert "docs-build" not in ids
+        for fast in ("ruff", "ty", "pytest-testmon"):
+            assert fast in ids, f"{fast} should stay always-on"
+
+    def test_conventional_commit_gated_on_semantic_release(self, copier_defaults: dict, project_factory) -> None:
+        """conventional-pre-commit ships only with semantic-release, and without --strict."""
+        with_release = project_factory({**copier_defaults, "use_semantic_release": True})
+        assert "conventional-pre-commit" in self._hook_ids(with_release)
+        assert "--strict" not in (with_release / "prek.toml").read_text()
+
+        without_release = project_factory({
+            **copier_defaults,
+            "use_ci": False,
+            "use_semantic_release": False,
+        })
+        assert "conventional-pre-commit" not in self._hook_ids(without_release)
+
+
 class TestDependencies:
     """Test dependency configuration."""
 

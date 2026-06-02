@@ -185,6 +185,11 @@ use_docs:
   help: "Generate a full documentation site? (zensical site, docs/ tree, mkdocstrings, Pages workflow, docs-build hook). Off = README only."
   default: true
 
+use_heavy_hooks:
+  type: bool
+  help: "Run slow checks as git hooks? (coverage + docs-build on pre-push). Off = fast hooks only; coverage and docs run in CI."
+  default: true
+
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
