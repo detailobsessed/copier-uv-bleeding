@@ -190,7 +190,7 @@ def _should_skip(rel_str: str, context: dict) -> bool:
     skip_rules = (
         (rel_str.startswith(".github") and provider != "github.com"),
         ("gitlab-ci" in rel_str and provider != "gitlab.com"),
-        (not context.get("use_ci") and any(x in rel_str for x in ("ci.yml", "copier-update.yml", "gitlab-ci"))),
+        (not context.get("use_ci") and any(x in rel_str for x in ("ci.yml", "gitlab-ci"))),
         (not context.get("use_semantic_release") and "release.yml" in rel_str),
         (not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str),
         (not context.get("use_docs") and any(x in rel_str for x in ("docs/", "docs.yml", "zensical.toml"))),
