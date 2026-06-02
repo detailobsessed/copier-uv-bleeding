@@ -46,6 +46,7 @@ When you run `copier copy`, you'll be asked:
 
 | Prompt | Description |
 | ------ | ----------- |
+| **Project audience** | `solo-internal` (default), `team`, or `public-oss` — sets lighter or fuller defaults for everything below (see [Audience profiles](#audience-profiles)) |
 | **Project name** | Name of your project |
 | **Project description** | One-line description |
 | **Project type** | `app`, `lib`, or `package` — configures pyproject.toml entry points and build settings |
@@ -53,12 +54,29 @@ When you run `copier copy`, you'll be asked:
 | **Repository provider** | `github.com` or `gitlab.com` |
 | **Repository namespace** | GitHub/GitLab username or organization |
 | **License** | Choose from 40+ open source licenses |
+| **Community-health files?** | `CODE_OF_CONDUCT`, `CONTRIBUTING`, `SECURITY`, issue/PR templates, `FUNDING` |
 | **Generate docs site?** | Zensical scaffolding, `docs/`, GitHub Pages workflow |
 | **Enable CI?** | GitHub Actions or GitLab CI |
 | **Enable semantic-release?** | Automated versioning and changelog |
+| **Heavy git hooks?** | Run coverage + docs-build on pre-push (off = fast hooks only; coverage/docs run in CI) |
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
 | **Configure GitHub repo settings?** | Run `gh repo edit` to enable delete-branch-on-merge and auto-merge |
+
+### Audience profiles
+
+`Project audience` is the one high-level choice that sets sensible starting defaults — every individual toggle stays overridable.
+
+| | solo-internal (default) | team | public-oss |
+| --- | --- | --- | --- |
+| Visibility | internal | internal | public |
+| CI | off | on | on |
+| semantic-release | off | on | on |
+| Docs site | off | off | on |
+| Heavy git hooks | off | off | on |
+| Community-health files | off | off | on |
+
+The shipped default is **solo-internal** — the leanest scaffold. Choose **public-oss** for the full open-source stack (docs site, strict hooks, community files), or **team** for a shared internal repo that wants CI and changelogs without the public-facing weight.
 
 ## Quick Start
 

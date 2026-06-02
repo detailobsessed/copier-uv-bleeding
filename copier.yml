@@ -70,10 +70,19 @@ project_type:
     Application (with CLI entry point — uv init --app): app
     Library (importable package, no CLI — uv init --lib): lib
 
+project_audience:
+  type: str
+  help: "Who is this project for? Sets sensible defaults for visibility, CI, docs, hooks, and OSS files — each still overridable below."
+  default: solo-internal
+  choices:
+    Solo / internal (audience of one — lightest defaults): solo-internal
+    Team (shared internal repo — adds CI + releases): team
+    Public open-source (full stack — docs, strict hooks, OSS files): public-oss
+
 project_visibility:
   type: str
   help: "Project visibility (public = open-source scaffolding, internal = skip community files)"
-  default: public
+  default: "{{ 'public' if project_audience == 'public-oss' else 'internal' }}"
   choices:
     Public (open-source with LICENSE, CoC, CONTRIBUTING, SECURITY): public
     Internal (company/private — skip open-source scaffolding): internal
@@ -183,17 +192,17 @@ python_package_command_line_name:
 use_docs:
   type: bool
   help: "Generate a full documentation site? (zensical site, docs/ tree, mkdocstrings, Pages workflow, docs-build hook). Off = README only."
-  default: true
+  default: "{{ project_audience == 'public-oss' }}"
 
 use_heavy_hooks:
   type: bool
   help: "Run slow checks as git hooks? (coverage + docs-build on pre-push). Off = fast hooks only; coverage and docs run in CI."
-  default: true
+  default: "{{ project_audience == 'public-oss' }}"
 
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
-  default: "{{ project_visibility == 'public' }}"
+  default: "{{ project_audience != 'solo-internal' }}"
 
 use_semantic_release:
   type: bool

@@ -1402,6 +1402,54 @@ class TestCommunityHealthFiles:
         assert not (project / "LICENSE").exists()
 
 
+class TestAudienceProfiles:
+    """project_audience cascades defaults: solo-internal (light) / team (CI+releases) / public-oss (full)."""
+
+    @staticmethod
+    def _profile_answers(copier_defaults: dict, audience: str) -> dict:
+        # Drop the toggles whose defaults cascade from audience so copier computes them.
+        cascaded = {"use_docs", "use_ci", "use_semantic_release", "project_audience"}
+        answers = {k: v for k, v in copier_defaults.items() if k not in cascaded}
+        answers["project_audience"] = audience
+        return answers
+
+    @staticmethod
+    def _hook_ids(project: Path) -> list[str]:
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+        return [hook["id"] for repo in data["repos"] for hook in repo.get("hooks", [])]
+
+    def test_solo_internal_is_lightest(self, copier_defaults: dict, project_factory) -> None:
+        """solo-internal: no docs site, no CI, no community files, internal visibility, light hooks."""
+        project = project_factory(self._profile_answers(copier_defaults, "solo-internal"))
+        assert not (project / "zensical.toml").exists(), "solo-internal should have no docs site"
+        assert not (project / ".github" / "workflows" / "ci.yml").exists(), "solo-internal should have no CI"
+        assert not (project / "CONTRIBUTING.md").exists(), "solo-internal should have no community files"
+        assert not (project / "LICENSE").exists(), "solo-internal is internal visibility"
+        assert "pytest-cov" not in self._hook_ids(project), "solo-internal should use light hooks"
+        readme = (project / "README.md").read_text()
+        assert "workflows/ci/badge.svg" not in readme, "no CI badge without CI"
+        assert "codecov.io" not in readme, "no codecov badge without CI"
+
+    def test_team_adds_ci_and_releases_but_stays_light(self, copier_defaults: dict, project_factory) -> None:
+        """team: CI + releases on, but no docs site / community files / heavy hooks."""
+        project = project_factory(self._profile_answers(copier_defaults, "team"))
+        assert (project / ".github" / "workflows" / "ci.yml").exists(), "team should have CI"
+        assert (project / ".github" / "workflows" / "release.yml").exists(), "team should have releases"
+        assert not (project / "zensical.toml").exists(), "team should have no docs site"
+        assert not (project / "CONTRIBUTING.md").exists(), "team should have no community files"
+        assert "pytest-cov" not in self._hook_ids(project), "team should keep light hooks"
+
+    def test_public_oss_is_full_stack(self, copier_defaults: dict, project_factory) -> None:
+        """public-oss: docs site, LICENSE, community files, heavy hooks."""
+        project = project_factory(self._profile_answers(copier_defaults, "public-oss"))
+        assert (project / "zensical.toml").exists()
+        assert (project / "LICENSE").exists()
+        assert (project / "CONTRIBUTING.md").exists()
+        assert "pytest-cov" in self._hook_ids(project)
+        assert "workflows/ci/badge.svg" in (project / "README.md").read_text(), "public-oss README has CI badge"
+
+
 class TestMcpRegistry:
     """Test publish_to_mcp_registry question gates MCP registry publishing workflow.
 

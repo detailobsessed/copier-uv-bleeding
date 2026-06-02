@@ -21,6 +21,7 @@ def copier_defaults() -> dict:
         "author_username": "testuser",
         "repository_namespace": "testuser",
         "copyright_license": "MIT",
+        "project_audience": "public-oss",
         "use_docs": True,
         "use_ci": True,
         "use_semantic_release": True,
