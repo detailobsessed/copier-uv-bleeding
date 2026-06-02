@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.0 (2026-06-02)
+
+### Features
+
+- **template**: Drop docs-site, fold audience/visibility into one open_source question
+  ([#327](https://github.com/detailobsessed/copier-uv-bleeding/pull/327),
+  [`d074c60`](https://github.com/detailobsessed/copier-uv-bleeding/commit/d074c60bc5ffa6157dad33f94b98e40cc4c1a68b))
+
+
 ## v0.40.1 (2026-06-02)
 
 ### Bug Fixes
