@@ -58,7 +58,6 @@ def _build_context(overrides: dict) -> dict:
         "python_package_distribution_name": "my-test-project",
         "python_package_import_name": "my_test_project",
         "python_package_command_line_name": "my-test-project",
-        "use_docs": True,
         "use_heavy_hooks": True,
         "use_ci": True,
         "use_semantic_release": True,
@@ -67,9 +66,7 @@ def _build_context(overrides: dict) -> dict:
         "use_custom_pypi_index": False,
         "use_blacksmith_runners": False,
         "configure_repo_settings": False,
-        "project_audience": "public-oss",
-        "project_visibility": "public",
-        "use_community_health_files": True,
+        "open_source": True,
         "custom_pypi_index_url": "",
         "current_year": datetime.now(UTC).year,
     }
@@ -176,13 +173,11 @@ _COMMUNITY_HEALTH_FILES = (
     "CODE_OF_CONDUCT",
     "CONTRIBUTING",
     "SECURITY",
-    "contributing.md",
-    "code_of_conduct.md",
     "FUNDING",
     "ISSUE_TEMPLATE",
     "pull_request_template",
 )
-_LICENSE_FILES = ("LICENSE", "license.md")
+_LICENSE_FILES = ("LICENSE",)
 
 
 def _should_skip(rel_str: str, context: dict) -> bool:
@@ -193,9 +188,8 @@ def _should_skip(rel_str: str, context: dict) -> bool:
         (not context.get("use_ci") and any(x in rel_str for x in ("ci.yml", "gitlab-ci"))),
         (not context.get("use_semantic_release") and "release.yml" in rel_str),
         (not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str),
-        (not context.get("use_docs") and any(x in rel_str for x in ("docs/", "docs.yml", "zensical.toml"))),
-        (not context.get("use_community_health_files", True) and any(x in rel_str for x in _COMMUNITY_HEALTH_FILES)),
-        (context.get("project_visibility") == "internal" and any(x in rel_str for x in _LICENSE_FILES)),
+        (not context.get("open_source", True) and any(x in rel_str for x in _COMMUNITY_HEALTH_FILES)),
+        (not context.get("open_source", True) and any(x in rel_str for x in _LICENSE_FILES)),
     )
     return any(skip_rules)
 
@@ -243,15 +237,13 @@ CONTEXT_VARIANTS: dict[str, dict] = {
         "use_semantic_release": True,
         "publish_to_pypi": False,
     }),
-    "no-docs": _build_context({
-        "use_docs": False,
-    }),
-    # Lightweight hooks — pytest-cov and docs-build dropped from git hooks
+    # Lightweight hooks — pytest-cov dropped from git hooks (runs in CI instead)
     "lightweight-hooks": _build_context({
         "use_heavy_hooks": False,
     }),
-    "no-docs-no-ci": _build_context({
-        "use_docs": False,
+    # Internal solo project, no CI — the lightest path
+    "internal-no-ci": _build_context({
+        "open_source": False,
         "use_ci": False,
         "use_semantic_release": False,
         "publish_to_pypi": False,
@@ -267,27 +259,20 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     # Project types
     "lib-type": _build_context({"project_type": "lib"}),
-    # Community-health toggle (independent of visibility)
-    "public-no-community": _build_context({
-        "use_community_health_files": False,
-    }),
-    # Visibility
+    # Internal (not open source) — no LICENSE or community-health files
     "internal": _build_context({
-        "project_visibility": "internal",
-        "use_community_health_files": False,
+        "open_source": False,
         "publish_to_pypi": False,
     }),
     "internal-selfhosted-gitlab": _build_context({
-        "project_visibility": "internal",
-        "use_community_health_files": False,
+        "open_source": False,
         "repository_provider": "gitlab.com",
         "repository_host": "gitlab.company.com",
         "publish_to_pypi": False,
         "use_blacksmith_runners": False,
     }),
     "internal-selfhosted-github": _build_context({
-        "project_visibility": "internal",
-        "use_community_health_files": False,
+        "open_source": False,
         "repository_provider": "github.com",
         "repository_host": "github.company.com",
         "publish_to_pypi": False,
@@ -299,8 +284,7 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     # Custom PyPI index (corporate Artifactory/Nexus)
     "custom-pypi-index": _build_context({
-        "project_visibility": "internal",
-        "use_community_health_files": False,
+        "open_source": False,
         "use_custom_pypi_index": True,
         "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
         "publish_to_pypi": False,
