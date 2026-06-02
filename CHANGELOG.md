@@ -14,6 +14,21 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.38.0 (2026-06-02)
+
+### Features
+
+- **template**: Decouple community-health files behind a toggle
+  ([#322](https://github.com/detailobsessed/copier-uv-bleeding/pull/322),
+  [`72a462b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/72a462bbe061439fde341fff97d8904656dad5cb))
+
+### Refactoring
+
+- **template**: Slim scaffolded README, clarify use_docs
+  ([#323](https://github.com/detailobsessed/copier-uv-bleeding/pull/323),
+  [`9b85230`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9b85230185bb123a8edd5688f1c0b112e75b59bb))
+
+
 ## v0.37.1 (2026-05-29)
 
 ### Bug Fixes
