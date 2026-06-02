@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.40.1 (2026-06-02)
+
+### Bug Fixes
+
+- **template**: Drop broken weekly Copier Update workflow
+  ([#326](https://github.com/detailobsessed/copier-uv-bleeding/pull/326),
+  [`9d0f34d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9d0f34d114b3676d3bc496ec9a623c8c82e7b12c))
+
+
 ## v0.40.0 (2026-06-02)
 
 ### Features
