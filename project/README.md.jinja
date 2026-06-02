@@ -22,23 +22,3 @@
 {%- endif %}
 
 {{ project_description }}
-{% if use_ci and repository_provider == "github.com" %}
-## Branch protection
-
-The CI workflow includes a `ci-pass` gate job that aggregates the status of all CI jobs.
-Add a [branch protection rule](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) for `main` requiring the **`ci-pass`** status check to pass before merging — recommended for team workflows.
-
-This project ships **no** local hook blocking pushes to `main`, so a solo workflow can commit straight to `main` for trivial/safe changes (typo fixes, doc tweaks, dep bumps). Add a `no-commit-to-main` pre-push hook to `prek.toml` if you want PR-only enforcement.
-{%- elif repository_provider == "gitlab.com" %}
-## Branch protection
-
-This project ships no local hook blocking pushes to `main`, so a solo workflow can commit straight to `main` for trivial/safe changes.
-
-Some self-hosted GitLab instances enforce a default protected-branch rule on `main`. If yours does and you want the solo workflow, drop the rule:
-
-```bash
-glab api projects/<id>/protected_branches/main -X DELETE
-```
-
-Keep the rule (and add a `no-commit-to-main` pre-push hook to `prek.toml`) if you want PR-only enforcement.
-{%- endif %}
