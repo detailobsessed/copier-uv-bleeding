@@ -33,24 +33,20 @@ _exclude:
 - "{% if repository_provider != 'gitlab.com' %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
-- "{% if not use_docs %}.github/workflows/docs.yml{% endif %}"
-- "{% if not use_docs %}zensical.toml{% endif %}"
-- "{% if not use_docs %}docs{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not publish_to_mcp_registry %}.github/workflows/mcp-registry-publish.yml{% endif %}"
 - "{% if not use_blacksmith_runners %}.github/actionlint.yaml{% endif %}"
-# Community-health files (OSS contributor onboarding) — gated on use_community_health_files
-- "{% if not use_community_health_files %}CODE_OF_CONDUCT.md{% endif %}"
-- "{% if not use_community_health_files %}CONTRIBUTING.md{% endif %}"
-- "{% if not use_community_health_files %}SECURITY.md{% endif %}"
-- "{% if not use_community_health_files %}docs/code_of_conduct.md{% endif %}"
-- "{% if not use_community_health_files %}docs/contributing.md{% endif %}"
-- "{% if not use_community_health_files %}.github/FUNDING.yml{% endif %}"
-- "{% if not use_community_health_files %}.github/ISSUE_TEMPLATE{% endif %}"
-- "{% if not use_community_health_files %}.github/pull_request_template.md{% endif %}"
-# Licensing files — gated on project_visibility
-- "{% if project_visibility == 'internal' %}LICENSE{% endif %}"
-- "{% if project_visibility == 'internal' %}docs/license.md{% endif %}"
+# Open-source scaffolding (LICENSE + community-health files) — gated on open_source.
+# The LICENSE line falls back to the question default so that a cross-version
+# `copier update` (where older answers predate open_source) keeps LICENSE and the
+# pyproject `license-files` glob in sync.
+- "{% if not (open_source | default(repository_provider == 'github.com')) %}LICENSE{% endif %}"
+- "{% if not open_source %}CODE_OF_CONDUCT.md{% endif %}"
+- "{% if not open_source %}CONTRIBUTING.md{% endif %}"
+- "{% if not open_source %}SECURITY.md{% endif %}"
+- "{% if not open_source %}.github/FUNDING.yml{% endif %}"
+- "{% if not open_source %}.github/ISSUE_TEMPLATE{% endif %}"
+- "{% if not open_source %}.github/pull_request_template.md{% endif %}"
 
 # PROMPT --------------------------------
 project_name:
@@ -68,28 +64,6 @@ project_type:
   choices:
     Application (with CLI entry point — uv init --app): app
     Library (importable package, no CLI — uv init --lib): lib
-
-project_audience:
-  type: str
-  help: "Who is this project for? Sets sensible defaults for visibility, CI, docs, hooks, and OSS files — each still overridable below."
-  default: solo-internal
-  choices:
-    Solo / internal (audience of one — lightest defaults): solo-internal
-    Team (shared internal repo — adds CI + releases): team
-    Public open-source (full stack — docs, strict hooks, OSS files): public-oss
-
-project_visibility:
-  type: str
-  help: "Project visibility (public = open-source scaffolding, internal = skip community files)"
-  default: "{{ 'public' if project_audience == 'public-oss' else 'internal' }}"
-  choices:
-    Public (open-source with LICENSE, CoC, CONTRIBUTING, SECURITY): public
-    Internal (company/private — skip open-source scaffolding): internal
-
-use_community_health_files:
-  type: bool
-  help: "Generate OSS community-health files? (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates, FUNDING)"
-  default: "{{ project_visibility == 'public' }}"
 
 author_fullname:
   type: str
@@ -130,11 +104,16 @@ repository_name:
   default: "{{ project_name | slugify }}"
   when: false
 
+open_source:
+  type: bool
+  help: "Open-source this project? Adds a LICENSE and community-health files (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates, FUNDING). Off = internal/private, none of those."
+  default: "{{ repository_provider == 'github.com' }}"
+
 copyright_license:
   type: str
   help: Your project's license
   default: ISC
-  when: "{{ project_visibility == 'public' }}"
+  when: "{{ open_source }}"
   choices:
     Academic Free License v3.0: AFL-3.0
     Apache License 2.0: Apache-2.0
@@ -188,20 +167,15 @@ python_package_command_line_name:
   default: "{{ project_name | slugify }}"
   when: false
 
-use_docs:
-  type: bool
-  help: "Generate a full documentation site? (zensical site, docs/ tree, mkdocstrings, Pages workflow, docs-build hook). Off = README only."
-  default: "{{ project_audience == 'public-oss' }}"
-
 use_heavy_hooks:
   type: bool
-  help: "Run slow checks as git hooks? (coverage + docs-build on pre-push). Off = fast hooks only; coverage and docs run in CI."
-  default: "{{ project_audience == 'public-oss' }}"
+  help: "Run slow checks as git hooks? (coverage on pre-push). Off = fast hooks only; coverage runs in CI."
+  default: false
 
 use_ci:
   type: bool
   help: "Enable CI workflow? (testing, linting, type checking)"
-  default: "{{ project_audience != 'solo-internal' }}"
+  default: true
 
 use_semantic_release:
   type: bool
@@ -212,7 +186,7 @@ use_semantic_release:
 publish_to_pypi:
   type: bool
   help: Will you publish this package to PyPI?
-  default: "{{ use_semantic_release and project_visibility == 'public' }}"
+  default: "{{ use_semantic_release and open_source }}"
   when: "{{ use_semantic_release }}"
 
 publish_to_mcp_registry:

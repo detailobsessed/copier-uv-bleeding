@@ -124,18 +124,6 @@ stages = ["pre-push"]
 priority = 1
 {%- endif %}
 
-{%- if use_docs and use_heavy_hooks %}
-
-[[repos.hooks]]
-id = "docs-build"
-name = "docs build check"
-entry = "bash -c 'test -f htmlcov/index.html || (mkdir -p htmlcov && touch htmlcov/index.html); uv run poe docs-build'"
-language = "system"
-files = { glob = ["docs/**", "zensical.toml", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "src/**"] }
-pass_filenames = false
-stages = ["pre-push"]
-{%- endif %}
-
 [[repos.hooks]]
 id = "check-template-update"
 name = "check for template updates"

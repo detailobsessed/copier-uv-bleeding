@@ -13,7 +13,7 @@ This is a **Copier template** that generates Python projects. Changes here don't
 Templates under `project/` are rendered with user-supplied strings. This is the most fragile surface area.
 
 - **String escaping** — User inputs (project name, description, author name) are interpolated into TOML, YAML, Markdown, and Python files. Verify that quotes, backslashes, and special characters are properly escaped. See `pyproject.toml.jinja` lines using `replace('\\', '\\\\') | replace('\"', '\\\"')` for the pattern.
-- **Conditional blocks** — `{% if %}` / `{% endif %}` guards control which sections appear based on boolean answers (`use_ci`, `use_semantic_release`, `publish_to_pypi`, `project_visibility`, etc.). Verify that every branch produces valid output and that no stray blank lines or missing newlines break structured formats.
+- **Conditional blocks** — `{% if %}` / `{% endif %}` guards control which sections appear based on boolean answers (`use_ci`, `use_semantic_release`, `publish_to_pypi`, `open_source`, etc.). Verify that every branch produces valid output and that no stray blank lines or missing newlines break structured formats.
 - **TOML/YAML validity** — A misplaced Jinja block can produce syntactically invalid TOML or YAML. The test suite catches this, but eyeball the rendered output mentally for each conditional path.
 
 ### 2. Copier Configuration (`copier.yml`)

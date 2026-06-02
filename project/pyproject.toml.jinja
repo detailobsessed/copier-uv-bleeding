@@ -10,7 +10,7 @@ build-backend = "uv_build"
 name = "{{ python_package_distribution_name }}"
 description = "{{ project_description | replace('\\', '\\\\') | replace('\"', '\\\"') }}"
 authors = [{name = "{{ author_fullname | replace('\\', '\\\\') | replace('\"', '\\\"') }}", email = "{{ author_email | replace('\\', '\\\\') | replace('\"', '\\\"') }}"}]
-{%- if project_visibility == 'public' %}
+{%- if open_source | default(repository_provider == 'github.com') %}
 license = "{{ copyright_license }}"
 license-files = ["LICENSE"]
 {%- endif %}
@@ -35,23 +35,13 @@ classifiers = [
 {%- endif %}
 
 [project.urls]
-{%- if use_docs and repository_host in ['github.com', 'gitlab.com'] %}
-Homepage = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
-Documentation = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}"
-Changelog = "https://{{ repository_namespace }}.{{ repository_host.rsplit('.', 1)[0] }}.io/{{ repository_name }}/changelog"
-{%- else %}
 Homepage = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
-{%- if use_docs %}
-Documentation = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
-Changelog = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/changelog"
-{%- endif %}
-{%- endif %}
 Repository = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}"
 Issues = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/issues"
 {%- if repository_host == "github.com" %}
 Discussions = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/discussions"
 {%- endif %}
-{%- if repository_host == "github.com" and use_community_health_files %}
+{%- if repository_host == "github.com" and open_source %}
 Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 {%- endif %}
 
@@ -81,19 +71,9 @@ local = [
     "prek>=0.3.11",
     "pytest-testmon>=2.2",
 ]
-{%- if use_docs %}
-docs = [
-    "markdown-callouts>=0.4",
-    "markdown-exec>=1.10",
-    "mkdocs-coverage>=1.1",
-    "mkdocs-section-index>=0.3.9",
-    "mkdocstrings[python]>=0.27",
-    "zensical",
-]
-{%- endif %}
 
 [tool.uv]
-default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", {% if use_docs %}"docs", {% endif %}"local"]
+default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", "local"]
 {%- if custom_pypi_index_url %}
 
 [[tool.uv.index]]
@@ -262,12 +242,6 @@ test-cov = "pytest --cov --cov-report=term-missing --cov-report=html"
 check.parallel = ["lint", "typecheck"]
 check.ignore_fail = "return_non_zero"
 fix = ["lint --fix", "format"]
-{%- if use_docs %}
-
-# Documentation
-docs = "zensical serve"
-docs-build = "zensical build -s --clean"
-{%- endif %}
 
 # Pre-commit
 prek = "prek run --all-files"
