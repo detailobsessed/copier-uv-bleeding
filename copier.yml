@@ -182,7 +182,7 @@ python_package_command_line_name:
 
 use_docs:
   type: bool
-  help: "Generate docs site scaffolding? (zensical, docs/, GitHub Pages workflow)"
+  help: "Generate a full documentation site? (zensical site, docs/ tree, mkdocstrings, Pages workflow, docs-build hook). Off = README only."
   default: true
 
 use_ci:
