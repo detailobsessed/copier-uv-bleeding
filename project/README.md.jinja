@@ -1,9 +1,11 @@
 # {{ project_name }}
 
-{% if repository_provider == "github.com" -%}
+{% if use_ci and repository_provider == "github.com" -%}
 [![ci](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/workflows/ci/badge.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Aci)
+{% if use_semantic_release -%}
 [![release](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/workflows/release/badge.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/actions?query=workflow%3Arelease)
-{% elif repository_provider == "gitlab.com" -%}
+{% endif -%}
+{% elif use_ci and repository_provider == "gitlab.com" -%}
 [![pipeline](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/badges/main/pipeline.svg)](https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/-/pipelines)
 {% endif -%}
 {%- if use_docs -%}
@@ -17,7 +19,7 @@
 [![pypi version](https://img.shields.io/pypi/v/{{ python_package_distribution_name }}.svg)](https://pypi.org/project/{{ python_package_distribution_name }}/)
 {%- endif %}
 [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
-{%- if repository_provider == "github.com" %}
+{%- if use_ci and repository_provider == "github.com" %}
 [![codecov](https://codecov.io/github/{{ repository_namespace }}/{{ repository_name }}/graph/badge.svg)](https://codecov.io/github/{{ repository_namespace }}/{{ repository_name }})
 {%- endif %}
 

@@ -67,6 +67,7 @@ def _build_context(overrides: dict) -> dict:
         "use_custom_pypi_index": False,
         "use_blacksmith_runners": False,
         "configure_repo_settings": False,
+        "project_audience": "public-oss",
         "project_visibility": "public",
         "use_community_health_files": True,
         "custom_pypi_index_url": "",
