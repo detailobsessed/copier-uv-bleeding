@@ -32,7 +32,6 @@ _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
 - "{% if repository_provider != 'gitlab.com' %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
-- "{% if not use_ci %}.github/workflows/copier-update.yml{% endif %}"
 - "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_docs %}.github/workflows/docs.yml{% endif %}"
 - "{% if not use_docs %}zensical.toml{% endif %}"
