@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.39.0 (2026-06-02)
+
+### Features
+
+- **template**: Add use_heavy_hooks profile, lighten default git hooks
+  ([#324](https://github.com/detailobsessed/copier-uv-bleeding/pull/324),
+  [`3761b78`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3761b78a4b7241df4bb2a5a389c5fb1ac012acf4))
+
+
 ## v0.38.0 (2026-06-02)
 
 ### Features
