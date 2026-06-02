@@ -51,7 +51,7 @@ Issues = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository
 {%- if repository_host == "github.com" %}
 Discussions = "https://{{ repository_host }}/{{ repository_namespace }}/{{ repository_name }}/discussions"
 {%- endif %}
-{%- if repository_host == "github.com" and project_visibility == 'public' %}
+{%- if repository_host == "github.com" and use_community_health_files %}
 Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 {%- endif %}
 

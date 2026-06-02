@@ -40,14 +40,18 @@ _exclude:
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not publish_to_mcp_registry %}.github/workflows/mcp-registry-publish.yml{% endif %}"
 - "{% if not use_blacksmith_runners %}.github/actionlint.yaml{% endif %}"
-- "{% if project_visibility == 'internal' %}CODE_OF_CONDUCT.md{% endif %}"
-- "{% if project_visibility == 'internal' %}CONTRIBUTING.md{% endif %}"
-- "{% if project_visibility == 'internal' %}SECURITY.md{% endif %}"
+# Community-health files (OSS contributor onboarding) — gated on use_community_health_files
+- "{% if not use_community_health_files %}CODE_OF_CONDUCT.md{% endif %}"
+- "{% if not use_community_health_files %}CONTRIBUTING.md{% endif %}"
+- "{% if not use_community_health_files %}SECURITY.md{% endif %}"
+- "{% if not use_community_health_files %}docs/code_of_conduct.md{% endif %}"
+- "{% if not use_community_health_files %}docs/contributing.md{% endif %}"
+- "{% if not use_community_health_files %}.github/FUNDING.yml{% endif %}"
+- "{% if not use_community_health_files %}.github/ISSUE_TEMPLATE{% endif %}"
+- "{% if not use_community_health_files %}.github/pull_request_template.md{% endif %}"
+# Licensing files — gated on project_visibility
 - "{% if project_visibility == 'internal' %}LICENSE{% endif %}"
-- "{% if project_visibility == 'internal' %}docs/code_of_conduct.md{% endif %}"
-- "{% if project_visibility == 'internal' %}docs/contributing.md{% endif %}"
 - "{% if project_visibility == 'internal' %}docs/license.md{% endif %}"
-- "{% if project_visibility == 'internal' %}.github/FUNDING.yml{% endif %}"
 
 # PROMPT --------------------------------
 project_name:
@@ -73,6 +77,11 @@ project_visibility:
   choices:
     Public (open-source with LICENSE, CoC, CONTRIBUTING, SECURITY): public
     Internal (company/private — skip open-source scaffolding): internal
+
+use_community_health_files:
+  type: bool
+  help: "Generate OSS community-health files? (CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, issue/PR templates, FUNDING)"
+  default: "{{ project_visibility == 'public' }}"
 
 author_fullname:
   type: str

@@ -67,6 +67,7 @@ def _build_context(overrides: dict) -> dict:
         "use_blacksmith_runners": False,
         "configure_repo_settings": False,
         "project_visibility": "public",
+        "use_community_health_files": True,
         "custom_pypi_index_url": "",
         "current_year": datetime.now(UTC).year,
     }
@@ -169,16 +170,17 @@ def _collect_templates() -> list[Path]:
     return templates
 
 
-_COMMUNITY_FILES = (
+_COMMUNITY_HEALTH_FILES = (
     "CODE_OF_CONDUCT",
     "CONTRIBUTING",
     "SECURITY",
-    "LICENSE",
-    "license.md",
     "contributing.md",
     "code_of_conduct.md",
     "FUNDING",
+    "ISSUE_TEMPLATE",
+    "pull_request_template",
 )
+_LICENSE_FILES = ("LICENSE", "license.md")
 
 
 def _should_skip(rel_str: str, context: dict) -> bool:
@@ -190,7 +192,8 @@ def _should_skip(rel_str: str, context: dict) -> bool:
         (not context.get("use_semantic_release") and "release.yml" in rel_str),
         (not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str),
         (not context.get("use_docs") and any(x in rel_str for x in ("docs/", "docs.yml", "zensical.toml"))),
-        (context.get("project_visibility") == "internal" and any(x in rel_str for x in _COMMUNITY_FILES)),
+        (not context.get("use_community_health_files", True) and any(x in rel_str for x in _COMMUNITY_HEALTH_FILES)),
+        (context.get("project_visibility") == "internal" and any(x in rel_str for x in _LICENSE_FILES)),
     )
     return any(skip_rules)
 
@@ -258,13 +261,19 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     # Project types
     "lib-type": _build_context({"project_type": "lib"}),
+    # Community-health toggle (independent of visibility)
+    "public-no-community": _build_context({
+        "use_community_health_files": False,
+    }),
     # Visibility
     "internal": _build_context({
         "project_visibility": "internal",
+        "use_community_health_files": False,
         "publish_to_pypi": False,
     }),
     "internal-selfhosted-gitlab": _build_context({
         "project_visibility": "internal",
+        "use_community_health_files": False,
         "repository_provider": "gitlab.com",
         "repository_host": "gitlab.company.com",
         "publish_to_pypi": False,
@@ -272,6 +281,7 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     "internal-selfhosted-github": _build_context({
         "project_visibility": "internal",
+        "use_community_health_files": False,
         "repository_provider": "github.com",
         "repository_host": "github.company.com",
         "publish_to_pypi": False,
@@ -284,6 +294,7 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     # Custom PyPI index (corporate Artifactory/Nexus)
     "custom-pypi-index": _build_context({
         "project_visibility": "internal",
+        "use_community_health_files": False,
         "use_custom_pypi_index": True,
         "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
         "publish_to_pypi": False,
