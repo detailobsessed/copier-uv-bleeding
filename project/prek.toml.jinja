@@ -110,6 +110,8 @@ verbose = true
 stages = ["pre-commit"]
 priority = 1
 
+{%- if use_heavy_hooks %}
+
 [[repos.hooks]]
 id = "pytest-cov"
 name = "pytest with coverage"
@@ -120,8 +122,9 @@ pass_filenames = false
 verbose = true
 stages = ["pre-push"]
 priority = 1
+{%- endif %}
 
-{%- if use_docs %}
+{%- if use_docs and use_heavy_hooks %}
 
 [[repos.hooks]]
 id = "docs-build"
@@ -143,12 +146,13 @@ pass_filenames = false
 verbose = true
 stages = ["post-checkout"]
 
+{%- if use_semantic_release %}
+
 [[repos]]
 repo = "https://github.com/compilerla/conventional-pre-commit"
 rev = ""  # prek autoupdate will fill this
 hooks = [
   { id = "conventional-pre-commit", stages = ["commit-msg"], priority = 1, args = [
-    "--strict",
     "--verbose",
     "feat",
     "fix",
@@ -162,3 +166,4 @@ hooks = [
     "test",
   ] },
 ]
+{%- endif %}

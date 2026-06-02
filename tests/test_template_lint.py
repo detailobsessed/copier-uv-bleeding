@@ -59,6 +59,7 @@ def _build_context(overrides: dict) -> dict:
         "python_package_import_name": "my_test_project",
         "python_package_command_line_name": "my-test-project",
         "use_docs": True,
+        "use_heavy_hooks": True,
         "use_ci": True,
         "use_semantic_release": True,
         "publish_to_pypi": True,
@@ -243,6 +244,10 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     }),
     "no-docs": _build_context({
         "use_docs": False,
+    }),
+    # Lightweight hooks — pytest-cov and docs-build dropped from git hooks
+    "lightweight-hooks": _build_context({
+        "use_heavy_hooks": False,
     }),
     "no-docs-no-ci": _build_context({
         "use_docs": False,
