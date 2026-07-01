@@ -14,6 +14,29 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.1 (2026-07-01)
+
+### Bug Fixes
+
+- **template**: Annotate git_env dict to satisfy ty's subprocess.run overload check
+  ([#328](https://github.com/detailobsessed/copier-uv-bleeding/pull/328),
+  [`bc2537b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bc2537b0b03f480e61983c1561851af27bf43ea0))
+
+- **template**: Migrate open_source from legacy visibility answers on update
+  ([#328](https://github.com/detailobsessed/copier-uv-bleeding/pull/328),
+  [`bc2537b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bc2537b0b03f480e61983c1561851af27bf43ea0))
+
+- **template**: Reconcile use_community_health_files in the open_source migration
+  ([#328](https://github.com/detailobsessed/copier-uv-bleeding/pull/328),
+  [`bc2537b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bc2537b0b03f480e61983c1561851af27bf43ea0))
+
+### Chores
+
+- **deps**: Update dependencies to latest
+  ([#328](https://github.com/detailobsessed/copier-uv-bleeding/pull/328),
+  [`bc2537b`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bc2537b0b03f480e61983c1561851af27bf43ea0))
+
+
 ## v0.41.0 (2026-06-02)
 
 ### Features
