@@ -1251,6 +1251,24 @@ class TestOpenSourceMigration:
         result = self._run(tmp_path, original)
         assert result == original
 
+    def test_falls_back_to_community_health_files_when_visibility_and_audience_absent(self, tmp_path: Path) -> None:
+        """Projects from before project_visibility existed only have use_community_health_files."""
+        result = self._run(tmp_path, "repository_provider: gitlab.com\nuse_community_health_files: true\n")
+        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
+
+    def test_derives_open_source_when_visibility_and_community_health_agree(self, tmp_path: Path) -> None:
+        """The common case: use_community_health_files matches its project_visibility-derived default."""
+        result = self._run(tmp_path, "project_visibility: public\nuse_community_health_files: true\n")
+        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
+
+    def test_abstains_when_visibility_and_community_health_disagree(self, tmp_path: Path) -> None:
+        """A public project with community files explicitly turned off (DOT-599 review finding):
+        no single boolean preserves both axes, so the migration must not guess."""
+        original = "project_visibility: public\nuse_community_health_files: false\n"
+        result = self._run(tmp_path, original)
+        assert result == original
+        assert "open_source" not in result
+
 
 class TestMcpRegistry:
     """Test publish_to_mcp_registry question gates MCP registry publishing workflow.
