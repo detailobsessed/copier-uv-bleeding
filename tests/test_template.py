@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import tomllib
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
-from conftest import generate_project
+from conftest import REPO_ROOT, generate_project
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -1183,6 +1184,72 @@ class TestOpenSource:
         content = (project / "pyproject.toml").read_text()
         assert "gitlab.company.com" in content
         assert "://gitlab.com/" not in content
+
+
+class TestOpenSourceMigration:
+    """The 0.41.0 `_migrations` step derives `open_source` from the legacy
+    `project_visibility` / `project_audience` answers.
+
+    Without this migration, `copier update --defaults` resolves `open_source`
+    from its own schema default (`repository_provider == 'github.com'`) instead
+    of the project's real history, silently flipping visibility for any project
+    whose history disagrees with that default — e.g. an internal project hosted
+    on GitHub gains a LICENSE and community-health files with no `.rej` warning.
+
+    A full `copier update` end-to-end run can't exercise this migration in this
+    test suite: `_migrations` are gated by PEP 440 version comparison against the
+    *tagged* template version, and an unreleased commit always resolves to a dev
+    version below the next tag (verified manually against a temporary local
+    `0.41.0` tag during development). So this tests the migration script directly.
+    """
+
+    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "0.41.0_open_source.py"
+
+    def test_migration_registered_in_copier_yml(self) -> None:
+        """copier.yml's `_migrations` entry must reference the script that actually exists."""
+        content = (REPO_ROOT / "copier.yml").read_text()
+        assert "migrations/0.41.0_open_source.py" in content
+        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
+
+    def _run(self, tmp_path: pathlib.Path, answers_body: str) -> str:
+        answers_file = tmp_path / ".copier-answers.yml"
+        answers_file.write_text(answers_body)
+        result = subprocess.run(
+            ["python3", str(self.SCRIPT)],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"migration script failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        return answers_file.read_text()
+
+    def test_derives_open_source_true_from_public_visibility(self, tmp_path: Path) -> None:
+        """An internal-on-paper GitHub project isn't affected, but a public project must stay public."""
+        result = self._run(tmp_path, "repository_provider: gitlab.com\nproject_visibility: public\n")
+        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
+
+    def test_derives_open_source_false_from_internal_visibility(self, tmp_path: Path) -> None:
+        """The exact regression this migration exists for: an internal GitHub project must not
+        silently become open-source (schema default is `repository_provider == 'github.com'`)."""
+        result = self._run(tmp_path, "repository_provider: github.com\nproject_visibility: internal\n")
+        assert re.search(r"^open_source:\s*false\s*$", result, re.MULTILINE), result
+
+    def test_falls_back_to_project_audience_when_visibility_absent(self, tmp_path: Path) -> None:
+        """Very old projects (pre-project_visibility) only have project_audience recorded."""
+        result = self._run(tmp_path, "repository_provider: gitlab.com\nproject_audience: public-oss\n")
+        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
+
+    def test_leaves_existing_open_source_answer_untouched(self, tmp_path: Path) -> None:
+        """If `open_source` is already answered, the migration must not override it."""
+        result = self._run(tmp_path, "project_visibility: public\nopen_source: false\n")
+        assert re.search(r"^open_source:\s*false\s*$", result, re.MULTILINE), result
+
+    def test_noop_without_any_legacy_answer(self, tmp_path: Path) -> None:
+        """No legacy keys to derive from — leave the file alone and let the question's own default apply."""
+        original = "repository_provider: gitlab.com\n"
+        result = self._run(tmp_path, original)
+        assert result == original
 
 
 class TestMcpRegistry:

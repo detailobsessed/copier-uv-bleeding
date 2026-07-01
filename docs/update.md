@@ -71,3 +71,34 @@ This runs:
 2. **Re-rendered templated values** — fields rendered from `.copier-answers.yml` (e.g. `[project.urls]`, `[project.scripts]`, repository paths) are recomputed on every update. If you manually edited those without bumping the matching answer, the update will reset them. Fix the answer in `.copier-answers.yml` instead of editing the rendered file.
 
 Since we use Git, run `git status` and `git diff` after `poe update-template` and review the changes before committing. Use `git checkout -- FILE` to drop unwanted changes, or `git add -p` for partial commits.
+
+## Known risk: silent overwrites in `pyproject.toml` and `prek.toml`
+
+`pyproject.toml` and `prek.toml` are deliberately left out of `_skip_if_exists`, so template
+improvements (poe tasks, ruff config, hook version bumps) keep flowing into your project via
+`copier update`. But that update is **not** a true 3-way merge — it replays the diff between
+the old and new template renders as a patch onto your file, using fuzzy context matching. Both
+files also carry large, free-form sections you're expected to hand-edit after generation:
+`dependencies`, `[project.scripts]`, `[dependency-groups]`, `[[tool.uv.index]]`, and hook
+`exclude`/`args` tuning.
+
+When a template release restructures a lot of one of these files at once, the patch can find
+*some* plausible anchor nearby and silently overwrite your hand-edited section — **without**
+producing a `.rej` file. Seeing no `.rej` files is not proof that nothing was lost.
+
+**Mitigation:** after every `poe update-template` (or bare `copier update`), always run
+`git diff pyproject.toml prek.toml` by hand and check that your dependencies, entry points,
+dependency-groups, and hook tuning are still there — regardless of whether any `.rej` files
+appeared.
+
+## Never hand-edit `.copier-answers.yml`
+
+Copier reconstructs the "old" version of your project (to compute what changed) from the full
+history of answers in `.copier-answers.yml`, including keys for questions the current template
+no longer asks. If you delete a deprecated key by hand — for example because a newer template
+version renamed or merged that question into a new one — Copier falls back to that old template
+version's schema *default* instead of your project's real history when reconstructing that old
+render. That produces a wrong baseline for the diff, which can silently delete or revert
+unrelated customizations elsewhere in the project. Leave deprecated keys in place; Copier stops
+writing them once the corresponding question is gone, but still needs them for one more update
+to compute history correctly.
