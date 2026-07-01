@@ -1377,7 +1377,7 @@ class TestIntegration:
         sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
         assert sync.returncode == 0, f"uv sync failed: {sync.stderr}"
 
-        git_env = {
+        git_env: dict[str, str] = {
             **os.environ,
             "GIT_AUTHOR_NAME": "Test",
             "GIT_AUTHOR_EMAIL": "test@test.com",
