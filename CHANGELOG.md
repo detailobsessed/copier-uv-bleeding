@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.2 (2026-07-02)
+
+### Bug Fixes
+
+- **template**: Preserve marked user regions in pyproject.toml/prek.toml across updates
+  ([#329](https://github.com/detailobsessed/copier-uv-bleeding/pull/329),
+  [`9a80874`](https://github.com/detailobsessed/copier-uv-bleeding/commit/9a80874df60a27d4df89d0543364c4fcefb7d1c8))
+
+
 ## v0.41.1 (2026-07-01)
 
 ### Bug Fixes
