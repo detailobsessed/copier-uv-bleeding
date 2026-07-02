@@ -72,24 +72,63 @@ This runs:
 
 Since we use Git, run `git status` and `git diff` after `poe update-template` and review the changes before committing. Use `git checkout -- FILE` to drop unwanted changes, or `git add -p` for partial commits.
 
-## Known risk: silent overwrites in `pyproject.toml` and `prek.toml`
+## How `pyproject.toml` and `prek.toml` update (DOT-599)
 
-`pyproject.toml` and `prek.toml` are deliberately left out of `_skip_if_exists`, so template
-improvements (poe tasks, ruff config, hook version bumps) keep flowing into your project via
-`copier update`. But that update is **not** a true 3-way merge — it replays the diff between
-the old and new template renders as a patch onto your file, using fuzzy context matching. Both
-files also carry large, free-form sections you're expected to hand-edit after generation:
-`dependencies`, `[project.scripts]`, `[dependency-groups]`, `[[tool.uv.index]]`, and hook
-`exclude`/`args` tuning.
+Both files mix template-owned config (most of the file — `[tool.ruff]`, `[tool.pytest.ini_options]`,
+poe tasks, hook definitions, ...) with content you're expected to grow over time (`dependencies`,
+`[project.scripts]`, `[dependency-groups]` contents, `[[tool.uv.index]]`, your own hooks) in one
+file, by design.
 
-When a template release restructures a lot of one of these files at once, the patch can find
-*some* plausible anchor nearby and silently overwrite your hand-edited section — **without**
-producing a `.rej` file. Seeing no `.rej` files is not proof that nothing was lost.
+Copier's default `copier update` is **not** a true 3-way merge — it replays the diff between the
+old and new template renders as a patch onto your file, using fuzzy context matching. On a
+release that restructures a lot of the file at once, that patch can find *some* plausible anchor
+nearby and silently overwrite a hand-edited section, **without** producing a `.rej` file. That
+bug is exactly what happened in the incident DOT-599 is named after.
 
-**Mitigation:** after every `poe update-template` (or bare `copier update`), always run
-`git diff pyproject.toml prek.toml` by hand and check that your dependencies, entry points,
-dependency-groups, and hook tuning are still there — regardless of whether any `.rej` files
-appeared.
+Because of that, both files are listed in `_skip_if_exists`, so Copier's default patcher never
+touches them after first generation. Instead, a `_tasks` step runs
+`migrations/sync_marked_sections.py` on every `copier update`, which **regenerates the whole file
+fresh from the template every time**, except for regions explicitly wrapped in
+`# template-preserve:<name>:start` / `# template-preserve:<name>:end` comments in the `.jinja`
+source (e.g. around `dependencies`, `[project.scripts]`, `[dependency-groups]`,
+`[[tool.uv.index]]`, and a dedicated "extra poe tasks" / "extra local hooks" slot in each file) —
+those are copied byte-for-byte from your previous version. Regions are matched **by name**, not
+by position, so a release that reorders or inserts a marked region can't splice content into the
+wrong slot.
+
+**Only marked regions survive an update — everything else always reflects the template.** If you
+add something the template has no marker for (a brand-new `[tool.x]` table, an extra dependency
+index before you've ever answered the custom-index question, a hand-written poe task outside the
+"extra poe tasks" slot), it will be silently dropped on the next update. This is a real trade-off
+versus the file-level "leave anything unrecognized alone" approach this template used briefly
+before markers: predictable and documented, but stricter. Two things matter in practice:
+
+- `[[tool.uv.index]]` only gets a marker at all in projects that answered `custom_pypi_index_url`
+  at generation time. If you never answered it and later hand-add a `[[tool.uv.index]]` block, it
+  will not survive the next update — re-run `copier update` after setting the answer instead.
+- For custom poe tasks / local hooks, use the dedicated "extra poe tasks" / "extra local hooks"
+  slots, not an arbitrary spot in the file — anything outside those slots follows the same rule.
+
+Existing projects generated before this mechanism shipped have none of these markers yet. Their
+first update to a marker-aware template version runs a one-time bootstrap
+(`_bootstrap_legacy_markers` in `migrations/sync_marked_sections.py`) that locates the equivalent
+pre-marker content for each of the structural regions above and wraps it in place before syncing,
+and — for the two "extra" slots — moves any task/hook whose name the template doesn't recognize
+into the new slot. It's best-effort text matching, not a TOML parser, so unusual formatting (a
+hand-reformatted multi-line `dependencies` array, for example) may not bootstrap cleanly; always
+`git diff` after the first update past this change.
+
+This approach is adapted from a small third-party tool called
+[Templator](https://github.com/dariusgm/templator) (not a dependency — its idea, reimplemented
+here in ~70 lines with no TOML library needed) with two deliberate fixes over its own
+implementation: it matches by name instead of position, and it never blanks a region that's never
+been snapshotted (Templator's own implementation empties any marked region with no snapshot, even
+on first generation — a footgun for a template that seeds real default content inside a marked
+region, like this template's CLI entry point).
+
+If you want a new spot users can customize without losing it on update, wrap it in
+`# template-preserve:<name>:start` / `:end` in the `.jinja` source — nothing else to register or
+maintain. Anything *not* wrapped always reflects the latest template release.
 
 ## Never hand-edit `.copier-answers.yml`
 

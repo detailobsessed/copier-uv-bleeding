@@ -134,6 +134,11 @@ pass_filenames = false
 verbose = true
 stages = ["post-checkout"]
 
+# template-preserve:extra-local-hooks:start
+# Add your own project-specific local hooks below as [[repos.hooks]] entries
+# under the `local` repo above — preserved across `copier update`.
+# template-preserve:extra-local-hooks:end
+
 {%- if use_semantic_release %}
 
 [[repos]]

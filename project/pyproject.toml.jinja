@@ -17,7 +17,9 @@ license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.14"
 version = "0.0.0"
+# template-preserve:dependencies:start
 dependencies = []
+# template-preserve:dependencies:end
 {%- if publish_to_pypi %}
 keywords = []
 classifiers = [
@@ -46,11 +48,14 @@ Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 {%- endif %}
 
 {% if project_type == 'app' -%}
+# template-preserve:project-scripts:start
 [project.scripts]
 {{ python_package_command_line_name }} = "{{ python_package_import_name }}.cli:main"
+# template-preserve:project-scripts:end
 
 {% endif -%}
 
+# template-preserve:dependency-groups:start
 [dependency-groups]
 {%- if use_semantic_release %}
 maintain = [
@@ -71,13 +76,16 @@ local = [
     "prek>=0.3.11",
     "pytest-testmon>=2.2",
 ]
+# template-preserve:dependency-groups:end
 
 [tool.uv]
 default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", "local"]
 {%- if custom_pypi_index_url %}
 
+# template-preserve:tool-uv-index:start
 [[tool.uv.index]]
 url = "{{ custom_pypi_index_url }}"
+# template-preserve:tool-uv-index:end
 {%- endif %}
 
 [tool.ruff]
@@ -263,6 +271,10 @@ runs = "gh run list --limit 10"
 checks = "gh pr checks --watch"
 watch = "gh run watch"
 {%- endif %}
+
+# template-preserve:extra-poe-tasks:start
+# Add your own project-specific poe tasks below — preserved across `copier update`.
+# template-preserve:extra-poe-tasks:end
 
 {%- if use_semantic_release %}
 
