@@ -1270,6 +1270,165 @@ class TestOpenSourceMigration:
         assert "open_source" not in result
 
 
+class TestMarkedSectionsSync:
+    """`_tasks` step (see copier.yml) that replaces `copier update`'s fuzzy-patch
+    handling of `pyproject.toml`/`prek.toml` with a regenerate-and-preserve
+    approach (DOT-599): the whole file is rendered fresh from the template on
+    every update, except for regions wrapped in
+    `# template-preserve:&lt;name&gt;:start`/`:end` comments in the .jinja source,
+    which are copied verbatim from the previous version.
+
+    Both files moved to `_skip_if_exists`, so this script is the *only* thing
+    that updates them after first generation.
+    """
+
+    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "sync_marked_sections.py"
+
+    @staticmethod
+    def _load_module():
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("sync_marked_sections", TestMarkedSectionsSync.SCRIPT)
+        assert spec is not None
+        assert spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_script_referenced_in_copier_yml(self) -> None:
+        content = (REPO_ROOT / "copier.yml").read_text()
+        assert "migrations/sync_marked_sections.py" in content
+        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
+
+    def test_pyproject_and_prek_toml_in_skip_if_exists(self) -> None:
+        """The whole mechanism depends on Copier's default patch-based update
+        never touching these files — otherwise both it and this script would
+        race to write them."""
+        content = (REPO_ROOT / "copier.yml").read_text()
+        skip_block = content.split("_skip_if_exists:")[1].split("_exclude:")[0]
+        assert "pyproject.toml" in skip_block
+        assert "prek.toml" in skip_block
+
+    def test_unmarked_content_always_reflects_fresh_render(self) -> None:
+        module = self._load_module()
+        existing = "line-length = 100\n"
+        new = "line-length = 140\n"
+        assert module.sync_text(existing, new) == new
+
+    def test_marked_region_preserved_verbatim(self) -> None:
+        module = self._load_module()
+        existing = 'a\n# template-preserve:deps:start\ndependencies = ["requests>=2"]\n# template-preserve:deps:end\nb\n'
+        new = "a2\n# template-preserve:deps:start\ndependencies = []\n# template-preserve:deps:end\nb2\n"
+        merged = module.sync_text(existing, new)
+        assert 'dependencies = ["requests>=2"]' in merged
+        assert "a2" in merged
+        assert "b2" in merged
+
+    def test_reordered_markers_match_by_name_not_position(self) -> None:
+        """The bug found in Templator's own implementation (positional
+        matching): a release that reorders marked regions must not splice
+        content into the wrong slot."""
+        module = self._load_module()
+        existing = (
+            "# template-preserve:foo:start\nFOO-OLD\n# template-preserve:foo:end\n"
+            "# template-preserve:bar:start\nBAR-OLD\n# template-preserve:bar:end\n"
+        )
+        new = (
+            "# template-preserve:bar:start\nBAR-DEFAULT\n# template-preserve:bar:end\n"
+            "# template-preserve:foo:start\nFOO-DEFAULT\n# template-preserve:foo:end\n"
+        )
+        merged = module.sync_text(existing, new)
+        assert "FOO-OLD" in merged
+        assert "BAR-OLD" in merged
+        foo_pos = merged.index("FOO-OLD")
+        bar_pos = merged.index("BAR-OLD")
+        assert bar_pos < foo_pos  # bar block comes first in `new`, and must keep its own content
+
+    def test_never_seen_marker_keeps_fresh_default_instead_of_emptying(self) -> None:
+        """The footgun found in Templator's own implementation: a marked
+        region with no snapshot (new to this release, or never customized)
+        must keep the fresh render's own default, not go blank."""
+        module = self._load_module()
+        existing = "x\n"  # no markers at all yet
+        new = "# template-preserve:newthing:start\nDEFAULT-CONTENT\n# template-preserve:newthing:end\n"
+        merged = module.sync_text(existing, new)
+        assert "DEFAULT-CONTENT" in merged
+
+    def test_markers_present_in_pyproject_template(self) -> None:
+        content = (REPO_ROOT / "project" / "pyproject.toml.jinja").read_text()
+        for name in ("dependencies", "project-scripts", "dependency-groups", "tool-uv-index", "extra-poe-tasks"):
+            assert f"# template-preserve:{name}:start" in content, f"missing marker: {name}"
+            assert f"# template-preserve:{name}:end" in content, f"missing marker: {name}"
+
+    def test_markers_present_in_prek_template(self) -> None:
+        content = (REPO_ROOT / "project" / "prek.toml.jinja").read_text()
+        assert "# template-preserve:extra-local-hooks:start" in content
+        assert "# template-preserve:extra-local-hooks:end" in content
+
+    def test_legacy_bootstrap_preserves_data_on_first_marker_aware_update(self) -> None:
+        """The critical regression caught in review (Macroscope, PR #329): a
+        project generated *before* markers existed has none of the
+        `# template-preserve:*` comments. Without bootstrapping, its first
+        update to a marker-aware template version would silently replace
+        every now-marked region with the fresh render's bare default,
+        discarding real user data with zero warning — the exact class of bug
+        DOT-599 was filed for, reintroduced by the fix meant to prevent it."""
+        module = self._load_module()
+        legacy_pyproject = (
+            '[project]\nname = "x"\ndependencies = ["requests>=2.31", "pydantic>=2"]\n\n'
+            '[project.scripts]\nmytool = "mytool.cli:main"\n\n'
+            '[dependency-groups]\nci = ["ruff>=0.14"]\ndev = ["ipython"]\n\n'
+            '[[tool.uv.index]]\nurl = "https://custom.example.com"\n\n'
+            '[tool.poe.tasks]\nsetup = "uv sync"\nlint = "ruff check ."\n'
+            'serve = "python -m mytool.server"\nwatch = "gh run watch"\n'
+        )
+        fresh = (
+            '[project]\nname = "x"\n# template-preserve:dependencies:start\ndependencies = []\n'
+            "# template-preserve:dependencies:end\n\n"
+            "# template-preserve:project-scripts:start\n[project.scripts]\n"
+            'mytool = "mytool.cli:main"\n# template-preserve:project-scripts:end\n\n'
+            "# template-preserve:dependency-groups:start\n[dependency-groups]\n"
+            'ci = ["ruff>=0.15"]\ndev = []\n# template-preserve:dependency-groups:end\n\n'
+            "# template-preserve:tool-uv-index:start\n# template-preserve:tool-uv-index:end\n\n"
+            '[tool.poe.tasks]\nsetup = "uv sync"\nlint = "ruff check ."\nwatch = "gh run watch"\n'
+            "# template-preserve:extra-poe-tasks:start\n# template-preserve:extra-poe-tasks:end\n"
+        )
+        merged = module.sync_text(legacy_pyproject, fresh)
+
+        import tomllib
+
+        tomllib.loads(merged)  # must stay valid TOML
+        assert '"requests>=2.31"' in merged
+        assert "pydantic" in merged
+        assert "custom.example.com" in merged
+        assert 'serve = "python -m mytool.server"' in merged
+        assert merged.count("serve = ") == 1  # moved, not duplicated
+
+    def test_legacy_bootstrap_preserves_custom_local_hook(self) -> None:
+        module = self._load_module()
+        legacy_prek = (
+            '[[repos]]\nrepo = "local"\n\n'
+            '[[repos.hooks]]\nid = "ty"\nname = "ty type checker"\n\n'
+            '[[repos.hooks]]\nid = "my-custom-check"\nname = "my custom check"\n'
+            'entry = "scripts/custom-check.sh"\n\n'
+            '[[repos.hooks]]\nid = "check-template-update"\nname = "check for template updates"\n'
+        )
+        fresh = (
+            '[[repos]]\nrepo = "local"\n\n'
+            '[[repos.hooks]]\nid = "ty"\nname = "ty type checker"\n\n'
+            '[[repos.hooks]]\nid = "check-template-update"\nname = "check for template updates"\n\n'
+            "# template-preserve:extra-local-hooks:start\n# template-preserve:extra-local-hooks:end\n"
+        )
+        merged = module.sync_text(legacy_prek, fresh)
+
+        import tomllib
+
+        tomllib.loads(merged)
+        assert "my-custom-check" in merged
+        assert "custom-check.sh" in merged
+        assert merged.count("my-custom-check") == 1
+
+
 class TestMcpRegistry:
     """Test publish_to_mcp_registry question gates MCP registry publishing workflow.
 
