@@ -33,7 +33,7 @@ hooks = [{ id = "sync-with-uv", priority = 0 }]
 
 [[repos]]
 repo = "https://github.com/betterleaks/betterleaks"
-rev = "v1.1.2"
+rev = "v1.7.2"
 hooks = [{ id = "betterleaks", priority = 1 }]
 
 [[repos]]
@@ -58,7 +58,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.15.20"
+rev = "v0.16.0"
 hooks = [
   { id = "ruff", args = ["--fix"], priority = 1 },
   { id = "ruff-format", priority = 1 },
@@ -71,7 +71,7 @@ hooks = [{ id = "shellcheck", priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
-rev = "0.11.11"
+rev = "0.12.0"
 hooks = [
   { id = "uv-lock", priority = 1 },
   { id = "uv-sync", stages = ["post-checkout", "post-merge", "post-rewrite"], priority = 1 },
@@ -84,7 +84,7 @@ hooks = [{ id = "actionlint", priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/crate-ci/typos"
-rev = "v1.46.0"
+rev = "v1.48.0"
 # Upstream ships `args = ["--write-changes", "--force-exclude"]`, so the hook
 # rewrites files in place — it has silently corrupted hex identifiers (Mongo
 # ObjectIds, git SHAs) in checked-in data files (DOT-604). Overriding `args`
@@ -95,7 +95,7 @@ hooks = [{ id = "typos", args = ["--force-exclude"], priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/igorshubovych/markdownlint-cli"
-rev = "v0.48.0"
+rev = "v0.49.1"
 hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], priority = 1 }]
 
 [[repos]]

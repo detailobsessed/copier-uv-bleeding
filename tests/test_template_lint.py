@@ -204,91 +204,123 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     # GitHub defaults (most common path)
     "github-defaults": _build_context({}),
     # String edge cases
-    "github-quotes": _build_context({
-        "project_description": 'Helps you "close the loop" on reviews',
-        "author_fullname": "Timothée O'Brien",
-    }),
-    "backslash-edge": _build_context({
-        "project_description": 'My "path" is C:\\temp\\',
-    }),
+    "github-quotes": _build_context(
+        {
+            "project_description": 'Helps you "close the loop" on reviews',
+            "author_fullname": "Timothée O'Brien",
+        }
+    ),
+    "backslash-edge": _build_context(
+        {
+            "project_description": 'My "path" is C:\\temp\\',
+        }
+    ),
     # GitLab
-    "gitlab-ci": _build_context({
-        "repository_provider": "gitlab.com",
-    }),
-    "gitlab-no-ci": _build_context({
-        "repository_provider": "gitlab.com",
-        "use_ci": False,
-        "use_semantic_release": False,
-        "publish_to_pypi": False,
-        "use_blacksmith_runners": False,
-    }),
+    "gitlab-ci": _build_context(
+        {
+            "repository_provider": "gitlab.com",
+        }
+    ),
+    "gitlab-no-ci": _build_context(
+        {
+            "repository_provider": "gitlab.com",
+            "use_ci": False,
+            "use_semantic_release": False,
+            "publish_to_pypi": False,
+            "use_blacksmith_runners": False,
+        }
+    ),
     # CI toggling
-    "github-no-ci": _build_context({
-        "use_ci": False,
-        "use_semantic_release": False,
-        "publish_to_pypi": False,
-        "use_blacksmith_runners": False,
-    }),
-    "ci-no-release": _build_context({
-        "use_semantic_release": False,
-        "publish_to_pypi": False,
-    }),
-    "ci-no-pypi": _build_context({
-        "use_semantic_release": True,
-        "publish_to_pypi": False,
-    }),
+    "github-no-ci": _build_context(
+        {
+            "use_ci": False,
+            "use_semantic_release": False,
+            "publish_to_pypi": False,
+            "use_blacksmith_runners": False,
+        }
+    ),
+    "ci-no-release": _build_context(
+        {
+            "use_semantic_release": False,
+            "publish_to_pypi": False,
+        }
+    ),
+    "ci-no-pypi": _build_context(
+        {
+            "use_semantic_release": True,
+            "publish_to_pypi": False,
+        }
+    ),
     # Lightweight hooks — pytest-cov dropped from git hooks (runs in CI instead)
-    "lightweight-hooks": _build_context({
-        "use_heavy_hooks": False,
-    }),
+    "lightweight-hooks": _build_context(
+        {
+            "use_heavy_hooks": False,
+        }
+    ),
     # Internal solo project, no CI — the lightest path
-    "internal-no-ci": _build_context({
-        "open_source": False,
-        "use_ci": False,
-        "use_semantic_release": False,
-        "publish_to_pypi": False,
-        "use_blacksmith_runners": False,
-    }),
+    "internal-no-ci": _build_context(
+        {
+            "open_source": False,
+            "use_ci": False,
+            "use_semantic_release": False,
+            "publish_to_pypi": False,
+            "use_blacksmith_runners": False,
+        }
+    ),
     # Blacksmith runners (previously untested)
-    "blacksmith-runners": _build_context({
-        "use_blacksmith_runners": True,
-    }),
-    "blacksmith-with-pypi": _build_context({
-        "use_blacksmith_runners": True,
-        "publish_to_pypi": True,
-    }),
+    "blacksmith-runners": _build_context(
+        {
+            "use_blacksmith_runners": True,
+        }
+    ),
+    "blacksmith-with-pypi": _build_context(
+        {
+            "use_blacksmith_runners": True,
+            "publish_to_pypi": True,
+        }
+    ),
     # Project types
     "lib-type": _build_context({"project_type": "lib"}),
     # Internal (not open source) — no LICENSE or community-health files
-    "internal": _build_context({
-        "open_source": False,
-        "publish_to_pypi": False,
-    }),
-    "internal-selfhosted-gitlab": _build_context({
-        "open_source": False,
-        "repository_provider": "gitlab.com",
-        "repository_host": "gitlab.company.com",
-        "publish_to_pypi": False,
-        "use_blacksmith_runners": False,
-    }),
-    "internal-selfhosted-github": _build_context({
-        "open_source": False,
-        "repository_provider": "github.com",
-        "repository_host": "github.company.com",
-        "publish_to_pypi": False,
-        "use_blacksmith_runners": False,
-    }),
+    "internal": _build_context(
+        {
+            "open_source": False,
+            "publish_to_pypi": False,
+        }
+    ),
+    "internal-selfhosted-gitlab": _build_context(
+        {
+            "open_source": False,
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.company.com",
+            "publish_to_pypi": False,
+            "use_blacksmith_runners": False,
+        }
+    ),
+    "internal-selfhosted-github": _build_context(
+        {
+            "open_source": False,
+            "repository_provider": "github.com",
+            "repository_host": "github.company.com",
+            "publish_to_pypi": False,
+            "use_blacksmith_runners": False,
+        }
+    ),
     # MCP registry publishing
-    "mcp-registry-publish": _build_context({
-        "publish_to_mcp_registry": True,
-    }),
+    "mcp-registry-publish": _build_context(
+        {
+            "publish_to_mcp_registry": True,
+        }
+    ),
     # Custom PyPI index (corporate Artifactory/Nexus)
-    "custom-pypi-index": _build_context({
-        "open_source": False,
-        "use_custom_pypi_index": True,
-        "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
-        "publish_to_pypi": False,
-    }),
+    "custom-pypi-index": _build_context(
+        {
+            "open_source": False,
+            "use_custom_pypi_index": True,
+            "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
+            "publish_to_pypi": False,
+        }
+    ),
 }
 
 
@@ -391,10 +423,12 @@ class TestStringFuzzing:
         project_description: str,
         author_fullname: str,
     ) -> None:
-        context = _build_context({
-            "project_description": project_description,
-            "author_fullname": author_fullname,
-        })
+        context = _build_context(
+            {
+                "project_description": project_description,
+                "author_fullname": author_fullname,
+            }
+        )
         for template_path in _TEMPLATES:
             rel = template_path.relative_to(TEMPLATE_DIR)
             if _get_output_extension(template_path) != ".toml":
@@ -412,10 +446,12 @@ class TestStringFuzzing:
         project_description: str,
         author_fullname: str,
     ) -> None:
-        context = _build_context({
-            "project_description": project_description,
-            "author_fullname": author_fullname,
-        })
+        context = _build_context(
+            {
+                "project_description": project_description,
+                "author_fullname": author_fullname,
+            }
+        )
         for template_path in _TEMPLATES:
             rel = template_path.relative_to(TEMPLATE_DIR)
             ext = _get_output_extension(template_path)
