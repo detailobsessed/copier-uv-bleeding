@@ -175,6 +175,74 @@ class TestPreCommitConfig:
         content = config.read_text()
         assert "pyupgrade" not in content
 
+    def test_rev_lines_have_no_trailing_comment(self, copier_defaults: dict, project_factory) -> None:
+        """Every `rev` line must be matchable by sync-with-uv (DOT-603).
+
+        sync-with-uv matches revs with a regex anchored at end-of-line, so a
+        trailing comment makes the line unmatchable. The hook then matches zero
+        revs and reports success, silently doing nothing forever. This is the
+        regex from sync_with_uv.py verbatim, so this test fails for the same
+        reason the real hook would go quiet.
+        """
+        repo_rev_re = re.compile(r"""^\s*rev\s*=\s*(['"])([^'"]*)\1\s*$""")
+        project = project_factory(copier_defaults)
+
+        rev_lines = [line for line in (project / "prek.toml").read_text().splitlines() if re.match(r"^\s*rev\s*=", line)]
+        assert rev_lines, "expected prek.toml to declare at least one rev"
+
+        unmatched = [line for line in rev_lines if not repo_rev_re.match(line)]
+        assert not unmatched, (
+            "these rev lines are invisible to sync-with-uv, which would silently "
+            f"stop syncing hook versions with uv.lock: {unmatched!r}. Put per-repo "
+            "notes on the line above the rev, not after it."
+        )
+
+    def test_typos_hook_does_not_write_changes(self, copier_defaults: dict, project_factory) -> None:
+        """The typos hook must report, not rewrite files in place (DOT-604).
+
+        Upstream ships `args = ["--write-changes", "--force-exclude"]`. Left at
+        the default it edits files, and has corrupted hex identifiers (Mongo
+        ObjectIds, git SHAs) that it read as misspelled prose. Config `args`
+        replace the upstream list rather than appending, so the override must
+        also re-supply `--force-exclude` or _typos.toml stops being honoured
+        when prek passes explicit staged filenames.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        typos = [hook for repo in data["repos"] for hook in repo.get("hooks", []) if hook["id"] == "typos"]
+        assert typos, "expected a typos hook in prek.toml"
+
+        for hook in typos:
+            args = hook.get("args")
+            assert args is not None, (
+                "typos must override args; the upstream default includes --write-changes, which rewrites files in place."
+            )
+            assert "--write-changes" not in args, f"typos must not run with --write-changes; got {args!r}"
+            assert "--force-exclude" in args, (
+                f"keep --force-exclude so _typos.toml exclusions still apply when prek passes explicit filenames; got {args!r}"
+            )
+
+    def test_has_typos_config(self, copier_defaults: dict, project_factory) -> None:
+        """Generated project ships a _typos.toml excluding generated files (DOT-604).
+
+        Release tooling writes abbreviated git SHAs into CHANGELOG.md, which
+        typos reads as prose.
+        """
+        project = project_factory(copier_defaults)
+
+        config = project / "_typos.toml"
+        assert config.exists(), "generated project should ship a _typos.toml"
+
+        with config.open("rb") as f:
+            data = tomllib.load(f)
+
+        excluded = data["files"]["extend-exclude"]
+        assert "CHANGELOG.md" in excluded
+        assert "uv.lock" in excluded
+
 
 class TestHookProfiles:
     """use_heavy_hooks gates slow git hooks; fast hooks stay always-on."""
