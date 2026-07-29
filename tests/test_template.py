@@ -336,6 +336,46 @@ class TestPreCommitConfig:
                 f"keep --force-exclude so _typos.toml exclusions still apply when prek passes explicit filenames; got {args!r}"
             )
 
+    @pytest.mark.skipif(shutil.which("prek") is None, reason="prek is not on PATH; it is not a dev dependency of this repo")
+    def test_builtin_hook_ids_are_real(self, copier_defaults: dict, project_factory) -> None:
+        """Every `repo = "builtin"` hook id must exist in `prek util list-builtins`.
+
+        A typo'd or retired builtin id is not a hard error at config-parse time,
+        so the hook simply never runs — the same "reports success while doing
+        nothing" shape as DOT-603 and DOT-604.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        configured = {hook["id"] for repo in data["repos"] if repo.get("repo") == "builtin" for hook in repo.get("hooks", [])}
+        assert configured, "expected a builtin repo block in prek.toml"
+
+        result = subprocess.run(["prek", "util", "list-builtins"], capture_output=True, text=True, check=True)
+        available = set(result.stdout.split())
+
+        assert configured <= available, f"not real prek builtins: {sorted(configured - available)}"
+
+    def test_no_commit_to_branch_is_not_shipped(self, copier_defaults: dict, project_factory) -> None:
+        """Generated projects must not block commits to their default branch.
+
+        `no-commit-to-branch` is a workflow opinion, not a correctness check.
+        This template has users who commit straight to main by choice; shipping
+        the hook would break that on the first commit with no way to discover
+        why beyond reading prek.toml. Kept out on purpose — the maintainers'
+        own prek.toml is where a branch policy belongs, not the template's.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        ids = [hook["id"] for repo in data["repos"] for hook in repo.get("hooks", [])]
+        assert "no-commit-to-branch" not in ids, (
+            "no-commit-to-branch imposes a branching workflow on every generated project; leave that to the user."
+        )
+
     def test_has_typos_config(self, copier_defaults: dict, project_factory) -> None:
         """Generated project ships a _typos.toml excluding generated files (DOT-604).
 

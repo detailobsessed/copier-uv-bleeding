@@ -19,7 +19,6 @@ exclude_tags = ["nightly"]
 [[repos]]
 repo = "builtin"
 hooks = [
-  { id = "no-commit-to-branch", args = ["--branch", "main"], priority = 0 },
   { id = "trailing-whitespace", priority = 0 },
   { id = "end-of-file-fixer", priority = 0 },
   { id = "check-yaml", args = ["--allow-multiple-documents"], priority = 0 },
@@ -34,6 +33,8 @@ hooks = [
   { id = "check-illegal-windows-names", priority = 0 },
   { id = "destroyed-symlinks", priority = 0 },
   { id = "mixed-line-ending", args = ["--fix=lf"], priority = 0 },
+  { id = "fix-byte-order-marker", priority = 0 },
+  { id = "forbid-new-submodules", priority = 0 },
   { id = "detect-private-key", priority = 0 },
 ]
 

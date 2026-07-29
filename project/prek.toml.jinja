@@ -37,6 +37,10 @@ hooks = [
   { id = "check-illegal-windows-names", priority = 0 },
   { id = "destroyed-symlinks", priority = 0 },
   { id = "mixed-line-ending", args = ["--fix=lf"], priority = 0 },
+  # A UTF-8 BOM makes TOML parsers and `#!` lines fail in ways the error
+  # message never attributes to an invisible three-byte prefix.
+  { id = "fix-byte-order-marker", priority = 0 },
+  { id = "forbid-new-submodules", priority = 0 },
   { id = "detect-private-key", priority = 0 },
 ]
 
