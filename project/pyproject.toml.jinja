@@ -1,15 +1,7 @@
 [build-system]
-# uv warns on every `uv sync` / `uv build` if uv_build is unbounded — and a
-# breaking uv_build release would silently break sdist builds in every rendered
-# project. Pin to the current minor series and the next major, and bump the
-# window when uv_build crosses it (DOT-589).
-#
-# Moved to the 0.12 series for uv 0.12, which enforces PEP 625: source
-# distributions must be `.tar.gz`, and `.tar.bz2`/`.tar.xz` are rejected, as
-# are wheels using bzip2/LZMA/XZ compression. uv_build already emits
-# PEP 625-conforming artifacts, so this is a no-op for the generated project
-# — verified by building an sdist and a wheel from a rendered project under
-# uv_build 0.12 and installing the result.
+# Bounded deliberately — an unbounded uv_build warns on every sync and can
+# break sdist builds. Bump the window when uv_build crosses it.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#build-backend-pin
 requires = ["uv_build>=0.12,<0.13"]
 build-backend = "uv_build"
 
@@ -70,12 +62,9 @@ maintain = [
     "python-semantic-release>=10.6",
 ]
 {%- endif %}
-# Floors track the versions this template is actually exercised against, not
-# the oldest release that happens to still work. A range wider than the tested
-# one advertises support nobody verifies: `uv sync` resolves to the newest
-# release, so the bottom of a `>=8` range is a configuration the template has
-# never once run under. `ty` is floored tighter than the rest because it is
-# pre-1.0, where any release may change behaviour.
+# Floors track the versions this template is tested at, not the oldest release
+# that still works.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#dependency-floors
 ci = [
     "ruff>=0.16",
     "pytest>=9",
@@ -104,37 +93,20 @@ url = "{{ custom_pypi_index_url }}"
 [tool.ruff]
 target-version = "py314"
 line-length = 140
-# `extend-select` below assumes ruff 0.16's broad defaults (413 rules). On 0.14
-# and 0.15 the defaults are just 59 rules (E4/E7/E9/F), so extending them would
-# silently drop the prefixes that were deleted here as redundant — DTZ, FA, FLY
-# and PIE — with no warning at all. Fail loudly instead of linting less than the
-# config claims. This lives here rather than only in the `ci` dependency floor
-# because that group is inside a template-preserve region: a project updating
-# from an older template keeps its own `ruff>=0.14` but does receive this
-# section, so the floor alone would not protect it.
+# Required — `extend-select` below assumes 0.16's 413 stable defaults. On 0.14
+# and 0.15 it would silently lint far less than this config claims.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#ruff-required-version
 required-version = ">=0.16"
-# Preview rules are unstable by definition — they change behaviour and can be
-# removed between patch releases. Turning them on also opts into preview-only
-# config syntax that then cannot be turned off again: `rule-codes-in-selectors`
-# (RUF201) demands rule NAMES in ignore selectors, but names are themselves
-# rejected outside preview ("Selecting rules by name requires preview mode"),
-# and `noqa-comments` demands `# ruff: ignore[...]`, which stable ruff does not
-# honour as a suppression at all. Rule codes and `# noqa:` work in both modes,
-# so they are the portable choice. Stable ruff 0.16 already enables 413 rules.
+# Preview rules change behaviour between patch releases, and preview-only
+# suppression syntax cannot be turned off again once adopted.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#ruff-preview
 preview = false
 
 [tool.ruff.lint]
-# `extend-select`, not `select`. Ruff's default rule set is broad (413 rules
-# as of 0.16) and grows with each release. `select` REPLACES that set, so a
-# curated list silently switches off every default it omits — this list was
-# disabling 81 of them, including all ten flake8-async rules, blind-except,
-# the leftover-debugger check and the flake8-pyi rules, with nothing warning
-# that it was doing so. `extend-select` layers on top of the defaults instead,
-# so future ruff releases add coverage rather than quietly losing it.
-#
-# Only list a prefix here if it is NOT already on by default. Entries that
-# become default should be deleted rather than kept "for documentation": a
-# redundant entry is indistinguishable from a load-bearing one.
+# `extend-select`, not `select` — `select` REPLACES ruff's defaults and would
+# silently switch off every one this list omits. Only add a prefix here if it
+# is NOT already on by default; delete entries once they become default.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#ruff-extend-select
 extend-select = [
     # Core — pycodestyle beyond the default subset
     "E",    # pycodestyle errors
@@ -291,23 +263,9 @@ fix = ["lint --fix", "format"]
 # Pre-commit
 prek = "prek run --all-files"
 
-
 # Template utilities
 check-template = { shell = "copier check-update || true" }
 update-template = { shell = "copier update --trust . --skip-answered --defaults --conflict rej && uv sync --upgrade && uv run prek update && echo '  ✓ Dependencies upgraded and hook versions updated' && { ls -1 -- **/*.rej *.rej 2>/dev/null | grep -q . && echo '  ⚠ Copier produced .rej files — review the diffs, apply manually, and delete the .rej files before committing.' || true; }{% if use_semantic_release %} && { grep -q 'git add uv.lock CHANGELOG.md' pyproject.toml || echo '  ⚠ WARNING: build_command in pyproject.toml is missing \"git add uv.lock CHANGELOG.md\" — releases will produce stale lockfiles. Add \"git add uv.lock CHANGELOG.md\" to build_command.'; }{% endif %}" }
-
-# Git utilities
-tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
-{%- if repository_provider == "github.com" %}
-
-# GitHub utilities
-# actions-up: https://github.com/azat-io/actions-up
-actionsup = "actions-up"
-releases = "gh release list --limit 10"
-runs = "gh run list --limit 10"
-checks = "gh pr checks --watch"
-watch = "gh run watch"
-{%- endif %}
 
 # template-preserve:extra-poe-tasks:start
 # Add your own project-specific poe tasks below — preserved across `copier update`.
@@ -318,23 +276,10 @@ watch = "gh run watch"
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
-# `set -e` is required. python-semantic-release hands build_command to the
-# shell as a script, not as an `&&` chain, so without it a failing `uv lock`
-# is swallowed: the remaining lines still run, `uv build` exits 0, and the
-# release reports success having committed a stale lockfile. CI cannot catch
-# this afterwards either, because the generated workflow runs `uv sync
-# --frozen`, which uses the lockfile as-is rather than asserting it is fresh
-# (`--locked` is the flag that would). DOT-602.
-#
-# The `unset` lines are required for the same reason. Bare entries in
-# build_command_env are resolved as os.getenv(name, "") and assigned
-# unconditionally, so a variable that is unset in CI arrives here as an empty
-# string rather than being omitted. uv parses its own UV_* variables as typed
-# CLI values -- an enum for --link-mode, a path for --cache-dir, a boolish for
-# --system-certs -- so an empty one is a malformed value, not an absent one,
-# and `uv lock` exits 2 before doing any work. The TLS and proxy variables are
-# read as plain strings where empty already means unset, so they need no
-# guard (each of the twelve verified individually against uv 0.12.1). DOT-615.
+# Do not remove `set -e` or the `unset` guards. Without `set -e` a failing
+# `uv lock` is swallowed and the release ships a stale lockfile; without the
+# guards an empty UV_* variable makes `uv lock` exit 2 before doing any work.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#semantic-release-build-command
 build_command = """
 set -e
 [ -n "$UV_SYSTEM_CERTS" ] || unset UV_SYSTEM_CERTS
@@ -344,25 +289,11 @@ uv lock --upgrade-package "$PACKAGE_NAME"
 git add uv.lock CHANGELOG.md
 uv build
 """
-# python-semantic-release REPLACES the environment for build_command instead
-# of extending it: it builds a hardcoded allowlist (PATH, HOME, VIRTUAL_ENV,
-# CI, GITHUB_ACTIONS, ...) and passes it to shell() as `env=`. Everything
-# else is dropped. Since the build_command above runs `uv lock`, which is a
-# network operation, it would otherwise execute with no TLS, proxy or cache
-# configuration while every other job in the same pipeline has all of it.
-# This inverts the usual CI intuition that exporting a variable in the job is
-# enough. DOT-605.
-#
-# A bare "VAR" entry is pass-through, resolved as os.getenv(name, "");
-# "VAR=value" sets a literal. Unset variables therefore arrive as empty
-# strings rather than being omitted -- see the `unset` guards in build_command
-# above, which any new UV_* entry added here also needs.
-#
-# Keep the proxy variables as a set: HTTPS_PROXY without NO_PROXY routes
-# internal hosts through the corporate proxy, which is the failure mode this
-# replaces. SSL_CERT_DIR is included alongside SSL_CERT_FILE because uv 0.12
-# made an invalid value in either one a hard HTTPS failure rather than a
-# warning-and-fall-back.
+# Required: python-semantic-release REPLACES the environment for build_command
+# rather than extending it, so `uv lock` would otherwise run with no TLS, proxy
+# or cache config. Any new UV_* entry here needs an `unset` guard above, and
+# the proxy variables must stay a set.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#semantic-release-build-command-env
 build_command_env = [
     "UV_SYSTEM_CERTS",
     "UV_CACHE_DIR",

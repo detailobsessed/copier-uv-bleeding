@@ -1046,16 +1046,6 @@ class TestTemplateCleanup:
         content = pyproject.read_text()
         assert "tests/fixtures" not in content
 
-    def test_github_has_gh_cli_tasks(self, copier_defaults: dict, project_factory) -> None:
-        """GitHub projects should have gh CLI poe tasks."""
-        project = project_factory(copier_defaults)
-
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
-        assert "gh release list" in content
-        assert "gh run list" in content
-        assert "gh run watch" in content
-
 
 class TestTemplateUpdateCheck:
     """Test template update check hook and related tasks (#161)."""
@@ -1370,17 +1360,6 @@ class TestGitLabSupport:
             data = tomllib.load(f)
         repo_urls = [r["repo"] for r in data["repos"]]
         assert "https://github.com/crate-ci/typos" in repo_urls
-
-    def test_gitlab_no_gh_cli_tasks(self, copier_defaults: dict, project_factory) -> None:
-        """GitLab projects should not have gh CLI poe tasks."""
-        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
-        project = project_factory(answers)
-
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
-        assert "gh release list" not in content
-        assert "gh run list" not in content
-        assert "docs-deploy" not in content
 
     def test_gitlab_no_discussions_url(self, copier_defaults: dict, project_factory) -> None:
         """GitLab projects should not have Discussions URL."""

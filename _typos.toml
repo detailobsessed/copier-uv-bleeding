@@ -1,2 +1,11 @@
 [files]
 extend-exclude = ["CHANGELOG.md", "uv.lock"]
+
+# docs/generated-config.md quotes these verbatim as examples of the hex strings
+# typos misreads as prose — the page explaining the problem trips it. Accepting
+# the two words that actually fire is narrower than excluding the whole page,
+# which would silence real typos in it. Only list words the dictionary rejects
+# today; a redundant entry is indistinguishable from a load-bearing one.
+[default.extend-words]
+ba = "ba"
+caf = "caf"
