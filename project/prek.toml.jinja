@@ -61,6 +61,11 @@ hooks = [
 [[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
 rev = ""
+# `args` is deliberately NOT overridden: uv-sync inherits upstream's
+# `--locked`, so a lockfile that has drifted from pyproject.toml fails the
+# hook instead of being silently regenerated. Kept on purpose — see the docs
+# before changing it.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-uv-sync-locked
 hooks = [
   { id = "uv-lock", priority = 1 },
   { id = "uv-sync", stages = ["post-checkout", "post-merge", "post-rewrite"], priority = 1 },

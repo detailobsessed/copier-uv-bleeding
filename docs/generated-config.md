@@ -229,6 +229,37 @@ exports, fixtures, snapshots are the usual reason — prefer a path exclusion
 over a repo-wide hex `extend-ignore-re`, which would also silence real typos in
 source and docs.
 
+### Why `uv-sync` keeps upstream's `--locked` {#prek-uv-sync-locked}
+
+The `uv-sync` hook ships this by default:
+
+```yaml
+- id: uv-sync
+  entry: uv sync --no-active
+  args: ["--locked"]
+```
+
+The template does **not** override `args`, so generated projects run
+`uv sync --no-active --locked` on post-checkout, post-merge and post-rewrite.
+`--locked` asserts the lockfile is already in step with `pyproject.toml` and
+fails if it is not, rather than quietly regenerating it.
+
+This is a deliberate choice, not an oversight — the alternative was considered
+and rejected. Setting `args = []` would make the hook self-heal silently, which
+is friendlier in the moment but hides the fact that someone changed
+dependencies without relocking. "Reports success while doing nothing" is the
+failure shape behind several of this template's worst bugs, so the loud version
+wins.
+
+Note that the original reason this looked broken is gone. It used to fire after
+every release, because a stale `uv.lock` was being committed — `build_command`
+neither staged the regenerated lockfile nor aborted when `uv lock` failed. Both
+are fixed (see [`set -e`](#semantic-release-build-command) and the `git add
+uv.lock` line in `build_command`), so a release commit now carries a lockfile
+that matches.
+
+If the hook fires for you now, it is reporting real drift. Run `uv lock`.
+
 ### Why copier conflict markers get their own guards {#prek-copier-conflicts}
 
 Two hooks exist because `copier update` can leave conflict debris that a normal

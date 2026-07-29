@@ -1068,6 +1068,31 @@ class TestTemplateUpdateCheck:
             data = tomllib.load(f)
         assert "post-checkout" in data["default_install_hook_types"]
 
+    def test_uv_sync_hook_inherits_upstream_locked(self, copier_defaults: dict, project_factory) -> None:
+        """uv-sync must NOT override `args`, so it keeps upstream's `--locked` (DOT-495).
+
+        Overriding `args` REPLACES the upstream list rather than appending to it --
+        the same mechanic that drops `--write-changes` from the typos hook (DOT-604).
+        So `args = []` here would silently turn `uv sync --locked` into a plain
+        `uv sync` that regenerates a drifted lockfile instead of reporting it.
+
+        That is a deliberate rejection, not an accident: a hook that self-heals
+        quietly hides the drift, and "reports success while doing nothing" is the
+        shape of DOT-602, DOT-603 and DOT-617. Absence of a key is invisible in a
+        diff, hence this test.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        uv_repo = next(r for r in data["repos"] if r.get("repo", "").endswith("/uv-pre-commit"))
+        uv_sync = next(h for h in uv_repo["hooks"] if h["id"] == "uv-sync")
+        assert "args" not in uv_sync, (
+            "uv-sync must inherit upstream's `args = ['--locked']`. Overriding `args` replaces "
+            f"that list, so a drifted lockfile would be regenerated silently instead of failing. Got: {uv_sync!r}"
+        )
+
     def test_check_template_update_hook_exists(self, copier_defaults: dict, project_factory) -> None:
         """prek.toml should have check-template-update hook."""
         project = project_factory(copier_defaults)
