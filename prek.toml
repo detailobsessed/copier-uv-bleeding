@@ -85,7 +85,13 @@ hooks = [{ id = "actionlint", priority = 1 }]
 [[repos]]
 repo = "https://github.com/crate-ci/typos"
 rev = "v1.46.0"
-hooks = [{ id = "typos", priority = 1 }]
+# Upstream ships `args = ["--write-changes", "--force-exclude"]`, so the hook
+# rewrites files in place — it has silently corrupted hex identifiers (Mongo
+# ObjectIds, git SHAs) in checked-in data files (DOT-604). Overriding `args`
+# REPLACES the upstream list rather than appending, which is what drops the
+# write flag here. Keep `--force-exclude`: it is what makes typos honour
+# _typos.toml when prek passes explicit staged filenames.
+hooks = [{ id = "typos", args = ["--force-exclude"], priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/igorshubovych/markdownlint-cli"
@@ -94,7 +100,10 @@ hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], pr
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
-rev = "lychee-v0.24.2"  # use bash project/scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492)
+# use bash project/scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492).
+# Note: never put a comment on the same line as `rev` — sync-with-uv anchors its
+# rev regex at end-of-line, so a trailing comment silently disables it (DOT-603).
+rev = "lychee-v0.24.2"
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
 
 [[repos]]

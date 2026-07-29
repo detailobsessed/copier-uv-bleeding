@@ -4,6 +4,12 @@ minimum_prek_version = "0.3.11"  # 0.3.11 introduced --repo-exclude-tag (scripts
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
+# Empty `rev` values are filled by `bash scripts/prek-autoupdate.sh`, and kept in
+# step with uv.lock by the sync-with-uv hook below. Never put a trailing comment
+# on a `rev` line: sync-with-uv matches revs with a regex anchored at end-of-line,
+# so a trailing comment makes the line unmatchable and the hook silently reports
+# success while updating nothing (DOT-603). Put per-repo notes on the line above.
+
 [[repos]]
 repo = "builtin"
 hooks = [
@@ -26,17 +32,17 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/detailobsessed/sync-with-uv"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [{ id = "sync-with-uv", priority = 0 }]
 
 [[repos]]
 repo = "https://github.com/betterleaks/betterleaks"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [{ id = "betterleaks", priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [
   { id = "ruff", args = ["--fix"], priority = 1 },
   { id = "ruff-format", priority = 1 },
@@ -44,7 +50,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [
   { id = "uv-lock", priority = 1 },
   { id = "uv-sync", stages = ["post-checkout", "post-merge", "post-rewrite"], priority = 1 },
@@ -52,29 +58,36 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/shellcheck-py/shellcheck-py"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [{ id = "shellcheck", priority = 1 }]
 {%- if repository_provider == "github.com" %}
 
 [[repos]]
 repo = "https://github.com/rhysd/actionlint"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [{ id = "actionlint", priority = 1 }]
 {%- endif %}
 
 [[repos]]
 repo = "https://github.com/crate-ci/typos"
-rev = ""  # prek autoupdate will fill this
-hooks = [{ id = "typos", priority = 1 }]
+rev = ""
+# Upstream ships `args = ["--write-changes", "--force-exclude"]`, so the hook
+# rewrites files in place — it has silently corrupted hex identifiers (Mongo
+# ObjectIds, git SHAs) in checked-in data files (DOT-604). Overriding `args`
+# REPLACES the upstream list rather than appending, which is what drops the
+# write flag here. Keep `--force-exclude`: it is what makes typos honour
+# _typos.toml when prek passes explicit staged filenames.
+hooks = [{ id = "typos", args = ["--force-exclude"], priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/igorshubovych/markdownlint-cli"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], priority = 1 }]
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
-rev = "lychee-v0.24.2"  # use scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492)
+# use scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492)
+rev = "lychee-v0.24.2"
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
 
 [[repos]]
@@ -143,7 +156,7 @@ stages = ["post-checkout"]
 
 [[repos]]
 repo = "https://github.com/compilerla/conventional-pre-commit"
-rev = ""  # prek autoupdate will fill this
+rev = ""
 hooks = [
   { id = "conventional-pre-commit", stages = ["commit-msg"], priority = 1, args = [
     "--verbose",

@@ -1,0 +1,16 @@
+# Spell-checker configuration for the `typos` hook in prek.toml.
+#
+# The hook runs read-only: prek.toml overrides its args to drop the upstream
+# `--write-changes` default, so typos reports rather than rewrites (DOT-604).
+# `--force-exclude` is kept there so the exclusions below still apply when prek
+# passes explicit staged filenames rather than letting typos walk the tree.
+#
+# Generated files are excluded because release tooling writes abbreviated git
+# SHAs, which typos reads as prose ("ba" -> "by"/"be").
+#
+# Add your own paths here. Data files holding hex-like identifiers — JSON
+# exports, fixtures, snapshots — are the usual reason; prefer a path exclusion
+# over a repo-wide hex `extend-ignore-re`, which would also silence real typos
+# in source and docs.
+[files]
+extend-exclude = ["CHANGELOG.md", "uv.lock"]
