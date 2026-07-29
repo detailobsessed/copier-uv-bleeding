@@ -80,7 +80,7 @@ ci = [
 ]
 dev = []
 local = [
-    "prek>=0.3.11",
+    "prek>=0.4.10",
     "pytest-testmon>=2.2",
 ]
 # template-preserve:dependency-groups:end
@@ -288,7 +288,7 @@ prek = "prek run --all-files"
 
 # Template utilities
 check-template = { shell = "copier check-update || true" }
-update-template = { shell = "copier update --trust . --skip-answered --defaults --conflict rej && uv sync --upgrade && bash scripts/prek-autoupdate.sh && echo '  ✓ Dependencies upgraded and hook versions updated' && { ls -1 -- **/*.rej *.rej 2>/dev/null | grep -q . && echo '  ⚠ Copier produced .rej files — review the diffs, apply manually, and delete the .rej files before committing.' || true; }{% if use_semantic_release %} && { grep -q 'git add uv.lock CHANGELOG.md' pyproject.toml || echo '  ⚠ WARNING: build_command in pyproject.toml is missing \"git add uv.lock CHANGELOG.md\" — releases will produce stale lockfiles. Add \"git add uv.lock CHANGELOG.md\" to build_command.'; }{% endif %}" }
+update-template = { shell = "copier update --trust . --skip-answered --defaults --conflict rej && uv sync --upgrade && uv run prek update && echo '  ✓ Dependencies upgraded and hook versions updated' && { ls -1 -- **/*.rej *.rej 2>/dev/null | grep -q . && echo '  ⚠ Copier produced .rej files — review the diffs, apply manually, and delete the .rej files before committing.' || true; }{% if use_semantic_release %} && { grep -q 'git add uv.lock CHANGELOG.md' pyproject.toml || echo '  ⚠ WARNING: build_command in pyproject.toml is missing \"git add uv.lock CHANGELOG.md\" — releases will produce stale lockfiles. Add \"git add uv.lock CHANGELOG.md\" to build_command.'; }{% endif %}" }
 
 # Git utilities
 tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"

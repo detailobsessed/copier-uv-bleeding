@@ -253,12 +253,12 @@ class TestPreCommitConfig:
     """Test pre-commit configuration."""
 
     def test_prek_version(self, copier_defaults: dict, project_factory) -> None:
-        """Pre-commit config should pin prek to 0.3.11+ (provides --repo-exclude-tag)."""
+        """Pre-commit config should pin prek to 0.4.10+ (provides the `[update]` tag filters)."""
         project = project_factory(copier_defaults)
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.3.11"' in content
+        assert 'minimum_prek_version = "0.4.10"' in content
 
     def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have betterleaks."""
@@ -533,12 +533,12 @@ class TestDependencies:
         assert "tomli" not in content
 
     def test_prek_version_updated(self, copier_defaults: dict, project_factory) -> None:
-        """prek dependency should be >= 0.3.11 (introduces --repo-exclude-tag, used by scripts/prek-autoupdate.sh)."""
+        """prek dependency should be >= 0.4.10 (introduces the `[update]` tag filters, DOT-616)."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.3.11"' in content
+        assert '"prek>=0.4.10"' in content
 
 
 class TestCIWorkflows:
@@ -1012,7 +1012,7 @@ class TestTemplateUpdateCheck:
         assert "check-template" in content
 
     def test_update_template_poe_task(self, copier_defaults: dict, project_factory) -> None:
-        """Rendered projects should have update-template poe task that chains uv sync --upgrade and prek autoupdate."""
+        """Rendered projects should have update-template poe task that chains uv sync --upgrade and prek update."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
@@ -1032,8 +1032,10 @@ class TestTemplateUpdateCheck:
         assert "--defaults" in content
         assert "--conflict rej" in content
         assert "uv sync --upgrade" in content
-        assert "scripts/prek-autoupdate.sh" in content
-        assert (project / "scripts" / "prek-autoupdate.sh").exists()
+        assert "prek update" in content
+        assert not (project / "scripts" / "prek-autoupdate.sh").exists(), (
+            "the wrapper script was replaced by a declarative `[update.repos]` filter in prek.toml (DOT-616)"
+        )
 
     def test_lychee_rev_is_pinned_not_empty(self, copier_defaults: dict, project_factory) -> None:
         """Lychee should have a pinned rev (not empty) since its 'nightly' tag is mutable."""
@@ -1047,23 +1049,36 @@ class TestTemplateUpdateCheck:
         assert rev, "Lychee rev should be pinned, not empty"
         assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
 
-    def test_prek_autoupdate_script_has_lychee_workaround(self, copier_defaults: dict, project_factory) -> None:
-        """scripts/prek-autoupdate.sh wraps `prek autoupdate` with the lychee `nightly` workaround (DOT-492, DOT-540).
+    def test_lychee_nightly_excluded_declaratively(self, copier_defaults: dict, project_factory) -> None:
+        """prek.toml must exclude lychee's `nightly` tag from `prek update` (DOT-492, DOT-540, DOT-616).
 
-        Verifies the script exists, is executable, and uses prek 0.3.11+ `--repo-exclude-tag` to
-        prevent lychee's `rev` from flipping to `nightly` (which lychee's own hook then rejects).
-        Tracks lycheeverse/lychee#1601 — remove the flag once upstream closes that issue (DOT-504).
+        lychee tags `nightly` as their GitHub "Latest" release, so `prek update`
+        resolves it as the newest tag and rewrites the pinned rev to a mutable
+        one that lychee's own hook then rejects (lycheeverse/lychee#1601).
+
+        This lives in the config rather than in a wrapper script so that every
+        invocation is covered -- a bare `prek update`, CI, an editor
+        integration -- not only the one that remembers to go through the
+        wrapper. Requires prek 0.4.10+, which `minimum_prek_version` enforces.
+        Remove once lycheeverse/lychee#1601 is fixed upstream (DOT-504).
         """
         project = project_factory(copier_defaults)
 
-        script = project / "scripts" / "prek-autoupdate.sh"
-        assert script.exists(), "prek-autoupdate.sh must ship in the scaffolded project"
-        assert os.access(script, os.X_OK), "prek-autoupdate.sh must be executable"
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
 
-        body = script.read_text()
-        assert "prek autoupdate" in body, "script must invoke `prek autoupdate`"
-        assert "--repo-exclude-tag https://github.com/lycheeverse/lychee=nightly" in body, (
-            "script must exclude the lychee `nightly` tag so prek picks the latest versioned tag"
+        repo = "https://github.com/lycheeverse/lychee"
+        filters = data.get("update", {}).get("repos", {}).get(repo)
+        assert filters is not None, (
+            f'prek.toml must declare [update.repos."{repo}"]; without it a plain `prek update` '
+            f"rewrites the pinned rev to `nightly`. Got update config: {data.get('update')!r}"
+        )
+        assert "nightly" in filters.get("exclude_tags", []), f"`nightly` must be in exclude_tags for {repo}; got {filters!r}"
+
+        assert data["minimum_prek_version"] == "0.4.10", (
+            "the [update] tag filters above need prek 0.4.10+. minimum_prek_version is the guard "
+            "that reaches updating projects, since the pyproject `prek>=` floor sits inside a "
+            f"template-preserve region. Got {data.get('minimum_prek_version')!r}"
         )
 
     def test_check_merge_conflict_has_assume_in_merge(self, copier_defaults: dict, project_factory) -> None:
@@ -1572,6 +1587,114 @@ class TestOpenSourceMigration:
         assert "open_source" not in result
 
 
+class TestRemovePrekAutoupdateScriptMigration:
+    """The 0.41.4 `_migrations` step deletes the orphaned `scripts/prek-autoupdate.sh`.
+
+    `copier update` never deletes files, so without this the wrapper lingers in
+    every existing project, unreferenced by `poe update-template` or the docs
+    (DOT-616).
+
+    Deleting a user's file is the risk here, so the guard is an exact digest of
+    every version the template shipped rather than a substring match. A substring
+    guard fails in both directions, which is a #336 review finding: it deletes a
+    genuinely edited script as long as the matched line survives, and it flags the
+    pre-0.40.0 script -- which used a `--cooldown-days 7` second pass and contains
+    no `--repo-exclude-tag` at all -- as customised when it is pristine.
+    """
+
+    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "0.41.4_remove_prek_autoupdate_script.py"
+    TARGET: ClassVar[pathlib.Path] = pathlib.Path("scripts") / "prek-autoupdate.sh"
+
+    # Byte-for-byte as shipped. Kept here rather than read from git history so the
+    # test fails if someone edits the digests in the migration to match a new file.
+    SHIPPED_0_38_1: ClassVar[str] = (
+        "#!/usr/bin/env bash\n"
+        "# Wraps `uv run prek autoupdate` with a workaround for lychee marking `nightly` as\n"
+        '# their GitHub "Latest" release (DOT-492). The second pass with --cooldown-days 7\n'
+        "# reverts lychee's `rev` from `nightly` back to the most recent versioned tag.\n"
+        "# Remove once lychee stops marking nightly as Latest (DOT-504).\n"
+        "set -eu\n"
+        'uv run prek autoupdate "$@"\n'
+        'uv run prek autoupdate --repo https://github.com/lycheeverse/lychee --cooldown-days 7 "$@"\n'
+    )
+    SHIPPED_0_40_0: ClassVar[str] = (
+        "#!/usr/bin/env bash\n"
+        "# Wraps `uv run prek autoupdate` with a workaround for lychee tagging `nightly`\n"
+        '# as their GitHub "Latest" release (lycheeverse/lychee#1601). The\n'
+        "# --repo-exclude-tag flag (prek 0.3.11+) keeps lychee on its real latest\n"
+        "# versioned tag instead of flipping to `nightly`. Remove the flag when upstream\n"
+        "# closes lycheeverse/lychee#1601 (DOT-504).\n"
+        "set -eu\n"
+        'uv run prek autoupdate --repo-exclude-tag https://github.com/lycheeverse/lychee=nightly "$@"\n'
+    )
+
+    def test_migration_registered_in_copier_yml(self) -> None:
+        """copier.yml's `_migrations` entry must reference the script that actually exists."""
+        content = (REPO_ROOT / "copier.yml").read_text()
+        assert "migrations/0.41.4_remove_prek_autoupdate_script.py" in content
+        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
+
+    def test_migration_commands_quote_the_script_path(self) -> None:
+        """copier runs string `_migrations` commands with `shell=True`.
+
+        `_copier_conf.src_path` is whatever the user passed to `copier copy`, so an
+        unquoted path containing a space splits into two arguments and python3 fails
+        to open the script (#336 review finding).
+        """
+        content = (REPO_ROOT / "copier.yml").read_text()
+        unquoted = re.findall(r"^\s*command:\s*python3\s+(?!\")\S*\{\{.*$", content, re.MULTILINE)
+        assert not unquoted, f"migration script paths must be quoted for paths with spaces: {unquoted}"
+
+    def _run(self, tmp_path: pathlib.Path, body: str | None) -> tuple[bool, str]:
+        """Run the migration in `tmp_path`; return (file still exists, stdout)."""
+        target = tmp_path / self.TARGET
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if body is not None:
+            target.write_text(body, newline="")
+        result = subprocess.run(["python3", str(self.SCRIPT)], cwd=tmp_path, capture_output=True, text=True, check=False)
+        assert result.returncode == 0, f"migration failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        return target.exists(), result.stdout
+
+    @pytest.mark.parametrize("shipped", ["SHIPPED_0_38_1", "SHIPPED_0_40_0"])
+    def test_removes_every_version_the_template_shipped(self, tmp_path: Path, shipped: str) -> None:
+        """Both shipped versions are pristine and must go, including the pre-0.40.0 one
+        that predates `--repo-exclude-tag` entirely."""
+        exists, stdout = self._run(tmp_path, getattr(self, shipped))
+        assert not exists, f"pristine {shipped} was left behind: {stdout}"
+        assert "Removed" in stdout
+
+    def test_removes_a_shipped_version_checked_out_with_crlf(self, tmp_path: Path) -> None:
+        """A Windows checkout with `core.autocrlf=true` stores the same bytes with CRLF.
+        That is not a customisation and must not read as one."""
+        exists, _ = self._run(tmp_path, self.SHIPPED_0_40_0.replace("\n", "\r\n"))
+        assert not exists, "CRLF line endings were mistaken for a user customisation"
+
+    def test_keeps_a_customised_script(self, tmp_path: Path) -> None:
+        """The failure mode that matters: never delete work the user did.
+
+        This script keeps the original invocation intact and only appends a line,
+        which is exactly what a substring guard would wave through.
+        """
+        exists, stdout = self._run(tmp_path, self.SHIPPED_0_40_0 + "uv run prek run --all-files\n")
+        assert exists, "a customised script was deleted"
+        assert "leaving it in place" in stdout
+
+    def test_noop_when_the_script_is_absent(self, tmp_path: Path) -> None:
+        """Projects generated after 0.41.4 never had the file; the migration must stay silent."""
+        exists, stdout = self._run(tmp_path, None)
+        assert not exists
+        assert stdout.strip() == "", f"expected no output, got: {stdout!r}"
+
+    def test_digests_match_the_versions_actually_shipped(self) -> None:
+        """Guards against the digests drifting from the file contents they claim to describe."""
+        import hashlib
+
+        content = self.SCRIPT.read_text()
+        for shipped in (self.SHIPPED_0_38_1, self.SHIPPED_0_40_0):
+            digest = hashlib.sha256(shipped.encode()).hexdigest()
+            assert digest in content, f"migration is missing the digest for a shipped version: {digest}"
+
+
 class TestMarkedSectionsSync:
     """`_tasks` step (see copier.yml) that replaces `copier update`'s fuzzy-patch
     handling of `pyproject.toml`/`prek.toml` with a regenerate-and-preserve
@@ -1843,7 +1966,7 @@ class TestIntegration:
         Reproduces the exact user flow from a fresh folder:
             copier copy ... && cd <dest>
             uv sync
-            git init && uv run prek install && bash scripts/prek-autoupdate.sh
+            git init && uv run prek install && uv run prek update
             git add -A && git commit -m "feat: init commit"
 
         Originally added as a regression test for DOT-491 (pytest-testmon hook exited 5
@@ -1881,14 +2004,21 @@ class TestIntegration:
             check=False,
         )
         assert install.returncode == 0, f"prek install failed: {install.stderr}"
-        autoupdate = subprocess.run(
-            ["bash", "scripts/prek-autoupdate.sh"],
+        update = subprocess.run(
+            ["uv", "run", "prek", "update"],
             cwd=project,
             capture_output=True,
             text=True,
             check=False,
         )
-        assert autoupdate.returncode == 0, f"prek-autoupdate.sh failed: {autoupdate.stderr}"
+        assert update.returncode == 0, f"prek update failed: {update.stderr}"
+
+        # The whole point of moving the lychee exclusion into prek.toml is that a
+        # bare `prek update` -- the one a user actually types -- is safe. Assert
+        # on the outcome rather than on the config, which is checked separately.
+        with (project / "prek.toml").open("rb") as f:
+            lychee = next(r for r in tomllib.load(f)["repos"] if r.get("repo", "").endswith("/lychee"))
+        assert lychee["rev"].startswith("lychee-v"), f"`prek update` flipped lychee to a mutable tag: {lychee['rev']!r} (DOT-492, DOT-616)"
 
         # Mirror the real user flow: hooks may auto-fix files (formatters, lockfile sync)
         # on the first run, abort the commit, and the user re-stages and retries.

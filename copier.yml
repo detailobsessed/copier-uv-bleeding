@@ -69,10 +69,24 @@ _exclude:
 # instead of the project's real history — silently flipping visibility for
 # any project whose history disagrees with that default. See
 # migrations/0.41.0_open_source.py.
+#
+# 0.41.4 replaced scripts/prek-autoupdate.sh with a declarative `[update.repos]`
+# tag filter in prek.toml. `copier update` never deletes files, so the script
+# would otherwise linger in every existing project, unreferenced. Runs "after"
+# so the removal happens once the rest of the update has been applied. See
+# migrations/0.41.4_remove_prek_autoupdate_script.py.
+#
+# The script paths are quoted: copier runs these through a shell, and
+# `_copier_conf.src_path` is whatever the user passed to `copier copy` -- an
+# unquoted path containing a space splits into two arguments and python3 fails
+# to open the script.
 _migrations:
 - version: 0.41.0
-  command: python3 {{ _copier_conf.src_path }}/migrations/0.41.0_open_source.py
+  command: python3 "{{ _copier_conf.src_path }}/migrations/0.41.0_open_source.py"
   when: "{{ _stage == 'before' }}"
+- version: 0.41.4
+  command: python3 "{{ _copier_conf.src_path }}/migrations/0.41.4_remove_prek_autoupdate_script.py"
+  when: "{{ _stage == 'after' }}"
 
 # PROMPT --------------------------------
 project_name:
@@ -284,10 +298,10 @@ _tasks:
   - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
     when: "{{ configure_repo_settings | default(false) }}"
   # Copy — setup instructions
-  - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && bash scripts/prek-autoupdate.sh\\n  Create your source files in src/ and tests/\\n'"
+  - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && uv run prek update\\n  Create your source files in src/ and tests/\\n'"
     when: "{{ _copier_operation == 'copy' }}"
   # Update — minimal output. `poe update-template` runs `uv sync --upgrade` and
-  # prek autoupdate after `copier update`, so this banner only confirms what
+  # `prek update` after `copier update`, so this banner only confirms what
   # copier itself did (hooks reinstalled) and doesn't claim "Dependencies synced"
   # — that's the poe chain's job. Same .git guard as above: only fire in the
   # destination, never in the temp render dirs.
