@@ -14,6 +14,25 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.12 (2026-07-29)
+
+### Bug Fixes
+
+- **prek**: Run uv-lock before sync-with-uv reads uv.lock
+  ([#343](https://github.com/detailobsessed/copier-uv-bleeding/pull/343),
+  [`c2df151`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c2df151d268c34d8f572ed83723cd20c7ac4b338))
+
+- **prek**: Stop file-rewriting hooks from sharing a priority group
+  ([#343](https://github.com/detailobsessed/copier-uv-bleeding/pull/343),
+  [`c2df151`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c2df151d268c34d8f572ed83723cd20c7ac4b338))
+
+### Chores
+
+- **prek**: Drop no-commit-to-branch, add BOM and submodule builtins
+  ([#343](https://github.com/detailobsessed/copier-uv-bleeding/pull/343),
+  [`c2df151`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c2df151d268c34d8f572ed83723cd20c7ac4b338))
+
+
 ## v0.41.11 (2026-07-29)
 
 ### Documentation
