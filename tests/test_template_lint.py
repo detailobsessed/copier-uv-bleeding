@@ -350,7 +350,13 @@ class TestTemplateLint:
             try:
                 template = _ENV.get_template(str(rel))
                 rendered = template.render(context)
-            except Exception as exc:
+            # Deliberately broad: this test's job is to report every render
+            # failure across every template and context variant in one pass.
+            # Jinja raises a wide range here (TemplateSyntaxError,
+            # UndefinedError, and arbitrary exceptions from custom filters),
+            # and narrowing the catch would turn an unanticipated failure into
+            # a test error instead of a readable report line.
+            except Exception as exc:  # noqa: BLE001
                 errors.append(f"RENDER FAIL {label}: {exc}")
                 continue
 

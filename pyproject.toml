@@ -86,6 +86,10 @@ patch_tags = ["fix", "perf", "refactor", "ci", "docs", "chore", "style", "build"
 [tool.ruff]
 target-version = "py314"
 line-length = 140
+# `extend-select` below assumes ruff 0.16's broad defaults (413 rules). On 0.14
+# and 0.15 the defaults are just 59 rules (E4/E7/E9/F), so extending them would
+# silently drop the prefixes deleted here as redundant — DTZ, FA, FLY, PIE.
+required-version = ">=0.16"
 # Preview rules are unstable by definition — they change behaviour and can be
 # removed between patch releases. Turning them on also opts into preview-only
 # config syntax that then cannot be turned off again: `rule-codes-in-selectors`
@@ -97,8 +101,19 @@ line-length = 140
 preview = false
 
 [tool.ruff.lint]
-select = [
-    # Core — universal baseline (ruff defaults + pycodestyle warnings)
+# `extend-select`, not `select`. Ruff's default rule set is broad (413 rules
+# as of 0.16) and grows with each release. `select` REPLACES that set, so a
+# curated list silently switches off every default it omits — this list was
+# disabling 81 of them, including all ten flake8-async rules, blind-except,
+# the leftover-debugger check and the flake8-pyi rules, with nothing warning
+# that it was doing so. `extend-select` layers on top of the defaults instead,
+# so future ruff releases add coverage rather than quietly losing it.
+#
+# Only list a prefix here if it is NOT already on by default. Entries that
+# become default should be deleted rather than kept "for documentation": a
+# redundant entry is indistinguishable from a load-bearing one.
+extend-select = [
+    # Core — pycodestyle beyond the default subset
     "E",    # pycodestyle errors
     "W",    # pycodestyle warnings
     "F",    # Pyflakes
@@ -106,20 +121,17 @@ select = [
     # Modern Python — enforce current idioms
     "UP",   # pyupgrade — use modern syntax (match, type unions, etc.)
     "I",    # isort — deterministic import ordering
-    "FA",   # flake8-future-annotations — `from __future__ import annotations`
 
     # Code quality — catch bugs and enforce clean patterns
     "A",    # flake8-builtins — prevent shadowing builtins (id, type, list)
     "B",    # flake8-bugbear — common bugs and design issues
     "SIM",  # flake8-simplify — simplifiable constructs
     "C4",   # flake8-comprehensions — better comprehensions
-    "PIE",  # flake8-pie — misc quality improvements
     "RET",  # flake8-return — consistent return statements
     "RSE",  # flake8-raise — raise best practices
     "ISC",  # flake8-implicit-str-concat — catch missing commas in collections
     "RUF",  # Ruff-specific rules
     "FURB", # refurb — modernise and simplify code
-    "FLY",  # flynt — prefer f-strings over .format() and %
     "PGH",  # pygrep-hooks — catch bare `# type: ignore`, eval(), etc.
 
     # Import hygiene
@@ -131,7 +143,6 @@ select = [
     # "N",  # pep8-naming — PEP 8 naming conventions
 
     # Correctness
-    "DTZ",  # flake8-datetimez — enforce timezone-aware datetimes
     "PTH",  # flake8-use-pathlib — prefer pathlib over os.path
 
     # Error messages

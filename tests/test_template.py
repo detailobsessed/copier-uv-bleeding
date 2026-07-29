@@ -67,6 +67,69 @@ class TestCoreFiles:
         assert "[tool.ruff]" in content
         assert "[tool.ruff.lint]" in content
 
+    def test_ruff_extends_defaults_rather_than_replacing_them(self, copier_defaults: dict, project_factory) -> None:
+        """Ruff config must use `extend-select`, never `select`.
+
+        `select` REPLACES ruff's default rule set; `extend-select` layers on
+        top of it. Ruff's defaults are broad (413 rules as of 0.16) and grow
+        with each release, so a curated `select` list silently switches off
+        every default it happens to omit — and nothing warns that it has.
+        Before this was fixed the template disabled 81 default rules that way,
+        including every flake8-async rule, blind-except and the leftover
+        debugger check.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            lint = tomllib.load(f)["tool"]["ruff"]["lint"]
+
+        assert "select" not in lint, (
+            "`select` replaces ruff's defaults, silently disabling every rule it omits. "
+            "Use `extend-select` so new ruff defaults are added rather than dropped."
+        )
+        assert "extend-select" in lint, "ruff config should declare extend-select"
+
+    def test_ruff_does_not_select_default_rules(self, copier_defaults: dict, project_factory) -> None:
+        """Prefixes that ruff now enables by default should not be re-listed.
+
+        A redundant entry is indistinguishable from a load-bearing one, so they
+        get deleted rather than kept "for documentation". These four are fully
+        covered by stable ruff 0.16's defaults.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            selected = tomllib.load(f)["tool"]["ruff"]["lint"]["extend-select"]
+
+        redundant = sorted({"DTZ", "FA", "FLY", "PIE"} & set(selected))
+        assert not redundant, f"these prefixes are fully enabled by ruff's defaults; drop them: {redundant!r}"
+
+    def test_ruff_required_version_matches_the_extend_select_premise(self, copier_defaults: dict, project_factory) -> None:
+        """`extend-select` is only safe on ruff >=0.16, so the config must demand it.
+
+        Ruff 0.14/0.15 enable 59 default rules (E4/E7/E9/F); 0.16 enables 413.
+        The four prefixes deleted as "redundant" are covered by the 413 and not
+        by the 59, so on an older ruff `extend-select` drops them silently.
+
+        `required-version` is the load-bearing guard rather than the `ci`
+        dependency floor: that group lives inside a `template-preserve` region,
+        so a project updating from an older template keeps its own `ruff>=0.14`
+        while still receiving this `[tool.ruff]` section. Only a constraint
+        inside the propagated section protects it, and it fails loudly.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        assert data["tool"]["ruff"].get("required-version") == ">=0.16", (
+            "extend-select assumes ruff 0.16's 413 default rules; without required-version "
+            "an older ruff silently drops DTZ/FA/FLY/PIE instead of failing"
+        )
+
+        ci_deps = data["dependency-groups"]["ci"]
+        assert "ruff>=0.16" in ci_deps, f"the ci group should pin the same floor; got {ci_deps!r}"
+
     def test_ruff_preview_is_disabled(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not opt into ruff's preview rules.
 
