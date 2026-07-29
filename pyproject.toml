@@ -44,15 +44,25 @@ branch = "main"
 # `set -e` is required: python-semantic-release runs build_command as a shell
 # script, not an `&&` chain, so without it a failing `uv lock` is swallowed
 # and the release reports success having committed a stale lockfile (DOT-602).
+#
+# The `unset` lines are required because bare build_command_env entries are
+# resolved as os.getenv(name, "") and assigned unconditionally, so a variable
+# unset in CI arrives as an empty string rather than being omitted. uv parses
+# its UV_* variables as typed CLI values (enum, path, boolish), so an empty
+# one is malformed rather than absent and `uv lock` exits 2 (DOT-615).
 build_command = """
 set -e
+[ -n "$UV_SYSTEM_CERTS" ] || unset UV_SYSTEM_CERTS
+[ -n "$UV_CACHE_DIR" ] || unset UV_CACHE_DIR
+[ -n "$UV_LINK_MODE" ] || unset UV_LINK_MODE
 uv lock --upgrade-package "$PACKAGE_NAME"
 git add uv.lock CHANGELOG.md
 """
 # python-semantic-release REPLACES rather than extends the environment for
 # build_command, so `uv lock` above would otherwise run with no TLS, proxy or
 # cache configuration. Bare entries are pass-through via os.getenv(name, "");
-# unset variables arrive as empty strings, which uv treats as unset (DOT-605).
+# unset variables arrive as empty strings, so any new UV_* entry here also
+# needs an `unset` guard in build_command above (DOT-605, DOT-615).
 build_command_env = [
     "UV_SYSTEM_CERTS",
     "UV_CACHE_DIR",

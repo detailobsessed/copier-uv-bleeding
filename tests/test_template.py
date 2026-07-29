@@ -431,6 +431,50 @@ class TestSemanticReleaseBuildCommand:
         hardcoded = [entry for entry in env if "=" in entry]
         assert not hardcoded, f"build_command_env entries must be pass-through names, not literals: {hardcoded!r}"
 
+    @staticmethod
+    def _assert_uv_vars_guarded(config: dict, source: str) -> None:
+        """Every forwarded UV_* variable must be unset when it arrives empty (DOT-615).
+
+        python-semantic-release assigns bare build_command_env entries
+        unconditionally via os.getenv(name, ""), so a variable that is unset in
+        CI reaches the subprocess as an empty string rather than being omitted.
+        uv parses its own UV_* variables as typed CLI values -- an enum for
+        --link-mode, a path for --cache-dir, a boolish for --system-certs -- so
+        an empty one is a malformed value rather than an absent one, and `uv
+        lock` exits 2 before doing any work.
+
+        The TLS and proxy variables are read as plain strings where empty
+        already means unset, so they are exempt. Restricting the check to UV_*
+        is also the invariant any future addition to the list has to satisfy.
+        """
+        build_command = config["build_command"]
+
+        for name in [entry for entry in config["build_command_env"] if entry.startswith("UV_")]:
+            assert f"unset {name}" in build_command, (
+                f"{source}: {name} is forwarded but never unset when empty. "
+                f"python-semantic-release will pass {name}='' to `uv lock`, which rejects "
+                f'it as a malformed value and aborts the release. Add `[ -n "${name}" ] '
+                f"|| unset {name}` to build_command. Got:\n{build_command}"
+            )
+
+    def test_forwarded_uv_variables_are_unset_when_empty(self, copier_defaults: dict, project_factory) -> None:
+        """Generated projects must guard every forwarded UV_* variable (DOT-615)."""
+        project = project_factory({**copier_defaults, "use_semantic_release": True})
+        self._assert_uv_vars_guarded(self._semantic_release(project), "generated project")
+
+    def test_this_repo_guards_its_own_forwarded_uv_variables(self) -> None:
+        """The template's own release config needs the same guards (DOT-615).
+
+        `[tool.semantic_release]` is one of the dual configs: it exists both in
+        `project/pyproject.toml.jinja` and in this repo's `pyproject.toml`,
+        which is what releases the template itself. Every other test in this
+        class inspects a generated project only, so a regression confined to
+        this repo's copy passes the whole suite and surfaces as a failed
+        release -- which is exactly how DOT-615 was found.
+        """
+        with (REPO_ROOT / "pyproject.toml").open("rb") as f:
+            self._assert_uv_vars_guarded(tomllib.load(f)["tool"]["semantic_release"], "this repo's pyproject.toml")
+
 
 class TestHookProfiles:
     """use_heavy_hooks gates slow git hooks; fast hooks stay always-on."""

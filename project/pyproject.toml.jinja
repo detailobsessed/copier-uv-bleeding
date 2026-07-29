@@ -319,8 +319,21 @@ branch = "main"
 # this afterwards either, because the generated workflow runs `uv sync
 # --frozen`, which uses the lockfile as-is rather than asserting it is fresh
 # (`--locked` is the flag that would). DOT-602.
+#
+# The `unset` lines are required for the same reason. Bare entries in
+# build_command_env are resolved as os.getenv(name, "") and assigned
+# unconditionally, so a variable that is unset in CI arrives here as an empty
+# string rather than being omitted. uv parses its own UV_* variables as typed
+# CLI values -- an enum for --link-mode, a path for --cache-dir, a boolish for
+# --system-certs -- so an empty one is a malformed value, not an absent one,
+# and `uv lock` exits 2 before doing any work. The TLS and proxy variables are
+# read as plain strings where empty already means unset, so they need no
+# guard (each of the twelve verified individually against uv 0.12.1). DOT-615.
 build_command = """
 set -e
+[ -n "$UV_SYSTEM_CERTS" ] || unset UV_SYSTEM_CERTS
+[ -n "$UV_CACHE_DIR" ] || unset UV_CACHE_DIR
+[ -n "$UV_LINK_MODE" ] || unset UV_LINK_MODE
 uv lock --upgrade-package "$PACKAGE_NAME"
 git add uv.lock CHANGELOG.md
 uv build
@@ -336,8 +349,8 @@ uv build
 #
 # A bare "VAR" entry is pass-through, resolved as os.getenv(name, "");
 # "VAR=value" sets a literal. Unset variables therefore arrive as empty
-# strings rather than being omitted, which is safe here — uv treats an empty
-# SSL_CERT_FILE/SSL_CERT_DIR as unset (verified against uv 0.12.0).
+# strings rather than being omitted -- see the `unset` guards in build_command
+# above, which any new UV_* entry added here also needs.
 #
 # Keep the proxy variables as a set: HTTPS_PROXY without NO_PROXY routes
 # internal hosts through the corporate proxy, which is the failure mode this
