@@ -244,6 +244,79 @@ class TestPreCommitConfig:
         assert "uv.lock" in excluded
 
 
+class TestSemanticReleaseBuildCommand:
+    """build_command must fail loudly and reach the network (DOT-602, DOT-605)."""
+
+    @staticmethod
+    def _semantic_release(project: Path) -> dict:
+        with (project / "pyproject.toml").open("rb") as f:
+            return tomllib.load(f)["tool"]["semantic_release"]
+
+    def test_build_command_aborts_on_failure(self, copier_defaults: dict, project_factory) -> None:
+        """build_command must `set -e` so a failing `uv lock` aborts the release (DOT-602).
+
+        python-semantic-release runs build_command as a shell script rather
+        than an `&&` chain. Without `set -e`, a failed `uv lock` lets the
+        following lines run anyway, `uv build` exits 0, and the release is
+        reported green having committed a stale lockfile. Nothing downstream
+        catches it either: the generated CI runs `uv sync --frozen`, which
+        consumes the lockfile as-is instead of asserting freshness.
+        """
+        project = project_factory({**copier_defaults, "use_semantic_release": True})
+        build_command = self._semantic_release(project)["build_command"]
+
+        lines = [line.strip() for line in build_command.strip().splitlines() if line.strip()]
+        assert lines, "build_command should not be empty"
+        assert lines[0] == "set -e", (
+            "build_command must start with `set -e`, otherwise a failing `uv lock` is "
+            f"swallowed and the release silently ships a stale lockfile. Got {lines!r}"
+        )
+
+    def test_build_command_env_passes_through_network_config(self, copier_defaults: dict, project_factory) -> None:
+        """build_command_env must forward TLS/proxy/cache config (DOT-605).
+
+        python-semantic-release replaces rather than extends the environment
+        for build_command, keeping only a hardcoded allowlist. Since
+        build_command runs `uv lock`, a network operation, anything not listed
+        here is dropped and the lock runs without the CI's TLS, proxy and cache
+        settings. uv 0.12 made an invalid SSL_CERT_FILE/SSL_CERT_DIR a hard
+        HTTPS failure rather than a warning, so this is release-breaking on any
+        project behind a corporate CA or proxy.
+        """
+        project = project_factory({**copier_defaults, "use_semantic_release": True})
+        config = self._semantic_release(project)
+
+        assert "build_command_env" in config, (
+            "build_command runs `uv lock` over the network, so build_command_env must "
+            "forward the environment python-semantic-release would otherwise drop."
+        )
+        env = config["build_command_env"]
+
+        for required in ("UV_SYSTEM_CERTS", "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE"):
+            assert required in env, f"{required} must be forwarded for corporate-CA setups; got {env!r}"
+
+        # Proxy variables must travel as a set: HTTPS_PROXY without NO_PROXY
+        # routes internal hosts through the corporate proxy, which is the exact
+        # failure this replaces. Both cases matter -- tools disagree on which
+        # they read.
+        for lower in ("http_proxy", "https_proxy", "no_proxy"):
+            assert lower in env, f"{lower} missing; proxy vars must be forwarded as a set. Got {env!r}"
+            assert lower.upper() in env, f"{lower.upper()} missing; proxy vars must be forwarded as a set. Got {env!r}"
+
+    def test_build_command_env_entries_are_pass_through(self, copier_defaults: dict, project_factory) -> None:
+        """Entries must be bare names, not `NAME=value` literals.
+
+        A bare entry is resolved as os.getenv(name, ""), forwarding whatever CI
+        set. Hardcoding a value in the template would override the CI's real
+        configuration instead of passing it through.
+        """
+        project = project_factory({**copier_defaults, "use_semantic_release": True})
+        env = self._semantic_release(project)["build_command_env"]
+
+        hardcoded = [entry for entry in env if "=" in entry]
+        assert not hardcoded, f"build_command_env entries must be pass-through names, not literals: {hardcoded!r}"
+
+
 class TestHookProfiles:
     """use_heavy_hooks gates slow git hooks; fast hooks stay always-on."""
 

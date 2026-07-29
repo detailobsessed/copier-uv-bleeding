@@ -281,11 +281,52 @@ watch = "gh run watch"
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
+# `set -e` is required. python-semantic-release hands build_command to the
+# shell as a script, not as an `&&` chain, so without it a failing `uv lock`
+# is swallowed: the remaining lines still run, `uv build` exits 0, and the
+# release reports success having committed a stale lockfile. CI cannot catch
+# this afterwards either, because the generated workflow runs `uv sync
+# --frozen`, which uses the lockfile as-is rather than asserting it is fresh
+# (`--locked` is the flag that would). DOT-602.
 build_command = """
+set -e
 uv lock --upgrade-package "$PACKAGE_NAME"
 git add uv.lock CHANGELOG.md
 uv build
 """
+# python-semantic-release REPLACES the environment for build_command instead
+# of extending it: it builds a hardcoded allowlist (PATH, HOME, VIRTUAL_ENV,
+# CI, GITHUB_ACTIONS, ...) and passes it to shell() as `env=`. Everything
+# else is dropped. Since the build_command above runs `uv lock`, which is a
+# network operation, it would otherwise execute with no TLS, proxy or cache
+# configuration while every other job in the same pipeline has all of it.
+# This inverts the usual CI intuition that exporting a variable in the job is
+# enough. DOT-605.
+#
+# A bare "VAR" entry is pass-through, resolved as os.getenv(name, "");
+# "VAR=value" sets a literal. Unset variables therefore arrive as empty
+# strings rather than being omitted, which is safe here — uv treats an empty
+# SSL_CERT_FILE/SSL_CERT_DIR as unset (verified against uv 0.12.0).
+#
+# Keep the proxy variables as a set: HTTPS_PROXY without NO_PROXY routes
+# internal hosts through the corporate proxy, which is the failure mode this
+# replaces. SSL_CERT_DIR is included alongside SSL_CERT_FILE because uv 0.12
+# made an invalid value in either one a hard HTTPS failure rather than a
+# warning-and-fall-back.
+build_command_env = [
+    "UV_SYSTEM_CERTS",
+    "UV_CACHE_DIR",
+    "UV_LINK_MODE",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "REQUESTS_CA_BUNDLE",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+]
 commit_message = "chore(release): {version}"
 tag_format = "{version}"
 allow_zero_version = true

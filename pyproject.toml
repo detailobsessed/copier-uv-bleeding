@@ -41,10 +41,32 @@ filterwarnings = [
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 branch = "main"
+# `set -e` is required: python-semantic-release runs build_command as a shell
+# script, not an `&&` chain, so without it a failing `uv lock` is swallowed
+# and the release reports success having committed a stale lockfile (DOT-602).
 build_command = """
+set -e
 uv lock --upgrade-package "$PACKAGE_NAME"
 git add uv.lock CHANGELOG.md
 """
+# python-semantic-release REPLACES rather than extends the environment for
+# build_command, so `uv lock` above would otherwise run with no TLS, proxy or
+# cache configuration. Bare entries are pass-through via os.getenv(name, "");
+# unset variables arrive as empty strings, which uv treats as unset (DOT-605).
+build_command_env = [
+    "UV_SYSTEM_CERTS",
+    "UV_CACHE_DIR",
+    "UV_LINK_MODE",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+    "REQUESTS_CA_BUNDLE",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+]
 commit_message = "chore(release): {version}"
 tag_format = "{version}"
 allow_zero_version = true
