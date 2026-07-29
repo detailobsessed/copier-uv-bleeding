@@ -229,6 +229,63 @@ exports, fixtures, snapshots are the usual reason — prefer a path exclusion
 over a repo-wide hex `extend-ignore-re`, which would also silence real typos in
 source and docs.
 
+### Why file-rewriting hooks each get their own priority {#prek-hook-priorities}
+
+`priority` is a prek-only scheduling extension: hooks run in ascending priority
+order, and hooks sharing a value run concurrently. Omitting it entirely gets you
+an implicit value from hook order, i.e. sequential behaviour. So parallelism here
+is opt-in — and for anything that writes files, opting in is a correctness
+decision, not a performance one.
+
+prek's own reference is explicit about it:
+
+> **Parallel hooks modifying files** — If two hooks run in the same priority
+> group and both mutate the same files (or depend on shared state), results are
+> **undefined**. Use separate priorities to avoid overlap.
+
+There is a second, independent reason:
+
+> If a hook modifies files without emitting a non-zero exit code (e.g.
+> `ruff format`), the priority group **as a whole** will fail. It is not possible
+> for prek to attribute the failure to a specific hook in the group which
+> modified files. Use separate priorities for clearer failure attribution.
+
+That is the difference between `Files were modified by following hooks...Failed`
+with a dozen hooks listed as `Passed` underneath it, and a single named hook
+telling you what it rewrote.
+
+Measured on 40 files each carrying a BOM, trailing whitespace, CRLF endings and
+no final newline:
+
+| Configuration | Files still with trailing whitespace | Files still with CRLF |
+| -- | -- | -- |
+| `trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending` all at 0 | 12/40 | 3/40 |
+| …plus `fix-byte-order-marker`, also at 0 | 27/40 | 20/40 |
+| the same four, one priority each | **0/40** | **0/40** |
+
+It is not corruption — prek fails the run, and re-running fixes more each time
+until it converges. But convergence is nondeterministic, and "the hook ran and
+reported success while another hook's fix was discarded" is the failure shape
+this template treats as a bug.
+
+So: read-only checks share group 0, and each builtin file mutator gets its own
+group, 1–4. Order there is also semantic — `end-of-file-fixer` runs last so it
+sees the real final byte after line endings are normalised and the BOM is
+stripped.
+
+Group 5 holds the remaining fixers (`ruff --fix`, `markdownlint`,
+`sync-with-uv`, `uv-lock`). They share a group safely because they write
+*disjoint* file types — `.py`, `.md`, `prek.toml`, `uv.lock` — which is the
+condition upstream's warning actually turns on. `ruff-format` is the exception at
+6, because it rewrites the same `.py` files as `ruff --fix` and must run after
+it. `sync-with-uv` moved out of group 0 for the same reason: it rewrites
+`prek.toml`, which the builtin mutators in 1–4 also touch.
+
+**A new hook that writes files needs a priority no other hook writing those same
+files uses.** Since 0.4.11 these can be named via a `[priorities]` alias table
+rather than bare integers, which is worth adopting once the template's
+`minimum_prek_version` floor reaches 0.4.11.
+
 ### Why `uv-sync` keeps upstream's `--locked` {#prek-uv-sync-locked}
 
 The `uv-sync` hook ships this by default:

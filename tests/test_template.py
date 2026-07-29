@@ -336,13 +336,15 @@ class TestPreCommitConfig:
                 f"keep --force-exclude so _typos.toml exclusions still apply when prek passes explicit filenames; got {args!r}"
             )
 
-    @pytest.mark.skipif(shutil.which("prek") is None, reason="prek is not on PATH; it is not a dev dependency of this repo")
     def test_builtin_hook_ids_are_real(self, copier_defaults: dict, project_factory) -> None:
         """Every `repo = "builtin"` hook id must exist in `prek util list-builtins`.
 
         A typo'd or retired builtin id is not a hard error at config-parse time,
         so the hook simply never runs — the same "reports success while doing
         nothing" shape as DOT-603 and DOT-604.
+
+        `prek` is a dev dependency specifically so this runs in CI rather than
+        only on machines that happen to have it installed.
         """
         project = project_factory(copier_defaults)
 
@@ -355,7 +357,62 @@ class TestPreCommitConfig:
         result = subprocess.run(["prek", "util", "list-builtins"], capture_output=True, text=True, check=True)
         available = set(result.stdout.split())
 
+        # Guard the parse itself: this asserts a subset relation, so an output
+        # format that stops being one-bare-id-per-line would make `available`
+        # junk and the assertion below vacuously true rather than failing.
+        assert "trailing-whitespace" in available, (
+            f"could not parse `prek util list-builtins`; expected bare ids, got {result.stdout[:200]!r}"
+        )
+
         assert configured <= available, f"not real prek builtins: {sorted(configured - available)}"
+
+    def test_file_mutating_hooks_do_not_share_a_priority(self, copier_defaults: dict, project_factory) -> None:
+        """Hooks writing the same files must not share a priority group.
+
+        prek's reference calls two same-group hooks mutating the same files
+        "undefined", and a group that modifies files fails as a whole with no
+        attribution to the hook responsible. Measured at 12/40 files losing
+        their trailing-whitespace fix with three such hooks sharing group 0,
+        and 0/40 once each got its own.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        # Every hook that writes to the files it is handed. `typos` is absent on
+        # purpose — the template drops upstream's --write-changes, so it only
+        # reports (see test_typos_hook_does_not_write_changes).
+        #
+        # The universal ones run over every text file, so they overlap with each
+        # other AND with every scoped fixer below. The scoped ones write
+        # disjoint file types (.py / .md / prek.toml / uv.lock) and may safely
+        # share a group with each other — except ruff and ruff-format, which
+        # both rewrite .py.
+        universal = {"trailing-whitespace", "end-of-file-fixer", "mixed-line-ending", "fix-byte-order-marker"}
+        scoped = {"ruff", "ruff-format", "markdownlint", "sync-with-uv", "uv-lock"}
+
+        priorities: dict[str, int] = {}
+        for repo in data["repos"]:
+            for hook in repo.get("hooks", []):
+                if hook["id"] in universal | scoped:
+                    priorities[hook["id"]] = hook.get("priority", 0)
+
+        missing = universal - priorities.keys()
+        assert not missing, f"expected these mutating hooks in prek.toml: {sorted(missing)}"
+
+        for hook_id in universal:
+            clashes = [other for other, p in priorities.items() if other != hook_id and p == priorities[hook_id]]
+            assert not clashes, (
+                f"{hook_id!r} rewrites every text file and shares priority {priorities[hook_id]} with {clashes}; "
+                "concurrent writers lose each other's edits. Give it an unused priority."
+            )
+
+        if {"ruff", "ruff-format"} <= priorities.keys():
+            assert priorities["ruff"] < priorities["ruff-format"], (
+                "ruff --fix and ruff-format both rewrite .py files, so they must not share a priority, "
+                "and formatting must come after fixing."
+            )
 
     def test_no_commit_to_branch_is_not_shipped(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not block commits to their default branch.
