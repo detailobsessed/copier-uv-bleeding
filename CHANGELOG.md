@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.3 (2026-07-29)
+
+### Bug Fixes
+
+- **template**: Stop typos rewriting files and unblock sync-with-uv
+  ([#330](https://github.com/detailobsessed/copier-uv-bleeding/pull/330),
+  [`f62f297`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f62f29744c052ae8ada2ea55df7ca6bb40c3fab6))
+
+
 ## v0.41.2 (2026-07-02)
 
 ### Bug Fixes
