@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.10 (2026-07-29)
+
+### Bug Fixes
+
+- **ci**: Run CI on pull requests targeting any base branch
+  ([#341](https://github.com/detailobsessed/copier-uv-bleeding/pull/341),
+  [`fd247cf`](https://github.com/detailobsessed/copier-uv-bleeding/commit/fd247cfd0092d48a3b7068e3cbdd2ca540152fab))
+
+
 ## v0.41.9 (2026-07-29)
 
 ### Documentation
