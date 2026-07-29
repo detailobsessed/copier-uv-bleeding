@@ -1,31 +1,22 @@
 #:schema https://www.schemastore.org/prek.json
 default_stages = ["pre-commit"]
-# 0.4.10 introduced the `[update]` tag filters used below. This is the guard
-# that reaches projects updating from an older template: `prek.toml` is
-# regenerated in full by the template's sync step, but `[dependency-groups]`
-# in pyproject.toml sits inside a template-preserve region, so the `prek>=`
-# floor there stays at whatever the project already had. A too-old prek would
-# otherwise ignore the `[update]` block entirely and silently reintroduce the
-# lychee `nightly` bug. Fails loudly instead (DOT-616).
+# Required — an older prek silently ignores the `[update]` block below.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-minimum-version
 minimum_prek_version = "0.4.10"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
-# lychee tags `nightly` as their GitHub "Latest" release, so `prek update`
-# resolves it as the newest tag and rewrites the pinned rev to a mutable one
-# that lychee's own hook then rejects (lycheeverse/lychee#1601, DOT-492).
-# Declaring the exclusion here rather than wrapping `prek update` in a script
-# means every invocation is protected -- a bare `prek update`, CI, an editor
-# integration -- not just the one that goes through the wrapper (DOT-616).
-# Remove once lycheeverse/lychee#1601 is fixed upstream (DOT-504).
+# Without this, `prek update` pins lychee to a mutable `nightly` tag that
+# lychee's own hook then rejects. Remove once lycheeverse/lychee#1601 is fixed.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-lychee-nightly
 [update.repos."https://github.com/lycheeverse/lychee"]
 exclude_tags = ["nightly"]
 
-# Empty `rev` values are filled by `prek update`, and kept in
-# step with uv.lock by the sync-with-uv hook below. Never put a trailing comment
-# on a `rev` line: sync-with-uv matches revs with a regex anchored at end-of-line,
-# so a trailing comment makes the line unmatchable and the hook silently reports
-# success while updating nothing (DOT-603). Put per-repo notes on the line above.
+# Empty `rev` values are filled by `prek update` and kept in step with uv.lock
+# by the sync-with-uv hook. NEVER put a trailing comment on a `rev` line — it
+# makes the line unmatchable and sync-with-uv then silently updates nothing.
+# Put per-repo notes on the line above.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-rev-lines
 
 [[repos]]
 repo = "builtin"
@@ -36,7 +27,9 @@ hooks = [
   { id = "check-toml", priority = 0 },
   { id = "check-json", priority = 0 },
   { id = "check-added-large-files", priority = 0 },
-  { id = "check-merge-conflict", args = ["--assume-in-merge"], priority = 0 },  # --assume-in-merge catches markers from `copier update --conflict inline` (no .git/MERGE_MSG)
+  # --assume-in-merge catches markers from `copier update --conflict inline`.
+  # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-copier-conflicts
+  { id = "check-merge-conflict", args = ["--assume-in-merge"], priority = 0 },
   { id = "check-case-conflict", priority = 0 },
   { id = "check-symlinks", priority = 0 },
   { id = "check-executables-have-shebangs", priority = 0 },
@@ -88,12 +81,10 @@ hooks = [{ id = "actionlint", priority = 1 }]
 [[repos]]
 repo = "https://github.com/crate-ci/typos"
 rev = ""
-# Upstream ships `args = ["--write-changes", "--force-exclude"]`, so the hook
-# rewrites files in place — it has silently corrupted hex identifiers (Mongo
-# ObjectIds, git SHAs) in checked-in data files (DOT-604). Overriding `args`
-# REPLACES the upstream list rather than appending, which is what drops the
-# write flag here. Keep `--force-exclude`: it is what makes typos honour
-# _typos.toml when prek passes explicit staged filenames.
+# `args` is overridden to drop upstream's `--write-changes`, which rewrites
+# files in place and has corrupted hex identifiers in checked-in data. Keep
+# `--force-exclude` — it is what makes typos honour _typos.toml.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-typos-args
 hooks = [{ id = "typos", args = ["--force-exclude"], priority = 1 }]
 
 [[repos]]
@@ -104,15 +95,15 @@ hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], pr
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
 # The `nightly` tag is excluded in the `[update.repos]` block at the top of
-# this file, so a plain `prek update` keeps this on a versioned tag (DOT-492).
+# this file, so a plain `prek update` keeps this on a versioned tag.
 rev = "lychee-v0.24.2"
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
 
 [[repos]]
 repo = "local"
 
-# Block commits containing .rej files produced by `copier update --conflict rej` (DOT-542).
-# https://copier.readthedocs.io/en/stable/updating/#tips-and-tricks
+# Block commits containing .rej files produced by `copier update --conflict rej`.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-copier-conflicts
 [[repos.hooks]]
 id = "no-copier-rej-files"
 name = "block copier .rej files"

@@ -31,7 +31,6 @@ It is designed to be used as a starting point for new Python projects, providing
 - **[prek](https://github.com/j178/prek)** — Rust-powered pre-commit hook runner (replaces pre-commit)
 - **[poethepoet](https://github.com/nat-n/poethepoet)** — task runner with pre-configured tasks for every workflow
 - **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage and randomization
-- **[Zensical](https://zensical.org/)** — beautiful documentation with API autodoc
 - **[semantic-release](https://github.com/python-semantic-release/python-semantic-release)** — automated versioning and changelogs from conventional commits
 - **[betterleaks](https://github.com/betterleaks/betterleaks)** — secret scanning on every commit (detects API keys, tokens, and credentials in staged changes)
 - **[lychee](https://github.com/lycheeverse/lychee)** — fast link checking in CI
@@ -46,37 +45,25 @@ When you run `copier copy`, you'll be asked:
 
 | Prompt | Description |
 | ------ | ----------- |
-| **Project audience** | `solo-internal` (default), `team`, or `public-oss` — sets lighter or fuller defaults for everything below (see [Audience profiles](#audience-profiles)) |
 | **Project name** | Name of your project |
 | **Project description** | One-line description |
-| **Project type** | `app`, `lib`, or `package` — configures pyproject.toml entry points and build settings |
+| **Project type** | `app` (CLI entry point, like `uv init --app`) or `lib` (importable package, like `uv init --lib`) |
 | **Author info** | Name, email, username (auto-detected from git) |
 | **Repository provider** | `github.com` or `gitlab.com` |
+| **Repository host** | Hostname — override for self-hosted GitLab (e.g. `gitlab.company.com`) |
 | **Repository namespace** | GitHub/GitLab username or organization |
-| **License** | Choose from 40+ open source licenses |
-| **Community-health files?** | `CODE_OF_CONDUCT`, `CONTRIBUTING`, `SECURITY`, issue/PR templates, `FUNDING` |
-| **Generate docs site?** | Zensical scaffolding, `docs/`, GitHub Pages workflow |
+| **Open-source this project?** | Adds a LICENSE plus `CODE_OF_CONDUCT`, `CONTRIBUTING`, `SECURITY`, issue/PR templates and `FUNDING`. Off = internal/private, none of those. Defaults on for GitHub |
+| **License** | Choose from 40+ open source licenses (asked only when open-sourcing) |
+| **Heavy git hooks?** | Run coverage on pre-push (off = fast hooks only; coverage runs in CI) |
 | **Enable CI?** | GitHub Actions or GitLab CI |
 | **Enable semantic-release?** | Automated versioning and changelog |
-| **Heavy git hooks?** | Run coverage + docs-build on pre-push (off = fast hooks only; coverage/docs run in CI) |
 | **Publish to PyPI?** | Include PyPI publishing in release workflow |
+| **Publish to MCP Registry?** | Include the MCP Registry publish workflow |
+| **Use a custom PyPI index?** | Point uv at Artifactory, Nexus, etc. |
 | **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
 | **Configure GitHub repo settings?** | Run `gh repo edit` to enable delete-branch-on-merge and auto-merge |
 
-### Audience profiles
-
-`Project audience` is the one high-level choice that sets sensible starting defaults — every individual toggle stays overridable.
-
-| | solo-internal (default) | team | public-oss |
-| --- | --- | --- | --- |
-| Visibility | internal | internal | public |
-| CI | off | on | on |
-| semantic-release | off | on | on |
-| Docs site | off | off | on |
-| Heavy git hooks | off | off | on |
-| Community-health files | off | off | on |
-
-The shipped default is **solo-internal** — the leanest scaffold. Choose **public-oss** for the full open-source stack (docs site, strict hooks, community files), or **team** for a shared internal repo that wants CI and changelogs without the public-facing weight.
+The booleans cascade: `use_ci` gates `use_semantic_release`, which gates `publish_to_pypi` and `publish_to_mcp_registry`. Answering "no" high up skips everything beneath it.
 
 ## Quick Start
 
@@ -144,13 +131,6 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe test-affected` | Run only tests affected by changes ([testmon](https://github.com/tarpas/pytest-testmon)) |
 | `poe test-all` | Run all tests |
 | `poe test-cov` | Run tests with coverage report |
-| `poe docs` | Serve docs locally |
-| `poe docs-build` | Build docs with strict mode |
 | `poe prek` | Run all pre-commit hooks |
 | `poe check-template` | Check for template updates (manual) |
 | `poe update-template` | Apply template updates via copier |
-| `poe tags` | List git tags by version |
-| `poe runs` | List recent CI runs |
-| `poe checks` | Watch PR checks |
-| `poe watch` | Watch current CI run |
-| `poe releases` | List recent GitHub releases |
