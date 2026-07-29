@@ -8,9 +8,18 @@
 # Generated files are excluded because release tooling writes abbreviated git
 # SHAs, which typos reads as prose ("ba" -> "by"/"be").
 #
+# .copier-answers.yml is the same problem with worse consequences. Copier writes
+# `_commit: <git describe>` there, e.g. `0.41.3-3-g2452caf` — and short SHAs are
+# hex, so any of the handful of words spellable from [0-9a-f] trips the
+# dictionary: caf, beef, fade, dead, deca. That makes it fail on a minority of
+# commits and pass on the rest, which is close to impossible to diagnose from
+# the outside. Worse, `_commit` is what `copier update` reads to find the
+# template revision to diff against; a "corrected" SHA points at nothing and
+# breaks updates for the project.
+#
 # Add your own paths here. Data files holding hex-like identifiers — JSON
 # exports, fixtures, snapshots — are the usual reason; prefer a path exclusion
 # over a repo-wide hex `extend-ignore-re`, which would also silence real typos
 # in source and docs.
 [files]
-extend-exclude = ["CHANGELOG.md", "uv.lock"]
+extend-exclude = ["CHANGELOG.md", "uv.lock", ".copier-answers.yml"]
