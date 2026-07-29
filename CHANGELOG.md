@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.6 (2026-07-29)
+
+### Chores
+
+- **deps**: Raise dependency floors to the versions the template is tested at
+  ([#337](https://github.com/detailobsessed/copier-uv-bleeding/pull/337),
+  [`cc74511`](https://github.com/detailobsessed/copier-uv-bleeding/commit/cc74511d521d731b644aa948d38c0bdac2461f97))
+
+
 ## v0.41.5 (2026-07-29)
 
 ### Refactoring
