@@ -15,13 +15,13 @@ dev = [
     "hypothesis>=6.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "pytest-randomly>=3.16",
+    "pytest-randomly>=4",
     "pytest-xdist>=3.5",
-    "python-semantic-release>=10.5.2",
+    "python-semantic-release>=10.6",
     "pyyaml>=6.0.3",
     "reuse",
     "ruff",
-    "ty>=0.0.14",
+    "ty>=0.0.64",
     "copier-template-extensions>=0.3.3",
 ]
 

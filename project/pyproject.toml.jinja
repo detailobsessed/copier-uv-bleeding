@@ -66,17 +66,23 @@ Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 [dependency-groups]
 {%- if use_semantic_release %}
 maintain = [
-    "build>=1.2",
-    "python-semantic-release>=10",
+    "build>=1.5",
+    "python-semantic-release>=10.6",
 ]
 {%- endif %}
+# Floors track the versions this template is actually exercised against, not
+# the oldest release that happens to still work. A range wider than the tested
+# one advertises support nobody verifies: `uv sync` resolves to the newest
+# release, so the bottom of a `>=8` range is a configuration the template has
+# never once run under. `ty` is floored tighter than the rest because it is
+# pre-1.0, where any release may change behaviour.
 ci = [
     "ruff>=0.16",
-    "pytest>=8",
-    "pytest-cov>=6",
-    "pytest-randomly>=3.15",
-    "ty>=0.0.14",
-    "poethepoet>=0.41",
+    "pytest>=9",
+    "pytest-cov>=7",
+    "pytest-randomly>=4",
+    "ty>=0.0.64",
+    "poethepoet>=0.48",
 ]
 dev = []
 local = [
