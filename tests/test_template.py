@@ -242,6 +242,11 @@ class TestPreCommitConfig:
         excluded = data["files"]["extend-exclude"]
         assert "CHANGELOG.md" in excluded
         assert "uv.lock" in excluded
+        assert ".copier-answers.yml" in excluded, (
+            "copier writes `_commit: <git describe>` here, and short SHAs are hex — any of "
+            "caf/beef/fade/dead/deca trips the dictionary. Without this exclusion the hook "
+            "fails on a minority of commits, and `copier update` breaks if it is ever 'fixed'."
+        )
 
 
 class TestSemanticReleaseBuildCommand:
