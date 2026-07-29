@@ -14,6 +14,35 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.4 (2026-07-29)
+
+### Bug Fixes
+
+- **release**: Unset forwarded UV_* variables when they arrive empty
+  ([#335](https://github.com/detailobsessed/copier-uv-bleeding/pull/335),
+  [`174b4ed`](https://github.com/detailobsessed/copier-uv-bleeding/commit/174b4edc32fb4569b86475f34c0e7eedf790e0f6))
+
+- **template**: Exclude .copier-answers.yml from typos
+  ([#334](https://github.com/detailobsessed/copier-uv-bleeding/pull/334),
+  [`2b444e4`](https://github.com/detailobsessed/copier-uv-bleeding/commit/2b444e4d6c4ea499d50506725845ab7b1dc22cde))
+
+- **template**: Make release build_command fail loudly and reach the network
+  ([#331](https://github.com/detailobsessed/copier-uv-bleeding/pull/331),
+  [`92126db`](https://github.com/detailobsessed/copier-uv-bleeding/commit/92126dbeb1076be72114a371c4f3f61e341228e2))
+
+### Chores
+
+- **deps**: Move to uv 0.12, upgrade dependencies and hook revs
+  ([#332](https://github.com/detailobsessed/copier-uv-bleeding/pull/332),
+  [`bceff10`](https://github.com/detailobsessed/copier-uv-bleeding/commit/bceff10ed15f17bd584fce5a15f5638e9dac82a7))
+
+### Refactoring
+
+- **template**: Extend ruff's defaults instead of replacing them
+  ([#333](https://github.com/detailobsessed/copier-uv-bleeding/pull/333),
+  [`8befa56`](https://github.com/detailobsessed/copier-uv-bleeding/commit/8befa56bb34043c7e5f4066375ffd60082738db7))
+
+
 ## v0.41.3 (2026-07-29)
 
 ### Bug Fixes
