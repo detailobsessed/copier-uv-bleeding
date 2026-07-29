@@ -4,9 +4,10 @@ name: ci
   push:
     branches:
       - main
+  # Deliberately unfiltered. Gating on `branches: [main]` meant stacked PRs --
+  # which target their parent branch, not main -- never triggered CI at all,
+  # so every PR in a stack but the bottom one was reviewed with no signal.
   pull_request:
-    branches:
-    - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

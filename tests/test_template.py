@@ -11,6 +11,7 @@ import tomllib
 from typing import TYPE_CHECKING, ClassVar
 
 import pytest
+import yaml
 from conftest import REPO_ROOT, generate_project
 
 if TYPE_CHECKING:
@@ -627,6 +628,35 @@ class TestDependencies:
 
 class TestCIWorkflows:
     """Test CI workflow configuration (from smoke_test.sh assertions)."""
+
+    def test_ci_pull_request_trigger_is_unfiltered(self, copier_defaults: dict, project_factory) -> None:
+        """CI must run on PRs targeting ANY base branch, not just main (DOT-619).
+
+        `pull_request: {branches: [main]}` looks harmless and silently disables CI
+        for stacked PRs, which target their parent branch rather than main. Every
+        PR in a stack but the bottom one then gets reviewed with no signal at all
+        -- not a red check, no check.
+
+        Asserting on an absent key because that is the defect: a `branches` filter
+        added back here would look like tightening and read as normal in a diff.
+        The `push` trigger is intentionally left alone; scoping that one to main
+        is correct.
+        """
+        answers = {**copier_defaults, "use_ci": True}
+        project = project_factory(answers)
+
+        ci_yml = project / ".github" / "workflows" / "ci.yml"
+        # "on" is the YAML 1.1 boolean true, hence the quoting in the workflow;
+        # PyYAML resolves the bare key back to True, so accept either.
+        workflow = yaml.safe_load(ci_yml.read_text())
+        triggers = workflow.get("on", workflow.get(True))
+
+        assert "pull_request" in triggers, "CI workflow has no pull_request trigger"
+        pr_trigger = triggers["pull_request"]
+        assert pr_trigger is None or "branches" not in pr_trigger, (
+            "pull_request must not filter on base branch -- a `branches` filter means stacked PRs "
+            f"(base != main) never trigger CI. Got: {pr_trigger!r}"
+        )
 
     def test_ci_has_setup_uv(self, copier_defaults: dict, project_factory) -> None:
         """CI workflow should use setup-uv action."""
