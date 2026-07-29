@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.5 (2026-07-29)
+
+### Refactoring
+
+- **template**: Replace prek-autoupdate.sh with declarative update filters
+  ([#336](https://github.com/detailobsessed/copier-uv-bleeding/pull/336),
+  [`903d007`](https://github.com/detailobsessed/copier-uv-bleeding/commit/903d00751a5dfdebc02abed05dfc71d62e6151d0))
+
+
 ## v0.41.4 (2026-07-29)
 
 ### Bug Fixes
