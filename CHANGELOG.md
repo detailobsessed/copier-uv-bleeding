@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.8 (2026-07-29)
+
+### Bug Fixes
+
+- **template**: Drop coverage omit that swallowed the only file in a fresh project
+  ([#339](https://github.com/detailobsessed/copier-uv-bleeding/pull/339),
+  [`42d93d3`](https://github.com/detailobsessed/copier-uv-bleeding/commit/42d93d3c3f40701b1fb90ad56833430a08c9471a))
+
+
 ## v0.41.7 (2026-07-29)
 
 ### Refactoring
