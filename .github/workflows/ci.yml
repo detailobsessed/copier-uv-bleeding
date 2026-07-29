@@ -73,7 +73,7 @@ jobs:
       run: uv lock
     - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
       env:
-        SKIP: no-commit-to-branch,pytest-cov,lychee,uv-lock
+        SKIP: pytest-cov,lychee,uv-lock
       with:
         extra-args: '--all-files'
 

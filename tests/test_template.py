@@ -336,6 +336,112 @@ class TestPreCommitConfig:
                 f"keep --force-exclude so _typos.toml exclusions still apply when prek passes explicit filenames; got {args!r}"
             )
 
+    def test_builtin_hook_ids_are_real(self, copier_defaults: dict, project_factory) -> None:
+        """Every `repo = "builtin"` hook id must exist in `prek util list-builtins`.
+
+        A typo'd or retired builtin id is not a hard error at config-parse time,
+        so the hook simply never runs — the same "reports success while doing
+        nothing" shape as DOT-603 and DOT-604.
+
+        `prek` is a dev dependency specifically so this runs in CI rather than
+        only on machines that happen to have it installed.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        configured = {hook["id"] for repo in data["repos"] if repo.get("repo") == "builtin" for hook in repo.get("hooks", [])}
+        assert configured, "expected a builtin repo block in prek.toml"
+
+        result = subprocess.run(["prek", "util", "list-builtins"], capture_output=True, text=True, check=True)
+        available = set(result.stdout.split())
+
+        # Guard the parse itself: this asserts a subset relation, so an output
+        # format that stops being one-bare-id-per-line would make `available`
+        # junk and the assertion below vacuously true rather than failing.
+        assert "trailing-whitespace" in available, (
+            f"could not parse `prek util list-builtins`; expected bare ids, got {result.stdout[:200]!r}"
+        )
+
+        assert configured <= available, f"not real prek builtins: {sorted(configured - available)}"
+
+    def test_file_mutating_hooks_do_not_share_a_priority(self, copier_defaults: dict, project_factory) -> None:
+        """Hooks writing the same files must not share a priority group.
+
+        prek's reference calls two same-group hooks mutating the same files
+        "undefined", and a group that modifies files fails as a whole with no
+        attribution to the hook responsible. Measured at 12/40 files losing
+        their trailing-whitespace fix with three such hooks sharing group 0,
+        and 0/40 once each got its own.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        # Every hook that writes to the files it is handed. `typos` is absent on
+        # purpose — the template drops upstream's --write-changes, so it only
+        # reports (see test_typos_hook_does_not_write_changes).
+        #
+        # The universal ones run over every text file, so they overlap with each
+        # other AND with every scoped fixer below. The scoped ones write
+        # disjoint file types (.py / .md / prek.toml / uv.lock) and may safely
+        # share a group with each other — except ruff and ruff-format, which
+        # both rewrite .py.
+        universal = {"trailing-whitespace", "end-of-file-fixer", "mixed-line-ending", "fix-byte-order-marker"}
+        scoped = {"ruff", "ruff-format", "markdownlint", "sync-with-uv", "uv-lock"}
+
+        priorities: dict[str, int] = {}
+        for repo in data["repos"]:
+            for hook in repo.get("hooks", []):
+                if hook["id"] in universal | scoped:
+                    priorities[hook["id"]] = hook.get("priority", 0)
+
+        missing = universal - priorities.keys()
+        assert not missing, f"expected these mutating hooks in prek.toml: {sorted(missing)}"
+
+        for hook_id in universal:
+            clashes = [other for other, p in priorities.items() if other != hook_id and p == priorities[hook_id]]
+            assert not clashes, (
+                f"{hook_id!r} rewrites every text file and shares priority {priorities[hook_id]} with {clashes}; "
+                "concurrent writers lose each other's edits. Give it an unused priority."
+            )
+
+        if {"ruff", "ruff-format"} <= priorities.keys():
+            assert priorities["ruff"] < priorities["ruff-format"], (
+                "ruff --fix and ruff-format both rewrite .py files, so they must not share a priority, "
+                "and formatting must come after fixing."
+            )
+
+        # Read-after-write, not two writers: sync-with-uv reads uv.lock to
+        # update prek.toml's rev lines, and uv-lock writes uv.lock. Sharing a
+        # group lets sync-with-uv read a stale lockfile and silently sync
+        # nothing, which the same-file check above would not catch.
+        if {"uv-lock", "sync-with-uv"} <= priorities.keys():
+            assert priorities["uv-lock"] < priorities["sync-with-uv"], (
+                "sync-with-uv reads the uv.lock that uv-lock writes, so uv-lock must run in an earlier priority group."
+            )
+
+    def test_no_commit_to_branch_is_not_shipped(self, copier_defaults: dict, project_factory) -> None:
+        """Generated projects must not block commits to their default branch.
+
+        `no-commit-to-branch` is a workflow opinion, not a correctness check.
+        This template has users who commit straight to main by choice; shipping
+        the hook would break that on the first commit with no way to discover
+        why beyond reading prek.toml. Kept out on purpose — the maintainers'
+        own prek.toml is where a branch policy belongs, not the template's.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        ids = [hook["id"] for repo in data["repos"] for hook in repo.get("hooks", [])]
+        assert "no-commit-to-branch" not in ids, (
+            "no-commit-to-branch imposes a branching workflow on every generated project; leave that to the user."
+        )
+
     def test_has_typos_config(self, copier_defaults: dict, project_factory) -> None:
         """Generated project ships a _typos.toml excluding generated files (DOT-604).
 

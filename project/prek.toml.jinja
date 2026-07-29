@@ -18,11 +18,16 @@ exclude_tags = ["nightly"]
 # Put per-repo notes on the line above.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-rev-lines
 
+# Priorities schedule hooks: ascending order, same value runs concurrently.
+# Per prek's reference, two hooks in one group that mutate the same files have
+# "undefined" results, and a group that modifies files fails as a whole with no
+# attribution to the hook responsible. Read-only checks share group 0; each
+# builtin file mutator gets its own group so both problems go away.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-hook-priorities
 [[repos]]
 repo = "builtin"
 hooks = [
-  { id = "trailing-whitespace", priority = 0 },
-  { id = "end-of-file-fixer", priority = 0 },
+  # 0 — read-only checks, safe to run concurrently
   { id = "check-yaml", args = ["--allow-multiple-documents"], priority = 0 },
   { id = "check-toml", priority = 0 },
   { id = "check-json", priority = 0 },
@@ -36,26 +41,39 @@ hooks = [
   { id = "check-shebang-scripts-are-executable", priority = 0 },
   { id = "check-illegal-windows-names", priority = 0 },
   { id = "destroyed-symlinks", priority = 0 },
-  { id = "mixed-line-ending", args = ["--fix=lf"], priority = 0 },
+  { id = "forbid-new-submodules", priority = 0 },
   { id = "detect-private-key", priority = 0 },
+
+  # 1-4 — file mutators, serialised. The order is also semantic: a UTF-8 BOM
+  # makes TOML parsers and `#!` lines fail with errors that never mention an
+  # invisible three-byte prefix, and end-of-file-fixer runs last so it sees the
+  # final byte after line endings are normalised and the BOM is stripped.
+  { id = "trailing-whitespace", priority = 1 },
+  { id = "mixed-line-ending", args = ["--fix=lf"], priority = 2 },
+  { id = "fix-byte-order-marker", priority = 3 },
+  { id = "end-of-file-fixer", priority = 4 },
 ]
 
 [[repos]]
 repo = "https://github.com/detailobsessed/sync-with-uv"
 rev = ""
-hooks = [{ id = "sync-with-uv", priority = 0 }]
+# Priority 6, not 0: it rewrites prek.toml, which the builtin mutators in groups
+# 1-4 also touch, and it READS uv.lock, which uv-lock rewrites in group 5. Both
+# hazards are ordering, not just concurrent writes.
+hooks = [{ id = "sync-with-uv", priority = 6 }]
 
 [[repos]]
 repo = "https://github.com/betterleaks/betterleaks"
 rev = ""
-hooks = [{ id = "betterleaks", priority = 1 }]
+hooks = [{ id = "betterleaks", priority = 5 }]
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
 rev = ""
 hooks = [
-  { id = "ruff", args = ["--fix"], priority = 1 },
-  { id = "ruff-format", priority = 1 },
+  # ruff-format must follow ruff --fix, and both rewrite the same .py files.
+  { id = "ruff", args = ["--fix"], priority = 5 },
+  { id = "ruff-format", priority = 6 },
 ]
 
 [[repos]]
@@ -67,20 +85,20 @@ rev = ""
 # before changing it.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-uv-sync-locked
 hooks = [
-  { id = "uv-lock", priority = 1 },
-  { id = "uv-sync", stages = ["post-checkout", "post-merge", "post-rewrite"], priority = 1 },
+  { id = "uv-lock", priority = 5 },
+  { id = "uv-sync", stages = ["post-checkout", "post-merge", "post-rewrite"], priority = 5 },
 ]
 
 [[repos]]
 repo = "https://github.com/shellcheck-py/shellcheck-py"
 rev = ""
-hooks = [{ id = "shellcheck", priority = 1 }]
+hooks = [{ id = "shellcheck", priority = 5 }]
 {%- if repository_provider == "github.com" %}
 
 [[repos]]
 repo = "https://github.com/rhysd/actionlint"
 rev = ""
-hooks = [{ id = "actionlint", priority = 1 }]
+hooks = [{ id = "actionlint", priority = 5 }]
 {%- endif %}
 
 [[repos]]
@@ -90,19 +108,19 @@ rev = ""
 # files in place and has corrupted hex identifiers in checked-in data. Keep
 # `--force-exclude` — it is what makes typos honour _typos.toml.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-typos-args
-hooks = [{ id = "typos", args = ["--force-exclude"], priority = 1 }]
+hooks = [{ id = "typos", args = ["--force-exclude"], priority = 5 }]
 
 [[repos]]
 repo = "https://github.com/igorshubovych/markdownlint-cli"
 rev = ""
-hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], priority = 1 }]
+hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], priority = 5 }]
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
 # The `nightly` tag is excluded in the `[update.repos]` block at the top of
 # this file, so a plain `prek update` keeps this on a versioned tag.
 rev = "lychee-v0.24.2"
-hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
+hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 5, types_or = ["markdown", "html", "rst", "yaml"] }]
 
 [[repos]]
 repo = "local"
@@ -124,7 +142,7 @@ entry = "uv run ty check"
 language = "system"
 types = ["python"]
 pass_filenames = false
-priority = 1
+priority = 5
 
 [[repos.hooks]]
 id = "pytest-testmon"
@@ -135,7 +153,7 @@ types = ["python"]
 pass_filenames = false
 verbose = true
 stages = ["pre-commit"]
-priority = 1
+priority = 5
 
 {%- if use_heavy_hooks %}
 
@@ -148,7 +166,7 @@ types = ["python"]
 pass_filenames = false
 verbose = true
 stages = ["pre-push"]
-priority = 1
+priority = 5
 {%- endif %}
 
 [[repos.hooks]]
@@ -172,7 +190,7 @@ stages = ["post-checkout"]
 repo = "https://github.com/compilerla/conventional-pre-commit"
 rev = ""
 hooks = [
-  { id = "conventional-pre-commit", stages = ["commit-msg"], priority = 1, args = [
+  { id = "conventional-pre-commit", stages = ["commit-msg"], priority = 5, args = [
     "--verbose",
     "feat",
     "fix",
