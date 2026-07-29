@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.9 (2026-07-29)
+
+### Documentation
+
+- **template**: Record that uv-sync keeps upstream's --locked on purpose
+  ([#340](https://github.com/detailobsessed/copier-uv-bleeding/pull/340),
+  [`b068468`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b068468af0dfb48c01d635c58116f4dfd274004b))
+
+
 ## v0.41.8 (2026-07-29)
 
 ### Bug Fixes
