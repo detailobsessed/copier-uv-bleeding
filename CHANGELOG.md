@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.7 (2026-07-29)
+
+### Refactoring
+
+- **template**: Move config rationale to docs, drop gh wrapper poe tasks
+  ([#338](https://github.com/detailobsessed/copier-uv-bleeding/pull/338),
+  [`56b9c1f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/56b9c1fae7fd2a3b286419ce67029463a5b7bf29))
+
+
 ## v0.41.6 (2026-07-29)
 
 ### Chores
