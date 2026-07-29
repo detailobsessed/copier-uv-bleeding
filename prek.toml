@@ -1,9 +1,20 @@
 #:schema https://www.schemastore.org/prek.json
 default_stages = ["pre-commit"]
-# Minimum prek version for builtin hooks and TOML config support
-minimum_prek_version = "0.3.11"  # 0.3.11 introduced --repo-exclude-tag (project/scripts/prek-autoupdate.sh)
+# Minimum prek version for builtin hooks and TOML config support.
+# 0.4.10 introduced the `[update]` tag filters used below (DOT-616).
+minimum_prek_version = "0.4.10"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
+
+# lychee tags `nightly` as their GitHub "Latest" release, so `prek update`
+# resolves it as the newest tag and rewrites the pinned rev to a mutable one
+# that lychee's own hook then rejects (lycheeverse/lychee#1601, DOT-492).
+# Excluding the tag here rather than via a wrapper script means every
+# invocation is protected -- a bare `prek update`, CI, an editor integration --
+# not just the one that remembers to go through the wrapper (DOT-616).
+# Remove once lycheeverse/lychee#1601 is fixed upstream (DOT-504).
+[update.repos."https://github.com/lycheeverse/lychee"]
+exclude_tags = ["nightly"]
 
 [[repos]]
 repo = "builtin"
@@ -100,7 +111,8 @@ hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], pr
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
-# use bash project/scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492).
+# The `nightly` tag is excluded in the `[update.repos]` block at the top of this
+# file, so a plain `prek update` keeps this on a versioned tag (DOT-492).
 # Note: never put a comment on the same line as `rev` — sync-with-uv anchors its
 # rev regex at end-of-line, so a trailing comment silently disables it (DOT-603).
 rev = "lychee-v0.24.2"

@@ -61,7 +61,7 @@ This runs:
 
 1. `copier update --trust . --skip-answered --conflict rej` — pull template changes; previously-answered questions are kept, new questions are surfaced interactively, conflicts produce `.rej` files instead of inline conflict markers
 2. `uv sync --upgrade` — upgrade all dependencies
-3. `bash scripts/prek-autoupdate.sh` — update hook versions (wraps `prek autoupdate` with a lychee `nightly` workaround; see `scripts/prek-autoupdate.sh`)
+3. `uv run prek update` — update hook versions. The lychee `nightly` tag is excluded declaratively in `prek.toml` under `[update.repos]`, so a bare `prek update` is safe to run by hand too
 
 ## Handling conflicts
 

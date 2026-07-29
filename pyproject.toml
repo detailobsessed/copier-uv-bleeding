@@ -205,6 +205,11 @@ known-first-party = ["tests"]
     "PLR0904",    # Test classes naturally have many test methods
 ]
 "extensions.py" = ["S404", "S602", "S605", "S607"]  # Template extensions use subprocess for git commands
+# Migrations run as bare `python3` scripts in the destination project during
+# `copier update`, where the repo's logging setup does not exist and stdout is
+# the only channel to the user. A migration that mutates files silently is
+# worse than one that prints.
+"migrations/**" = ["T201"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

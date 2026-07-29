@@ -1,10 +1,27 @@
 #:schema https://www.schemastore.org/prek.json
 default_stages = ["pre-commit"]
-minimum_prek_version = "0.3.11"  # 0.3.11 introduced --repo-exclude-tag (scripts/prek-autoupdate.sh)
+# 0.4.10 introduced the `[update]` tag filters used below. This is the guard
+# that reaches projects updating from an older template: `prek.toml` is
+# regenerated in full by the template's sync step, but `[dependency-groups]`
+# in pyproject.toml sits inside a template-preserve region, so the `prek>=`
+# floor there stays at whatever the project already had. A too-old prek would
+# otherwise ignore the `[update]` block entirely and silently reintroduce the
+# lychee `nightly` bug. Fails loudly instead (DOT-616).
+minimum_prek_version = "0.4.10"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
-# Empty `rev` values are filled by `bash scripts/prek-autoupdate.sh`, and kept in
+# lychee tags `nightly` as their GitHub "Latest" release, so `prek update`
+# resolves it as the newest tag and rewrites the pinned rev to a mutable one
+# that lychee's own hook then rejects (lycheeverse/lychee#1601, DOT-492).
+# Declaring the exclusion here rather than wrapping `prek update` in a script
+# means every invocation is protected -- a bare `prek update`, CI, an editor
+# integration -- not just the one that goes through the wrapper (DOT-616).
+# Remove once lycheeverse/lychee#1601 is fixed upstream (DOT-504).
+[update.repos."https://github.com/lycheeverse/lychee"]
+exclude_tags = ["nightly"]
+
+# Empty `rev` values are filled by `prek update`, and kept in
 # step with uv.lock by the sync-with-uv hook below. Never put a trailing comment
 # on a `rev` line: sync-with-uv matches revs with a regex anchored at end-of-line,
 # so a trailing comment makes the line unmatchable and the hook silently reports
@@ -86,7 +103,8 @@ hooks = [{ id = "markdownlint", args = ["--fix", "--ignore", "CHANGELOG.md"], pr
 
 [[repos]]
 repo = "https://github.com/lycheeverse/lychee"
-# use scripts/prek-autoupdate.sh, not bare `prek autoupdate` (DOT-492)
+# The `nightly` tag is excluded in the `[update.repos]` block at the top of
+# this file, so a plain `prek update` keeps this on a versioned tag (DOT-492).
 rev = "lychee-v0.24.2"
 hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 1, types_or = ["markdown", "html", "rst", "yaml"] }]
 
