@@ -1,6 +1,6 @@
 [project]
 name = "copier-uv-bleeding"
-version = "0.41.10"
+version = "0.41.11"
 description = "Bleeding edge Copier template for Python projects managed by uv"
 readme = "README.md"
 requires-python = ">=3.14"

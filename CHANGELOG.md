@@ -14,6 +14,15 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.11 (2026-07-29)
+
+### Documentation
+
+- Drop '(bleeding edge fork)' from project descriptions
+  ([#342](https://github.com/detailobsessed/copier-uv-bleeding/pull/342),
+  [`8860152`](https://github.com/detailobsessed/copier-uv-bleeding/commit/886015241359e14a9ee54c5391e1d3749218d5fc))
+
+
 ## v0.41.10 (2026-07-29)
 
 ### Bug Fixes
