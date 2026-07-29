@@ -230,7 +230,11 @@ source = ["src/"]
 
 [tool.coverage.report]
 precision = 2
-omit = ["src/*/__init__.py"]
+# No `omit` here. A pattern like `src/*/__init__.py` matches the ONLY Python
+# file a freshly generated project has, leaving coverage with nothing to report
+# — it warns, writes neither the terminal table nor htmlcov/, and still exits 0.
+# The generated __init__.py is a bare docstring: 0 statements, reports 100%, so
+# omitting it buys nothing.
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING", "if __name__ == .__main__.:"]
 
 [tool.coverage.json]

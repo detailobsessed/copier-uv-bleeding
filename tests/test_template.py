@@ -2048,6 +2048,40 @@ class TestIntegration:
             assert result.returncode == 0, f"`poe {task}` failed at the declared dependency floors:\n{result.stdout}\n{result.stderr}"
 
     @pytest.mark.slow
+    def test_test_cov_produces_a_report(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """`poe test-cov` must produce an actual report on a freshly generated project.
+
+        The bug this pins (DOT-617) was silent in the worst way: coverage measured
+        `src/`, an `omit = ["src/*/__init__.py"]` pattern excluded the only Python
+        file a fresh project has, and coverage was left with nothing to report. It
+        emitted a CovReportWarning, wrote neither the terminal table nor `htmlcov/`,
+        and exited 0 -- so the task looked like it worked.
+
+        Every other coverage assertion in this suite reads pyproject *content*.
+        This one runs the task, which is the only way to catch a config that is
+        internally consistent but produces nothing.
+        """
+        project = generate_project(tmp_path, copier_defaults)
+
+        sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
+        assert sync.returncode == 0, f"uv sync failed: {sync.stderr}"
+
+        result = subprocess.run(
+            ["uv", "run", "poe", "test-cov"],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, f"`poe test-cov` failed:\n{result.stdout}\n{result.stderr}"
+
+        # Exit code 0 is not enough -- that is exactly what the bug produced.
+        output = result.stdout + result.stderr
+        assert "No data to report" not in output, f"coverage had nothing to measure:\n{output}"
+        assert "TOTAL" in output, f"coverage terminal report was not written:\n{output}"
+        assert (project / "htmlcov" / "index.html").exists(), "coverage HTML report was not written"
+
+    @pytest.mark.slow
     def test_first_commit_succeeds_with_prek_hooks(self, tmp_path: Path, copier_defaults: dict) -> None:
         """First `git commit` on a freshly scaffolded project must succeed.
 
