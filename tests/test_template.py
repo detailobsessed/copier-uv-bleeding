@@ -414,6 +414,15 @@ class TestPreCommitConfig:
                 "and formatting must come after fixing."
             )
 
+        # Read-after-write, not two writers: sync-with-uv reads uv.lock to
+        # update prek.toml's rev lines, and uv-lock writes uv.lock. Sharing a
+        # group lets sync-with-uv read a stale lockfile and silently sync
+        # nothing, which the same-file check above would not catch.
+        if {"uv-lock", "sync-with-uv"} <= priorities.keys():
+            assert priorities["uv-lock"] < priorities["sync-with-uv"], (
+                "sync-with-uv reads the uv.lock that uv-lock writes, so uv-lock must run in an earlier priority group."
+            )
+
     def test_no_commit_to_branch_is_not_shipped(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not block commits to their default branch.
 

@@ -273,13 +273,21 @@ group, 1–4. Order there is also semantic — `end-of-file-fixer` runs last so 
 sees the real final byte after line endings are normalised and the BOM is
 stripped.
 
-Group 5 holds the remaining fixers (`ruff --fix`, `markdownlint`,
-`sync-with-uv`, `uv-lock`). They share a group safely because they write
-*disjoint* file types — `.py`, `.md`, `prek.toml`, `uv.lock` — which is the
-condition upstream's warning actually turns on. `ruff-format` is the exception at
-6, because it rewrites the same `.py` files as `ruff --fix` and must run after
-it. `sync-with-uv` moved out of group 0 for the same reason: it rewrites
-`prek.toml`, which the builtin mutators in 1–4 also touch.
+Group 5 holds fixers that write *disjoint* file types — `ruff --fix` (`.py`),
+`markdownlint` (`.md`), `uv-lock` (`uv.lock`) — which is the condition upstream's
+warning actually turns on, so sharing a group is safe for them.
+
+Group 6 is for hooks that must follow something in 5:
+
+- `ruff-format` rewrites the same `.py` files as `ruff --fix`.
+- `sync-with-uv` **reads** `uv.lock` to update the `rev` lines in `prek.toml`,
+  and `uv-lock` writes `uv.lock`. This one is a read-after-write dependency
+  rather than two writers, which is a hazard the "do they write the same file?"
+  test does not catch — worth checking separately when placing a hook.
+
+`uv-sync` stays in group 5 despite also touching the environment, because its
+`stages` are `post-checkout`/`post-merge`/`post-rewrite`: it never runs in the
+same invocation as the `pre-commit` hooks it would otherwise contend with.
 
 **A new hook that writes files needs a priority no other hook writing those same
 files uses.** Since 0.4.11 these can be named via a `[priorities]` alias table
