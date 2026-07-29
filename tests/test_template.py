@@ -540,6 +540,90 @@ class TestDependencies:
         content = pyproject.read_text()
         assert '"prek>=0.4.10"' in content
 
+    # Floors track the versions the template is actually exercised against, not the
+    # oldest release that happens to still work. `uv sync` resolves to the newest
+    # release, so the bottom of a `>=8` range is a configuration nobody has ever run
+    # the template under -- it advertises support that is not verified. Pinning them
+    # here makes widening a range a deliberate, reviewed edit rather than a leftover.
+    EXPECTED_FLOORS: ClassVar[dict[str, dict[str, str]]] = {
+        "maintain": {"build": "1.5", "python-semantic-release": "10.6"},
+        "ci": {
+            "ruff": "0.16",
+            "pytest": "9",
+            "pytest-cov": "7",
+            "pytest-randomly": "4",
+            "ty": "0.0.64",
+            "poethepoet": "0.48",
+        },
+        "local": {"prek": "0.4.10", "pytest-testmon": "2.2"},
+    }
+
+    @staticmethod
+    def _floors(specs: list[str]) -> dict[str, str]:
+        """Map ``["pytest>=9", ...]`` to ``{"pytest": "9", ...}``, ignoring unpinned entries."""
+        return dict(spec.split(">=", 1) for spec in specs if ">=" in spec)
+
+    def test_shipped_dependency_floors_are_current(self, copier_defaults: dict, project_factory) -> None:
+        """Every tool group must declare the floor the template is tested at.
+
+        Note these live inside the `dependency-groups` template-preserve region, so
+        raising them reaches newly generated projects only. That is fine while no
+        config depends on the newer behaviour -- when one does, the guard has to go
+        in the propagated section instead, the way ruff's `required-version` and
+        prek's `minimum_prek_version` do.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            groups = tomllib.load(f)["dependency-groups"]
+
+        for group, expected in self.EXPECTED_FLOORS.items():
+            actual = self._floors(groups[group])
+            for package, floor in expected.items():
+                assert actual.get(package) == floor, (
+                    f"[dependency-groups] {group}: expected {package}>={floor}, got {actual.get(package)!r}"
+                )
+
+    def test_every_tool_dependency_declares_a_floor(self, copier_defaults: dict, project_factory) -> None:
+        """No bare package names in the tool groups.
+
+        An unpinned entry resolves to whatever exists on the day someone runs
+        `uv sync`, which is exactly the unverified-configuration problem the floors
+        exist to prevent -- except silently, since there is nothing to review.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            groups = tomllib.load(f)["dependency-groups"]
+
+        unpinned = {group: [s for s in groups[group] if ">=" not in s] for group in self.EXPECTED_FLOORS}
+        assert not any(unpinned.values()), f"tool dependencies must declare a `>=` floor: { {g: v for g, v in unpinned.items() if v} }"
+
+    def test_this_repo_is_not_older_than_the_floors_it_ships(self, copier_defaults: dict, project_factory) -> None:
+        """The template's own dev group must not lag the floors it hands to users.
+
+        This repo and `project/pyproject.toml.jinja` are the usual dual-config pair,
+        and the template half is the one that gets attention. `ty>=0.0.14` sat here
+        for fifty patch releases while the template shipped a current floor -- so the
+        tool the template claims to be tested against was not the one testing it.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            shipped = tomllib.load(f)["dependency-groups"]
+        with (REPO_ROOT / "pyproject.toml").open("rb") as f:
+            ours = self._floors(tomllib.load(f)["dependency-groups"]["dev"])
+
+        def parts(version: str) -> tuple[int, ...]:
+            return tuple(int(n) for n in version.split(".") if n.isdigit())
+
+        for group in self.EXPECTED_FLOORS:
+            for package, floor in self._floors(shipped[group]).items():
+                if package in ours:
+                    assert parts(ours[package]) >= parts(floor), (
+                        f"this repo pins {package}>={ours[package]} but ships {package}>={floor} to generated projects"
+                    )
+
 
 class TestCIWorkflows:
     """Test CI workflow configuration (from smoke_test.sh assertions)."""
@@ -1958,6 +2042,31 @@ class TestIntegration:
         # Run uv sync
         result = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False)
         assert result.returncode == 0, f"uv sync failed: {result.stderr}"
+
+    @pytest.mark.slow
+    def test_declared_floors_actually_work(self, tmp_path: Path, copier_defaults: dict) -> None:
+        """A generated project must lint, typecheck and test at its declared floors.
+
+        Every other floor test asserts on what pyproject *says*. This one runs the
+        bottom of every declared range, which is the only thing that catches a floor
+        that is a lie -- the shape of both the ruff bug in #333 (`extend-select`
+        assumes 0.16's defaults, floor said 0.14) and DOT-616 (prek's `[update]`
+        tag filters need 0.4.10, floor said 0.3.11).
+
+        `UV_RESOLUTION` has to be in the environment, not just on the `uv sync` line:
+        `uv run` re-resolves and would silently swap the lockfile back to `highest`
+        ("Ignoring existing lockfile due to change in resolution mode"), so the run
+        would measure the newest releases while appearing to measure the floors.
+        """
+        project = generate_project(tmp_path, copier_defaults)
+        env = {**os.environ, "UV_RESOLUTION": "lowest-direct"}
+
+        sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False, env=env)
+        assert sync.returncode == 0, f"uv sync at declared floors failed: {sync.stderr}"
+
+        for task in ("lint", "typecheck", "test"):
+            result = subprocess.run(["uv", "run", "poe", task], cwd=project, capture_output=True, text=True, check=False, env=env)
+            assert result.returncode == 0, f"`poe {task}` failed at the declared dependency floors:\n{result.stdout}\n{result.stderr}"
 
     @pytest.mark.slow
     def test_first_commit_succeeds_with_prek_hooks(self, tmp_path: Path, copier_defaults: dict) -> None:

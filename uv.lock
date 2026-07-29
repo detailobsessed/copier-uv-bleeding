@@ -179,13 +179,13 @@ dev = [
     { name = "poethepoet" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
-    { name = "pytest-randomly", specifier = ">=3.16" },
+    { name = "pytest-randomly", specifier = ">=4" },
     { name = "pytest-xdist", specifier = ">=3.5" },
-    { name = "python-semantic-release", specifier = ">=10.5.2" },
+    { name = "python-semantic-release", specifier = ">=10.6" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "reuse" },
     { name = "ruff" },
-    { name = "ty", specifier = ">=0.0.14" },
+    { name = "ty", specifier = ">=0.0.64" },
     { name = "zensical" },
 ]
 
