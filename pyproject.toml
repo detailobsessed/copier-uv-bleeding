@@ -86,7 +86,15 @@ patch_tags = ["fix", "perf", "refactor", "ci", "docs", "chore", "style", "build"
 [tool.ruff]
 target-version = "py314"
 line-length = 140
-preview = true
+# Preview rules are unstable by definition — they change behaviour and can be
+# removed between patch releases. Turning them on also opts into preview-only
+# config syntax that then cannot be turned off again: `rule-codes-in-selectors`
+# (RUF201) demands rule NAMES in ignore selectors, but names are themselves
+# rejected outside preview ("Selecting rules by name requires preview mode"),
+# and `noqa-comments` demands `# ruff: ignore[...]`, which stable ruff does not
+# honour as a suppression at all. Rule codes and `# noqa:` work in both modes,
+# so they are the portable choice. Stable ruff 0.16 already enables 413 rules.
+preview = false
 
 [tool.ruff.lint]
 select = [

@@ -67,6 +67,53 @@ class TestCoreFiles:
         assert "[tool.ruff]" in content
         assert "[tool.ruff.lint]" in content
 
+    def test_ruff_preview_is_disabled(self, copier_defaults: dict, project_factory) -> None:
+        """Generated projects must not opt into ruff's preview rules.
+
+        Preview rules are unstable by contract: they change behaviour and can
+        be withdrawn between patch releases. That is a poor default to hand to
+        someone who adopted this template for a real project — a routine ruff
+        upgrade turns into new lint failures they did not ask for.
+
+        Stable ruff 0.16 already enables 413 rules, so preview buys very little
+        coverage for the churn it adds.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            ruff = tomllib.load(f)["tool"]["ruff"]
+
+        assert ruff.get("preview") is False, (
+            "preview must be explicitly disabled — leaving it on subjects generated "
+            "projects to rules that can change or vanish in a patch release."
+        )
+
+    def test_ruff_selectors_use_rule_codes(self, copier_defaults: dict, project_factory) -> None:
+        """Ignore selectors must use rule codes, not rule names.
+
+        This is load-bearing, not cosmetic. Rule names in a selector are
+        rejected outside preview mode ("Selecting rules by name requires
+        preview mode"), so switching the ignore lists to names silently pins
+        the template to `preview = true` forever. Codes are accepted in both
+        modes; names are a one-way door.
+
+        Category prefixes in `select` (`E`, `PLR`) are not affected.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            lint = tomllib.load(f)["tool"]["ruff"]["lint"]
+
+        selectors = list(lint.get("ignore", []))
+        for ignores in lint.get("per-file-ignores", {}).values():
+            selectors.extend(ignores)
+
+        names = [s for s in selectors if not re.fullmatch(r"[A-Z]+[0-9]*", s)]
+        assert not names, (
+            f"rule names in ignore selectors require preview mode, which this template "
+            f"deliberately disables. Use the rule codes instead. Got {names!r}"
+        )
+
     def test_src_directory_exists(self, copier_defaults: dict, project_factory) -> None:
         """src directory should exist."""
         project = project_factory(copier_defaults)
@@ -349,11 +396,13 @@ class TestHookProfiles:
         assert "conventional-pre-commit" in self._hook_ids(with_release)
         assert "--strict" not in (with_release / "prek.toml").read_text()
 
-        without_release = project_factory({
-            **copier_defaults,
-            "use_ci": False,
-            "use_semantic_release": False,
-        })
+        without_release = project_factory(
+            {
+                **copier_defaults,
+                "use_ci": False,
+                "use_semantic_release": False,
+            }
+        )
         assert "conventional-pre-commit" not in self._hook_ids(without_release)
 
 
@@ -517,7 +566,7 @@ class TestCIWorkflows:
         An unbounded `uv_build` makes uv print a noisy warning on every `uv sync`
         / `uv build` (drowns out real warnings) and risks silent sdist breakage
         when `uv_build` ships a future major. The template ships with
-        `uv_build>=0.9,<0.12`; bump the upper bound when uv_build crosses 0.12+.
+        `uv_build>=0.12,<0.13`; bump the window when uv_build crosses it.
         """
         project = project_factory(copier_defaults)
 
@@ -535,7 +584,7 @@ class TestCIWorkflows:
         assert "<" in spec, (
             f"uv_build must have an upper version bound to avoid the uv warning and "
             f"to prevent silent breakage on a future major release. Got {spec!r}; "
-            f"expected something like 'uv_build>=0.9,<0.12'."
+            f"expected something like 'uv_build>=0.12,<0.13'."
         )
 
     def test_pypi_false_excludes_classifiers_and_keywords(self, copier_defaults: dict, project_factory) -> None:
