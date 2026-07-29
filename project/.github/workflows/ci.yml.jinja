@@ -5,9 +5,10 @@ name: ci
     branches:
     - main
     - test-me-*
+  # Deliberately unfiltered. Gating on `branches: [main]` means a stacked PR --
+  # one targeting its parent branch rather than main -- never triggers CI, so
+  # every PR in a stack but the bottom one gets reviewed with no signal.
   pull_request:
-    branches:
-    - main
 
 concurrency:
   group: {% raw %}${{ github.workflow }}-${{ github.ref }}{% endraw %}
