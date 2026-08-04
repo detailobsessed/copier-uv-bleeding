@@ -13,20 +13,36 @@ something every new project should inherit in its own config.
 ### Why `uv_build` is pinned to a window {#build-backend-pin}
 
 ```toml
-requires = ["uv_build>=0.12,<0.13"]
+requires = ["uv_build>=0.12.1,<0.13"]
 ```
 
-An unbounded `uv_build` makes uv warn on every `uv sync` and `uv build`, and a
-breaking `uv_build` release would silently break sdist builds in every project
-generated from this template at once. The bound is the current minor series
-plus the next major; bump the window when `uv_build` crosses it (DOT-589).
+This is verbatim what `uv init` emits on uv 0.12.1 and what
+[uv's build-backend docs](https://docs.astral.sh/uv/concepts/build-backend/)
+recommend — there is nothing template-specific about it. Since uv 0.12.0,
+`uv init` writes a `[build-system]` block by default, so a generated project
+and a hand-run `uv init --package` now agree on backend, `src/` layout, and
+pin window alike.
+
+**The upper bound is uv's recommendation, not this template's.** `uv_build`
+follows uv's own versioning policy, under which a minor release may change
+build behaviour; uv's docs state that "including an upper bound on the
+`uv_build` version ensures that your package continues to build correctly as
+new versions are released". Dropping it would diverge from uv, not align with
+it.
+
+A *stale* window is never a breakage, which is why bumping it is routine rather
+than urgent. The `uv` executable bundles a copy of the backend and uses it only
+when it satisfies the `requires` specifier; when it doesn't, uv resolves the
+`uv_build` package from PyPI into an isolated build environment instead. So a
+project still pinned to `<0.13` keeps building under uv 0.13 — it just loses
+the bundled fast path and pays a download.
 
 The window moved to the `0.12` series for uv 0.12, which enforces PEP 625:
 source distributions must be `.tar.gz`, and `.tar.bz2` / `.tar.xz` are
 rejected, as are wheels using bzip2/LZMA/XZ compression. `uv_build` already
 emits PEP 625-conforming artifacts, so the move was a no-op for generated
 projects — verified by building an sdist and a wheel from a rendered project
-under `uv_build` 0.12 and installing the result.
+under `uv_build` 0.12 and installing the result (DOT-589).
 
 ## Dependencies
 

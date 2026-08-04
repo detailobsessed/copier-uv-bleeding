@@ -896,10 +896,12 @@ class TestCIWorkflows:
     def test_uv_build_has_upper_bound(self, copier_defaults: dict, project_factory) -> None:
         """`build-system.requires` must pin `uv_build` with an upper bound (DOT-589).
 
-        An unbounded `uv_build` makes uv print a noisy warning on every `uv sync`
-        / `uv build` (drowns out real warnings) and risks silent sdist breakage
-        when `uv_build` ships a future major. The template ships with
-        `uv_build>=0.12,<0.13`; bump the window when uv_build crosses it.
+        The bound is uv's own recommendation, not this template's: `uv_build`
+        follows uv's versioning policy, so a minor may change build behaviour,
+        and uv's docs ask for an upper bound for exactly that reason. `uv init`
+        emits `uv_build>=0.12.1,<0.13.0` on uv 0.12.1; the template matches that
+        shape. An unbounded spec also makes uv warn on every `uv sync` / `uv
+        build`, drowning out real warnings. Bump the window when uv does.
         """
         project = project_factory(copier_defaults)
 
