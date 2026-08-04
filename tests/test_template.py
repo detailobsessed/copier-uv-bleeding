@@ -2015,6 +2015,66 @@ class TestMarkedSectionsSync:
             assert f"# template-preserve:{name}:start" in content, f"missing marker: {name}"
             assert f"# template-preserve:{name}:end" in content, f"missing marker: {name}"
 
+    # --- Externally-owned scalars (DOT-620) ------------------------------
+
+    def test_released_version_survives_update(self) -> None:
+        """`project.version` is owned by semantic-release, not the template.
+        The fresh render always carries the seed `0.0.0`; without preservation
+        the update silently rolls a released project back to it, and
+        `allow_zero_version = true` means semantic-release then *accepts*
+        `0.0.0` and computes 0.1.0 instead of the real next version."""
+        module = self._load_module()
+        existing = '[project]\nname = "x"\nversion = "0.18.0"\n'
+        new = '[project]\nname = "x"\nversion = "0.0.0"\n'
+        assert module.sync_text(existing, new) == existing
+
+    def test_tag_format_survives_update(self) -> None:
+        """Worse than the version reset it sits beside: semantic-release
+        derives the current version from tags matching `tag_format`, not from
+        `project.version` — so restoring only the version leaves a repo that
+        looks correct and still computes 0.1.0."""
+        module = self._load_module()
+        existing = '[tool.semantic_release]\ntag_format = "v{version}"\nbranch = "main"\n'
+        new = '[tool.semantic_release]\ntag_format = "{version}"\nbranch = "main"\n'
+        merged = module.sync_text(existing, new)
+        assert 'tag_format = "v{version}"' in merged
+        assert 'branch = "main"' in merged  # everything else still tracks the fresh render
+
+    def test_table_scan_survives_build_command_shell_guards(self) -> None:
+        """`build_command` is a multi-line string whose `set -e` guards start
+        at column 0 with `[ -n "$UV_..." ]`. A naive `^\\[` table-end scan stops
+        there — before `tag_format` — and preservation silently does nothing."""
+        module = self._load_module()
+        body = '[ -n "$UV_CACHE_DIR" ] || unset UV_CACHE_DIR\nuv build\n'
+        existing = f'[tool.semantic_release]\nbuild_command = """\n{body}"""\ntag_format = "v{{version}}"\n'
+        new = f'[tool.semantic_release]\nbuild_command = """\n{body}"""\ntag_format = "{{version}}"\n'
+        assert 'tag_format = "v{version}"' in module.sync_text(existing, new)
+
+    def test_absent_scalar_keeps_fresh_seed(self) -> None:
+        """Newly enabling `use_semantic_release` gives the destination no
+        `[tool.semantic_release]` to snapshot — same rule as an unsnapshotted
+        marker: keep the fresh render's own default rather than blanking it."""
+        module = self._load_module()
+        existing = '[project]\nname = "x"\nversion = "2.0.0"\n'
+        new = '[project]\nname = "x"\nversion = "0.0.0"\n\n[tool.semantic_release]\ntag_format = "{version}"\n'
+        merged = module.sync_text(existing, new)
+        assert 'version = "2.0.0"' in merged
+        assert 'tag_format = "{version}"' in merged
+
+    def test_rendered_pyproject_matches_preservation_shape(self, copier_defaults: dict, project_factory) -> None:
+        """Guard against a future template reformat silently disabling the
+        pass above: preservation is a no-op unless the *rendered* file really
+        holds these keys as single-line strings in the expected tables."""
+        module = self._load_module()
+        rendered = (project_factory(copier_defaults, "app") / "pyproject.toml").read_text()
+        for table, key, sentinel in (
+            ("project", "version", "9.9.9"),
+            ("tool.semantic_release", "tag_format", "vX{version}"),
+        ):
+            assert module.read_scalar(rendered, table, key) is not None, f"{table}.{key} unreadable in render"
+            rewritten = module.replace_scalar(rendered, table, key, sentinel)
+            assert module.read_scalar(rewritten, table, key) == sentinel, f"{table}.{key} not rewritable"
+
     def test_markers_present_in_prek_template(self) -> None:
         content = (REPO_ROOT / "project" / "prek.toml.jinja").read_text()
         assert "# template-preserve:extra-local-hooks:start" in content

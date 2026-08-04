@@ -96,7 +96,8 @@ those are copied byte-for-byte from your previous version. Regions are matched *
 by position, so a release that reorders or inserts a marked region can't splice content into the
 wrong slot.
 
-**Only marked regions survive an update — everything else always reflects the template.** If you
+**Only marked regions (plus the two tool-owned keys below) survive an update — everything else
+always reflects the template.** If you
 add something the template has no marker for (a brand-new `[tool.x]` table, an extra dependency
 index before you've ever answered the custom-index question, a hand-written poe task outside the
 "extra poe tasks" slot), it will be silently dropped on the next update. This is a real trade-off
@@ -109,6 +110,27 @@ before markers: predictable and documented, but stricter. Two things matter in p
 - For custom poe tasks / local hooks, use the dedicated "extra poe tasks" / "extra local hooks"
   slots, not an arbitrary spot in the file — anything outside those slots follows the same rule.
 
+### Tool-owned keys preserved without a marker
+
+Two keys in `pyproject.toml` are owned by neither the template nor you, but by
+**python-semantic-release**, which rewrites them in your repo between updates:
+
+| Key | Why it can't just be re-rendered |
+| --- | --- |
+| `project.version` | The template renders the seed `version = "0.0.0"`. Re-rendering it rolls a released project back to zero, and because the template also sets `allow_zero_version = true`, semantic-release *accepts* `0.0.0` as a legitimate starting point — the next `feat` computes `0.1.0` instead of your real next version, and the tag collides with or regresses past real history. |
+| `tool.semantic_release.tag_format` | Worse, and less obvious: semantic-release reads the current version from **tags matching this format**, not from `project.version`. If your project uses `v{version}` and an update resets it to `{version}`, restoring the version line alone does not fix anything — no tag matches, so it still computes `0.1.0` from a `pyproject.toml` that looks correct. |
+
+`sync_marked_sections.py` snapshots these two by key path from your current file and writes them
+back into the fresh render, alongside the marked regions (DOT-620). Markers would not have worked
+here: a project updating *from* a marker-less version has no marked region to snapshot, so its
+first update — the one that matters — would still reset them. Preserving by key path needs no
+action on your side; the next `copier update` fixes it.
+
+If a past update already reset your `tag_format` **and a release ran on the wrong format**,
+restoring the line is not enough on its own: semantic-release has no tag it recognizes any more.
+Tag the last good release commit in the correct format first (`git tag -a v0.9.0 <sha>`), then
+release normally.
+
 Existing projects generated before this mechanism shipped have none of these markers yet. Their
 first update to a marker-aware template version runs a one-time bootstrap
 (`_bootstrap_legacy_markers` in `migrations/sync_marked_sections.py`) that locates the equivalent
@@ -120,7 +142,8 @@ hand-reformatted multi-line `dependencies` array, for example) may not bootstrap
 
 This approach is adapted from a small third-party tool called
 [Templator](https://github.com/dariusgm/templator) (not a dependency — its idea, reimplemented
-here in ~70 lines with no TOML library needed) with two deliberate fixes over its own
+here in ~70 lines; the marker mechanism itself needs no TOML library, only the tool-owned-key
+pass above reads `tomllib`) with two deliberate fixes over its own
 implementation: it matches by name instead of position, and it never blanks a region that's never
 been snapshotted (Templator's own implementation empties any marked region with no snapshot, even
 on first generation — a footgun for a template that seeds real default content inside a marked
