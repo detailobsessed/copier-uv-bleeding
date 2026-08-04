@@ -160,7 +160,8 @@ These cover `prek.toml` and `_typos.toml`.
 ### Why `minimum_prek_version` is pinned {#prek-minimum-version}
 
 prek 0.4.10 introduced the `[update]` tag filters used to exclude lychee's
-`nightly` tag. That version floor is the guard that reaches projects updating
+`nightly` tag; the pin tracks the version the template is tested at (0.4.12),
+which is at or above that. That floor is the guard that reaches projects updating
 from an older template: `prek.toml` is regenerated in full by the template's
 [sync step](update.md), but `[dependency-groups]` in `pyproject.toml` sits
 inside a template-preserve region, so the `prek>=` floor there stays at
@@ -291,8 +292,8 @@ same invocation as the `pre-commit` hooks it would otherwise contend with.
 
 **A new hook that writes files needs a priority no other hook writing those same
 files uses.** Since 0.4.11 these can be named via a `[priorities]` alias table
-rather than bare integers, which is worth adopting once the template's
-`minimum_prek_version` floor reaches 0.4.11.
+rather than bare integers. The floor is now 0.4.12, so adopting them is
+unblocked.
 
 ### Why `uv-sync` keeps upstream's `--locked` {#prek-uv-sync-locked}
 

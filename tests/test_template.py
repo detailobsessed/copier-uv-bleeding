@@ -129,7 +129,13 @@ class TestCoreFiles:
         )
 
         ci_deps = data["dependency-groups"]["ci"]
-        assert "ruff>=0.16" in ci_deps, f"the ci group should pin the same floor; got {ci_deps!r}"
+        ci_ruff = next((spec for spec in ci_deps if spec.startswith("ruff>=")), None)
+        assert ci_ruff is not None, f"the ci group must floor ruff; got {ci_deps!r}"
+        # The ci floor tracks the tested version and may sit *above* required-version
+        # (which is pinned to the minor whose defaults `extend-select` assumes). It must
+        # never sit below it, or a resolvable install would hard-fail on required-version.
+        parts = tuple(int(p) for p in ci_ruff.removeprefix("ruff>=").split("."))
+        assert parts >= (0, 16), f"the ci floor must not fall below required-version; got {ci_ruff!r}"
 
     def test_ruff_preview_is_disabled(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not opt into ruff's preview rules.
@@ -254,12 +260,12 @@ class TestPreCommitConfig:
     """Test pre-commit configuration."""
 
     def test_prek_version(self, copier_defaults: dict, project_factory) -> None:
-        """Pre-commit config should pin prek to 0.4.10+ (provides the `[update]` tag filters)."""
+        """Pre-commit config should pin prek to the tested floor (>=0.4.10 provides the `[update]` tag filters)."""
         project = project_factory(copier_defaults)
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.4.10"' in content
+        assert 'minimum_prek_version = "0.4.12"' in content
 
     def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have betterleaks."""
@@ -640,12 +646,12 @@ class TestDependencies:
         assert "tomli" not in content
 
     def test_prek_version_updated(self, copier_defaults: dict, project_factory) -> None:
-        """prek dependency should be >= 0.4.10 (introduces the `[update]` tag filters, DOT-616)."""
+        """prek dependency tracks the tested floor (>=0.4.10 introduced the `[update]` tag filters, DOT-616)."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.4.10"' in content
+        assert '"prek>=0.4.12"' in content
 
     # Floors track the versions the template is actually exercised against, not the
     # oldest release that happens to still work. `uv sync` resolves to the newest
@@ -655,14 +661,14 @@ class TestDependencies:
     EXPECTED_FLOORS: ClassVar[dict[str, dict[str, str]]] = {
         "maintain": {"build": "1.5", "python-semantic-release": "10.6"},
         "ci": {
-            "ruff": "0.16",
+            "ruff": "0.16.1",
             "pytest": "9",
             "pytest-cov": "7",
             "pytest-randomly": "4",
-            "ty": "0.0.64",
+            "ty": "0.0.66",
             "poethepoet": "0.48",
         },
-        "local": {"prek": "0.4.10", "pytest-testmon": "2.2"},
+        "local": {"prek": "0.4.12", "pytest-testmon": "2.2"},
     }
 
     @staticmethod
@@ -1310,8 +1316,8 @@ class TestTemplateUpdateCheck:
         )
         assert "nightly" in filters.get("exclude_tags", []), f"`nightly` must be in exclude_tags for {repo}; got {filters!r}"
 
-        assert data["minimum_prek_version"] == "0.4.10", (
-            "the [update] tag filters above need prek 0.4.10+. minimum_prek_version is the guard "
+        assert data["minimum_prek_version"] == "0.4.12", (
+            "the [update] tag filters above need prek 0.4.10+, and the floor tracks the tested version. minimum_prek_version is the guard "
             "that reaches updating projects, since the pyproject `prek>=` floor sits inside a "
             f"template-preserve region. Got {data.get('minimum_prek_version')!r}"
         )
