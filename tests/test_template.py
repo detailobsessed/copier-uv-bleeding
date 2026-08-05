@@ -1445,11 +1445,19 @@ class TestTemplateUpdateCheck:
         See `test_shipped_script_is_rendered_executable` for the other half of this pair.
         """
         copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
-        task_lines = [line for line in copier_yml.read_text().splitlines() if line.lstrip().startswith("- ") and "chmod" in line]
+        tasks = yaml.safe_load(copier_yml.read_text())["_tasks"]
 
-        assert not task_lines, (
+        # Parse the YAML rather than grepping lines. A copier task is either a bare command
+        # string or a mapping with `command` (plus `when`), and either form can put the
+        # command on a folded continuation line — `- command: >-` with the body indented
+        # underneath. A line-oriented filter sees no `chmod` on the `- ` line and passes
+        # while copier happily runs the task.
+        commands = [task if isinstance(task, str) else task.get("command", "") for task in tasks]
+        offenders = [command for command in commands if "chmod" in command]
+
+        assert not offenders, (
             "copier.yml _tasks contains a chmod task:\n"
-            + "\n".join(task_lines)
+            + "\n".join(offenders)
             + "\n\nThe template must not change modes of files it does not own — a glob over "
             "`scripts/` catches the downstream project's own scripts and breaks ruff EXE002 "
             "(DOT-628). Copier already propagates the template's exec bits; if a newly "
