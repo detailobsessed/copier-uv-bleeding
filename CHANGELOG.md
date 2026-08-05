@@ -14,6 +14,19 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.14 (2026-08-05)
+
+### Bug Fixes
+
+- **template**: Repoint sync-with-uv at the upstream project
+  ([`2f64304`](https://github.com/detailobsessed/copier-uv-bleeding/commit/2f64304896aaf3d82795717aa2f39297488ffb32))
+
+### Documentation
+
+- Scope Linear reporting to this project and pin Closes-line discipline
+  ([`f135bc6`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f135bc68381a70376f90d9004b31d8bd1aa21cbf))
+
+
 ## v0.41.13 (2026-08-05)
 
 ### Bug Fixes
