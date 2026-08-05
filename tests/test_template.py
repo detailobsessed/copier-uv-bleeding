@@ -2665,7 +2665,39 @@ class TestTempCloneCleanupTolerance:
     this helper is never consulted at all.
     """
 
-    CLONE_CLEANUP_STDERR = "OSError: [Errno 66] Directory not empty: '/tmp/copier._vcs.clone.ab12cd34/.git'"
+    # Trimmed from a real failure: dirty tree, `copier copy -r HEAD`, copier 9.17.1 on
+    # macOS. Frame paths shortened, structure and the final line kept verbatim.
+    CLEANUP_ONLY = """Traceback (most recent call last):
+  File "/venv/copier/_template.py", line 240, in _cleanup
+    rmtree(temp_clone, ignore_errors=False, onexc=handle_remove_readonly)
+  File "/python/shutil.py", line 753, in _rmtree_safe_fd_step
+    os.rmdir(name, dir_fd=dirfd)
+OSError: [Errno 66] Directory not empty: PosixPath('/tmp/copier._vcs.clone.ulvgwzp7')
+"""
+
+    # A render that died partway, with the cleanup crash chained onto the unwind. Every
+    # loose substring the old matcher looked for is present, and `pyproject.toml` was
+    # written before the failure — so only the chaining marker separates this from benign.
+    PARTIAL_RENDER_THEN_CLEANUP = """Traceback (most recent call last):
+  File "/venv/copier/_main.py", line 850, in _render_file
+    raise UndefinedError(msg)
+jinja2.exceptions.UndefinedError: 'project_name' is undefined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/venv/copier/_template.py", line 240, in _cleanup
+    rmtree(temp_clone, ignore_errors=False, onexc=handle_remove_readonly)
+OSError: [Errno 66] Directory not empty: PosixPath('/tmp/copier._vcs.clone.ulvgwzp7')
+"""
+
+    # A pure render failure. Mentions the clone directory (every template frame lives
+    # inside it) and the word `rmtree`, but nothing here is a cleanup failure.
+    RENDER_ERROR_ONLY = """Traceback (most recent call last):
+  File "/tmp/copier._vcs.clone.ulvgwzp7/project/scripts/rmtree_helper.py", line 3
+    {{ project_name }
+jinja2.exceptions.TemplateSyntaxError: unexpected '}'
+"""
 
     @staticmethod
     def _with_render(tmp_path: Path) -> Path:
@@ -2673,22 +2705,33 @@ class TestTempCloneCleanupTolerance:
         (tmp_path / "pyproject.toml").write_text('[project]\nname = "rendered"\n')
         return tmp_path
 
-    @pytest.mark.parametrize("marker", ["Directory not empty", "rmtree", "Errno 66"])
-    def test_accepts_each_cleanup_marker(self, tmp_path: Path, marker: str) -> None:
-        """Each accepted signature is tested alone — no case leans on another's marker."""
-        stderr = f"copier._vcs.clone.ab12cd34 cleanup failed: {marker}"
-        assert _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
+    def test_accepts_a_cleanup_only_failure(self, tmp_path: Path) -> None:
+        """The one shape this exists for: render finished, `_cleanup` could not rmtree."""
+        assert _is_temp_clone_cleanup_failure(self.CLEANUP_ONLY, self._with_render(tmp_path))
 
-    def test_rejects_failure_outside_copiers_temp_clone(self, tmp_path: Path) -> None:
-        """Same OSError, a path copier did not create — could be the template's own tree."""
-        stderr = "OSError: [Errno 66] Directory not empty: '/some/other/path/.git'"
+    def test_rejects_partial_render_with_chained_cleanup_failure(self, tmp_path: Path) -> None:
+        """The dangerous case: a real render error whose unwind also trips the cleanup.
+
+        Every individual token the matcher keys on is present, and the destination holds a
+        `pyproject.toml` written before the failure. Suppressing this would run the whole
+        suite against a half-rendered project.
+        """
+        assert not _is_temp_clone_cleanup_failure(self.PARTIAL_RENDER_THEN_CLEANUP, self._with_render(tmp_path))
+
+    def test_rejects_render_error_that_merely_mentions_the_clone(self, tmp_path: Path) -> None:
+        """`copier._vcs.clone` and `rmtree` in stderr prove nothing on their own."""
+        assert not _is_temp_clone_cleanup_failure(self.RENDER_ERROR_ONLY, self._with_render(tmp_path))
+
+    def test_rejects_cleanup_failure_outside_copiers_temp_clone(self, tmp_path: Path) -> None:
+        """Same exception, a directory copier did not create — not ours to excuse."""
+        stderr = self.CLEANUP_ONLY.replace("copier._vcs.clone.ulvgwzp7", "some-other-dir")
         assert not _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
 
-    def test_rejects_clone_path_without_a_cleanup_marker(self, tmp_path: Path) -> None:
-        """A real failure *inside* the clone (bad ref, missing commit) must still fail."""
-        stderr = "copier._vcs.clone.ab12cd34: fatal: invalid reference: HEAD"
+    def test_rejects_when_the_failure_was_not_raised_by_cleanup(self, tmp_path: Path) -> None:
+        """Bind the OSError to the `_cleanup` frame, not just to the clone path."""
+        stderr = self.CLEANUP_ONLY.replace(", in _cleanup", ", in _render_file")
         assert not _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
 
     def test_rejects_when_nothing_was_rendered(self, tmp_path: Path) -> None:
         """The load-bearing gate: cleanup noise never excuses an empty destination."""
-        assert not _is_temp_clone_cleanup_failure(self.CLONE_CLEANUP_STDERR, tmp_path)
+        assert not _is_temp_clone_cleanup_failure(self.CLEANUP_ONLY, tmp_path)

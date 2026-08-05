@@ -2,12 +2,33 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).parent.parent
+
+# The one copier failure the suite tolerates (DOT-606), matched as a whole rather than as
+# loose substrings. The `OSError` line must itself name a path under copier's own temp
+# clone: a render error's traceback also mentions that directory — every template frame
+# lives inside it — so `"copier._vcs.clone" in stderr` is nearly vacuous on its own.
+_CLONE_CLEANUP_RE = re.compile(
+    r"^OSError: \[Errno \d+\] Directory not empty: .*copier\._vcs\.clone\.",
+    re.MULTILINE,
+)
+
+# ...and it must have been raised *by* the cleanup, not merely alongside it.
+_CLEANUP_FRAME = ", in _cleanup"
+
+# A chained traceback means something failed first and the cleanup crash rode along on the
+# unwind. That is the dangerous shape: a partial render whose exception is followed by the
+# cleanup `OSError`, which would otherwise satisfy every check above.
+_CHAINED_EXCEPTION_MARKERS = (
+    "During handling of the above exception",
+    "The above exception was the direct cause",
+)
 
 
 @pytest.fixture
@@ -89,14 +110,30 @@ def _is_temp_clone_cleanup_failure(stderr: str, dst: Path) -> bool:
     first, so it reads as flakiness rather than as one deterministic bug. Re-running the
     "failed" test alone usually passes, which sends triage down the wrong path entirely.
 
-    Deliberately narrow. This tolerates only an `rmtree` of a path copier itself names
-    `copier._vcs.clone.*`, and only when the destination actually received a rendered
-    project. A render that genuinely failed leaves no `pyproject.toml`, and any other
-    non-zero exit still fails the test with copier's own stderr.
+    Deliberately narrow, because this is the one place a real copier failure could be
+    swallowed. All four must hold:
+
+    1. The final exception is an `OSError` naming a path under copier's own temp clone.
+    2. It was raised from a `_cleanup` frame — the cleanup is what failed, not something
+       that merely happened to mention the same directory.
+    3. Nothing failed before it. A chained traceback is exactly how a partial render would
+       present: its own exception, then the cleanup `OSError` raised while unwinding.
+    4. The destination actually received a render.
+
+    Independent substring checks are not enough for (1) and (2): every template frame in a
+    Jinja render error lives *inside* the temp clone, so a genuine render failure can put
+    `copier._vcs.clone` and `rmtree` in stderr on unrelated lines while `pyproject.toml` —
+    written early — already exists in the destination. Any other non-zero exit still fails
+    the test with copier's own stderr.
+
+    If copier renames `_cleanup`, this stops matching and DOT-606's dirty-tree failures
+    come back visibly. That is the intended direction to fail in.
     """
-    if "copier._vcs.clone" not in stderr:
+    if not _CLONE_CLEANUP_RE.search(stderr):
         return False
-    if not any(marker in stderr for marker in ("Directory not empty", "rmtree", "Errno 66")):
+    if _CLEANUP_FRAME not in stderr:
+        return False
+    if any(marker in stderr for marker in _CHAINED_EXCEPTION_MARKERS):
         return False
     return (dst / "pyproject.toml").is_file()
 
