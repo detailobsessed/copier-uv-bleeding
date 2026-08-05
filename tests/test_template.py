@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import pytest
 import yaml
-from conftest import REPO_ROOT, _is_temp_clone_cleanup_failure, generate_project
+from conftest import REPO_ROOT, _is_retryable_cleanup_race, generate_project
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -2655,14 +2655,16 @@ class TestIntegration:
 
 
 class TestTempCloneCleanupTolerance:
-    """Pin the boundary of `conftest._is_temp_clone_cleanup_failure` (DOT-606).
+    """Pin the boundary of `conftest._is_retryable_cleanup_race` (DOT-606).
 
-    That helper is the one place in the suite where a non-zero copier exit is suppressed,
-    and both directions of drift are silent. Widen it and a genuine render failure passes
-    as a green test; narrow it and the dirty-tree failures it exists to absorb come back.
-    Neither shows up in the integration tests, which only ever see whichever exit copier
-    happens to produce on the machine running them — on a clean tree, that is exit 0 and
-    this helper is never consulted at all.
+    The helper decides whether a failed render is worth re-running, so a wrong answer costs
+    a wasted render or an early failure — never a swallowed one. It is still worth pinning:
+    widen it and the suite burns three renders on every genuinely broken template; narrow it
+    and DOT-606's dirty-tree failures stop being retried and come back.
+
+    The integration tests cannot cover this. They only see whichever exit copier produces on
+    the machine running them, and on a clean tree that is exit 0 with the helper never
+    consulted at all.
     """
 
     # Trimmed from a real failure: dirty tree, `copier copy -r HEAD`, copier 9.17.1 on
@@ -2707,7 +2709,7 @@ jinja2.exceptions.TemplateSyntaxError: unexpected '}'
 
     def test_accepts_a_cleanup_only_failure(self, tmp_path: Path) -> None:
         """The one shape this exists for: render finished, `_cleanup` could not rmtree."""
-        assert _is_temp_clone_cleanup_failure(self.CLEANUP_ONLY, self._with_render(tmp_path))
+        assert _is_retryable_cleanup_race(self.CLEANUP_ONLY, self._with_render(tmp_path))
 
     def test_rejects_partial_render_with_chained_cleanup_failure(self, tmp_path: Path) -> None:
         """The dangerous case: a real render error whose unwind also trips the cleanup.
@@ -2716,22 +2718,22 @@ jinja2.exceptions.TemplateSyntaxError: unexpected '}'
         `pyproject.toml` written before the failure. Suppressing this would run the whole
         suite against a half-rendered project.
         """
-        assert not _is_temp_clone_cleanup_failure(self.PARTIAL_RENDER_THEN_CLEANUP, self._with_render(tmp_path))
+        assert not _is_retryable_cleanup_race(self.PARTIAL_RENDER_THEN_CLEANUP, self._with_render(tmp_path))
 
     def test_rejects_render_error_that_merely_mentions_the_clone(self, tmp_path: Path) -> None:
         """`copier._vcs.clone` and `rmtree` in stderr prove nothing on their own."""
-        assert not _is_temp_clone_cleanup_failure(self.RENDER_ERROR_ONLY, self._with_render(tmp_path))
+        assert not _is_retryable_cleanup_race(self.RENDER_ERROR_ONLY, self._with_render(tmp_path))
 
     def test_rejects_cleanup_failure_outside_copiers_temp_clone(self, tmp_path: Path) -> None:
         """Same exception, a directory copier did not create — not ours to excuse."""
         stderr = self.CLEANUP_ONLY.replace("copier._vcs.clone.ulvgwzp7", "some-other-dir")
-        assert not _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
+        assert not _is_retryable_cleanup_race(stderr, self._with_render(tmp_path))
 
     def test_rejects_when_the_failure_was_not_raised_by_cleanup(self, tmp_path: Path) -> None:
         """Bind the OSError to the `_cleanup` frame, not just to the clone path."""
         stderr = self.CLEANUP_ONLY.replace(", in _cleanup", ", in _render_file")
-        assert not _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
+        assert not _is_retryable_cleanup_race(stderr, self._with_render(tmp_path))
 
     def test_rejects_when_nothing_was_rendered(self, tmp_path: Path) -> None:
         """The load-bearing gate: cleanup noise never excuses an empty destination."""
-        assert not _is_temp_clone_cleanup_failure(self.CLEANUP_ONLY, tmp_path)
+        assert not _is_retryable_cleanup_race(self.CLEANUP_ONLY, tmp_path)

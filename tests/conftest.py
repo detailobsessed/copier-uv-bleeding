@@ -30,6 +30,12 @@ _CHAINED_EXCEPTION_MARKERS = (
     "The above exception was the direct cause",
 )
 
+# The race is intermittent — the same dirty tree renders fine on the next attempt — so a
+# re-render is the actual fix and stderr matching only decides whether to spend one. Three
+# is chosen against a measured hit rate around one render in ten; a run that loses the race
+# three times running fails, which is the safe direction.
+_MAX_RENDER_ATTEMPTS = 3
+
 
 @pytest.fixture
 def copier_defaults() -> dict:
@@ -90,15 +96,21 @@ def generate_project(
         else:
             cmd.extend(["-d", f"{key}={value}"])
 
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    if result.returncode != 0 and not _is_temp_clone_cleanup_failure(result.stderr, tmp_path):
-        pytest.fail(f"Copier failed: {result.stderr}")
+    for attempt in range(1, _MAX_RENDER_ATTEMPTS + 1):
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            return tmp_path
+        # A non-zero exit is never accepted as success. The cleanup race only buys another
+        # attempt; if copier keeps failing, the last stderr is what the test reports.
+        if attempt < _MAX_RENDER_ATTEMPTS and _is_retryable_cleanup_race(result.stderr, tmp_path):
+            continue
+        pytest.fail(f"Copier failed (attempt {attempt}/{_MAX_RENDER_ATTEMPTS}): {result.stderr}")
 
     return tmp_path
 
 
-def _is_temp_clone_cleanup_failure(stderr: str, dst: Path) -> bool:
-    """True if copier rendered successfully but crashed clearing its own temp clone (DOT-606).
+def _is_retryable_cleanup_race(stderr: str, dst: Path) -> bool:
+    """True if copier's exit looks like the temp-clone cleanup race, so re-rendering is worth a shot (DOT-606).
 
     On a dirty working tree copier takes its dirty-file overlay path, which does extra git
     work inside the temp clone it made of this repo. Something still holds a handle under
@@ -110,24 +122,28 @@ def _is_temp_clone_cleanup_failure(stderr: str, dst: Path) -> bool:
     first, so it reads as flakiness rather than as one deterministic bug. Re-running the
     "failed" test alone usually passes, which sends triage down the wrong path entirely.
 
-    Deliberately narrow, because this is the one place a real copier failure could be
-    swallowed. All four must hold:
+    This decides whether to *retry*, never whether to accept a failure. That distinction is
+    what bounds the damage of a wrong answer: a false positive costs one extra render and
+    then fails with copier's real stderr anyway, and a false negative fails immediately —
+    which is what would have happened without any of this. Nothing is ever suppressed, so
+    no amount of cleverness in classifying stderr is load-bearing for correctness.
+
+    Still matched tightly, to keep pointless retries rare. All four must hold:
 
     1. The final exception is an `OSError` naming a path under copier's own temp clone.
     2. It was raised from a `_cleanup` frame — the cleanup is what failed, not something
        that merely happened to mention the same directory.
-    3. Nothing failed before it. A chained traceback is exactly how a partial render would
-       present: its own exception, then the cleanup `OSError` raised while unwinding.
+    3. Nothing failed before it. A chained traceback is how a partial render presents: its
+       own exception, then the cleanup `OSError` raised while unwinding.
     4. The destination actually received a render.
 
     Independent substring checks are not enough for (1) and (2): every template frame in a
     Jinja render error lives *inside* the temp clone, so a genuine render failure can put
     `copier._vcs.clone` and `rmtree` in stderr on unrelated lines while `pyproject.toml` —
-    written early — already exists in the destination. Any other non-zero exit still fails
-    the test with copier's own stderr.
+    written early — already exists in the destination.
 
-    If copier renames `_cleanup`, this stops matching and DOT-606's dirty-tree failures
-    come back visibly. That is the intended direction to fail in.
+    If copier renames `_cleanup`, this stops matching and the race stops being retried.
+    That is the intended direction to fail in.
     """
     if not _CLONE_CLEANUP_RE.search(stderr):
         return False
