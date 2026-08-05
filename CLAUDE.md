@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A **Copier template** that generates production-ready Python 3.14+ projects. The `project/` directory contains Jinja templates rendered by `copier copy`. Changes here don't run directly -- they produce scaffolded projects, so every change must be valid across all combinations of user answers.
 
+## Issue Tracking
+
+Linear issues for this repo live in the **`copier-uv-bleeding` project** on the `Detail Obsessed` (DOT) team. When working in this repo, only report on issues in that Linear project -- the DOT team also holds unrelated work (a macOS app, career/website tasks) that is noise here. `list_issues` takes `project: "copier-uv-bleeding"`.
+
+Linear only auto-closes on a bare `Closes DOT-NNN` line -- `Refs DOT-NNN` attaches the PR without closing. **When adding a commit to an already-open PR, re-check the PR body's `Closes`/`Refs` lines**: a fix appended to a stack after the body was written closes nothing (DOT-629 shipped in #345 and stayed in Backlog for exactly this reason).
+
 ## Commands
 
 ```bash
