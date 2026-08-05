@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 import pytest
 import yaml
-from conftest import REPO_ROOT, generate_project
+from conftest import REPO_ROOT, _is_temp_clone_cleanup_failure, generate_project
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -2652,3 +2652,43 @@ class TestIntegration:
             f"Underscored repo slug `die_zeit` leaked into CHANGELOG.md — semantic-release "
             f"appears to be using python_package_import_name instead of the repo slug:\n{changelog}"
         )
+
+
+class TestTempCloneCleanupTolerance:
+    """Pin the boundary of `conftest._is_temp_clone_cleanup_failure` (DOT-606).
+
+    That helper is the one place in the suite where a non-zero copier exit is suppressed,
+    and both directions of drift are silent. Widen it and a genuine render failure passes
+    as a green test; narrow it and the dirty-tree failures it exists to absorb come back.
+    Neither shows up in the integration tests, which only ever see whichever exit copier
+    happens to produce on the machine running them — on a clean tree, that is exit 0 and
+    this helper is never consulted at all.
+    """
+
+    CLONE_CLEANUP_STDERR = "OSError: [Errno 66] Directory not empty: '/tmp/copier._vcs.clone.ab12cd34/.git'"
+
+    @staticmethod
+    def _with_render(tmp_path: Path) -> Path:
+        """A destination that received a project: the render-succeeded half of the gate."""
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "rendered"\n')
+        return tmp_path
+
+    @pytest.mark.parametrize("marker", ["Directory not empty", "rmtree", "Errno 66"])
+    def test_accepts_each_cleanup_marker(self, tmp_path: Path, marker: str) -> None:
+        """Each accepted signature is tested alone — no case leans on another's marker."""
+        stderr = f"copier._vcs.clone.ab12cd34 cleanup failed: {marker}"
+        assert _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
+
+    def test_rejects_failure_outside_copiers_temp_clone(self, tmp_path: Path) -> None:
+        """Same OSError, a path copier did not create — could be the template's own tree."""
+        stderr = "OSError: [Errno 66] Directory not empty: '/some/other/path/.git'"
+        assert not _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
+
+    def test_rejects_clone_path_without_a_cleanup_marker(self, tmp_path: Path) -> None:
+        """A real failure *inside* the clone (bad ref, missing commit) must still fail."""
+        stderr = "copier._vcs.clone.ab12cd34: fatal: invalid reference: HEAD"
+        assert not _is_temp_clone_cleanup_failure(stderr, self._with_render(tmp_path))
+
+    def test_rejects_when_nothing_was_rendered(self, tmp_path: Path) -> None:
+        """The load-bearing gate: cleanup noise never excuses an empty destination."""
+        assert not _is_temp_clone_cleanup_failure(self.CLONE_CLEANUP_STDERR, tmp_path)
