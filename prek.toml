@@ -52,8 +52,8 @@ hooks = [
 ]
 
 [[repos]]
-repo = "https://github.com/detailobsessed/sync-with-uv"
-rev = "v0.6.0-prek"
+repo = "https://github.com/tsvikas/sync-with-uv"
+rev = "v0.6.0"
 # Priority 6, not 0: it rewrites prek.toml, which the builtin mutators in groups
 # 1-4 also touch, and it READS uv.lock, which uv-lock rewrites in group 5. Both
 # hazards are ordering, not just concurrent writes.
