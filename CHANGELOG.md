@@ -14,6 +14,47 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.13 (2026-08-05)
+
+### Bug Fixes
+
+- **template**: Preserve semantic-release-owned version and tag_format across updates
+  ([#345](https://github.com/detailobsessed/copier-uv-bleeding/pull/345),
+  [`f7432c7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f7432c7582163abfc3f21fd22c8abdc563cea028))
+
+- **template**: Stabilize copier update and unbreak the first commit
+  ([#345](https://github.com/detailobsessed/copier-uv-bleeding/pull/345),
+  [`f7432c7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f7432c7582163abfc3f21fd22c8abdc563cea028))
+
+- **template**: Stop coverage sysmon core breaking the first commit
+  ([#345](https://github.com/detailobsessed/copier-uv-bleeding/pull/345),
+  [`f7432c7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f7432c7582163abfc3f21fd22c8abdc563cea028))
+
+### Chores
+
+- **deps**: Upgrade dependencies and raise floors to the tested versions
+  ([#345](https://github.com/detailobsessed/copier-uv-bleeding/pull/345),
+  [`f7432c7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f7432c7582163abfc3f21fd22c8abdc563cea028))
+
+- **template**: Match uv's own uv_build pin, raise floor to 0.12.1
+  ([#345](https://github.com/detailobsessed/copier-uv-bleeding/pull/345),
+  [`f7432c7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/f7432c7582163abfc3f21fd22c8abdc563cea028))
+
+### Continuous Integration
+
+- Bump pinned actions and SHA-pin generated workflows
+  ([#344](https://github.com/detailobsessed/copier-uv-bleeding/pull/344),
+  [`833d0ed`](https://github.com/detailobsessed/copier-uv-bleeding/commit/833d0ed5acbe70a0b0507d6c443d032d6810d04f))
+
+- Bump pinned actions to current releases
+  ([#344](https://github.com/detailobsessed/copier-uv-bleeding/pull/344),
+  [`833d0ed`](https://github.com/detailobsessed/copier-uv-bleeding/commit/833d0ed5acbe70a0b0507d6c443d032d6810d04f))
+
+- **template**: Pin generated workflow actions to SHAs and bump to current
+  ([#344](https://github.com/detailobsessed/copier-uv-bleeding/pull/344),
+  [`833d0ed`](https://github.com/detailobsessed/copier-uv-bleeding/commit/833d0ed5acbe70a0b0507d6c443d032d6810d04f))
+
+
 ## v0.41.12 (2026-07-29)
 
 ### Bug Fixes
