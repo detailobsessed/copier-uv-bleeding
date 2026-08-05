@@ -70,10 +70,35 @@ def generate_project(
             cmd.extend(["-d", f"{key}={value}"])
 
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    if result.returncode != 0:
+    if result.returncode != 0 and not _is_temp_clone_cleanup_failure(result.stderr, tmp_path):
         pytest.fail(f"Copier failed: {result.stderr}")
 
     return tmp_path
+
+
+def _is_temp_clone_cleanup_failure(stderr: str, dst: Path) -> bool:
+    """True if copier rendered successfully but crashed clearing its own temp clone (DOT-606).
+
+    On a dirty working tree copier takes its dirty-file overlay path, which does extra git
+    work inside the temp clone it made of this repo. Something still holds a handle under
+    that clone's `.git` when `_cleanup` calls `rmtree(..., ignore_errors=False)`, so copier
+    exits non-zero *after* every file has been written. Observed on macOS with copier 9.17.x.
+
+    The effect is a test suite that is green in CI (which always checks out clean) and red
+    for anyone mid-change — with the failure landing on whichever test happens to render
+    first, so it reads as flakiness rather than as one deterministic bug. Re-running the
+    "failed" test alone usually passes, which sends triage down the wrong path entirely.
+
+    Deliberately narrow. This tolerates only an `rmtree` of a path copier itself names
+    `copier._vcs.clone.*`, and only when the destination actually received a rendered
+    project. A render that genuinely failed leaves no `pyproject.toml`, and any other
+    non-zero exit still fails the test with copier's own stderr.
+    """
+    if "copier._vcs.clone" not in stderr:
+        return False
+    if not any(marker in stderr for marker in ("Directory not empty", "rmtree", "Errno 66")):
+        return False
+    return (dst / "pyproject.toml").is_file()
 
 
 def _cache_key(answers: dict, project_type: str) -> str:
