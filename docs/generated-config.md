@@ -342,6 +342,50 @@ that matches.
 
 If the hook fires for you now, it is reporting real drift. Run `uv lock`.
 
+### Why the testmon hook forces `COVERAGE_CORE=ctrace` {#testmon-coverage-core}
+
+```toml
+entry = "uv run pytest -q --testmon --no-cov"
+env = { COVERAGE_CORE = "ctrace" }
+```
+
+Without this, the **first commit in a freshly scaffolded project fails**, and
+the failure looks nothing like its cause:
+
+```
+INTERNALERROR> coverage.exceptions.CoverageWarning: Dynamic contexts aren't
+supported with core=sysmon; context data may be incomplete (no-sysmon-context)
+============================ no tests ran in 0.03s ====================
+```
+
+Four independent choices have to line up for this to bite, which is why it
+appeared without anything in the template changing:
+
+1. `coverage` selects the `sys.monitoring` core by default on CPython 3.14+
+   (`SYSMON_DEFAULT = CPYTHON and PYVERSION >= (3, 14)`). This template requires
+   3.14, so every generated project gets it.
+2. That core cannot do dynamic contexts. `coverage` knows this and *will* fall
+   back on its own — but only when `dynamic_context` is set in config, which it
+   reads once, up front.
+3. `pytest-testmon` never sets it in config. It calls `switch_context()`
+   imperatively per test, long after coverage has committed to `sysmon`. All
+   coverage can do at that point is warn.
+4. The template sets `filterwarnings = ["error"]`, which promotes that warning
+   to an exception — raised inside a pluggy hook, so pytest aborts with
+   `INTERNALERROR` and exit code 3 rather than a test failure.
+
+Silencing the warning instead would be worse than the crash. testmon uses those
+per-test contexts to decide which tests a change affects; with incomplete
+context data it would keep working and quietly select the wrong tests. Crashing
+is the honest outcome, so the fix restores the contexts rather than the silence.
+
+The variable is scoped to this one hook via prek's per-hook `env` rather than
+set globally in `[tool.coverage.run]`. The `pytest-cov` hook and `poe test-cov`
+use no dynamic contexts, so they keep `sysmon`, which is the faster core on
+3.14. Scoping it through `env` also keeps it working on Windows, which the CI
+matrix covers — an `env VAR=value ...` prefix on `entry` would not, since prek
+execs the entry directly instead of going through a shell.
+
 ### Why copier conflict markers get their own guards {#prek-copier-conflicts}
 
 Two hooks exist because `copier update` can leave conflict debris that a normal

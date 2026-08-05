@@ -267,6 +267,38 @@ class TestPreCommitConfig:
         content = config.read_text()
         assert 'minimum_prek_version = "0.4.12"' in content
 
+    def test_testmon_hook_pins_coverage_core(self, copier_defaults: dict, project_factory) -> None:
+        """The testmon hook must force the ctrace coverage core.
+
+        coverage picks the sys.monitoring core by default on CPython 3.14+, and that
+        core cannot do dynamic contexts. testmon calls `switch_context()` per test,
+        coverage warns, `filterwarnings = ["error"]` promotes it, and pytest aborts
+        with INTERNALERROR -- so the FIRST commit in a fresh project fails.
+
+        `TestIntegration::test_first_commit_succeeds_with_prek_hooks` covers the same
+        ground end-to-end, but it is marked slow. This is the fast guard.
+
+        Scoped via prek's per-hook `env` rather than `[tool.coverage.run] core`, so
+        pytest-cov keeps the faster default core. Must stay `env` and not an
+        `env VAR=value` prefix on `entry`: prek execs the entry without a shell, and
+        the CI matrix includes Windows.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        hooks = [h for repo in data["repos"] for h in repo.get("hooks", [])]
+        testmon = next((h for h in hooks if h.get("id") == "pytest-testmon"), None)
+        assert testmon is not None, "the generated prek.toml must define a pytest-testmon hook"
+        assert testmon.get("env", {}).get("COVERAGE_CORE") == "ctrace", (
+            "the testmon hook must set COVERAGE_CORE=ctrace, or the first commit in a "
+            f"freshly scaffolded project dies with a coverage INTERNALERROR. Got {testmon.get('env')!r}"
+        )
+        assert not testmon["entry"].startswith("env "), (
+            f"use prek's `env` key, not an `env VAR=value` entry prefix; got {testmon['entry']!r}"
+        )
+
     def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have betterleaks."""
         project = project_factory(copier_defaults)

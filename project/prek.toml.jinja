@@ -148,6 +148,13 @@ priority = 5
 id = "pytest-testmon"
 name = "pytest affected tests"
 entry = "uv run pytest -q --testmon --no-cov"
+# coverage defaults to the sys.monitoring core on CPython 3.14+, which does not
+# support dynamic contexts. testmon calls `switch_context()` per test, so
+# coverage warns, `filterwarnings = ["error"]` promotes it, and pytest dies with
+# an INTERNALERROR before running anything. Scoped to this hook: the pytest-cov
+# hook uses no dynamic contexts and keeps the faster default.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#testmon-coverage-core
+env = { COVERAGE_CORE = "ctrace" }
 language = "system"
 types = ["python"]
 pass_filenames = false
