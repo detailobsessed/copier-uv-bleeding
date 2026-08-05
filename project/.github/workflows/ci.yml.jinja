@@ -38,8 +38,8 @@ jobs:
     outputs:
       src: {% raw %}${{ steps.filter.outputs.src }}{% endraw %}
     steps:
-    - uses: actions/checkout@v6
-    - uses: dorny/paths-filter@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
       id: filter
       with:
         filters: |
@@ -57,15 +57,15 @@ jobs:
     runs-on: ubuntu-latest
 {%- endif %}
     steps:
-    - uses: actions/checkout@v6
-    - uses: astral-sh/setup-uv@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       with:
         python-version: "3.14"
         enable-cache: true
         github-token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
     - name: Refresh lockfile
       run: uv lock
-    - uses: j178/prek-action@v1
+    - uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
       env:
         SKIP: pytest-testmon,uv-lock
       with:
@@ -82,13 +82,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         fetch-tags: true
 
     - name: Setup uv and Python
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       with:
         python-version: "3.14"
         enable-cache: true
@@ -142,13 +142,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         fetch-tags: true
 
     - name: Setup uv and Python
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       with:
 {%- if publish_to_pypi %}
         python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
@@ -180,7 +180,7 @@ jobs:
       if: {% raw %}${{ matrix.os == 'ubuntu-latest' && matrix.resolution == 'highest' }}{% endraw %}
 {%- endif %}
 {%- endif %}
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
       with:
         token: {% raw %}${{ secrets.CODECOV_TOKEN }}{% endraw %}
         fail_ci_if_error: false
