@@ -260,9 +260,23 @@ configure_repo_settings:
 
 
 # TASKS --------------------------------
+#
+# There is deliberately no `chmod +x` task here. It used to be
+# `chmod +x scripts/*.sh scripts/*.py`, which flipped the mode of *every* file
+# a downstream project keeps in `scripts/` — including its own shebang-less
+# ones, which then failed ruff's `EXE002` ("executable but no shebang") with no
+# `.rej` and no warning. The obvious recovery (`chmod 644 scripts/*.py`) then
+# trips `EXE001` on the legitimately-executable ones (DOT-628).
+#
+# It was never needed. Copier's own `_render_file` chmods each rendered file to
+# the template's mode, preferring the template's *git-index* exec bit over
+# `stat().st_mode` so it survives filesystems that don't carry the bit
+# (Windows), then syncs the destination's git index to match. That runs on
+# `copy` and `update` alike, and only for files copier actually renders — so
+# `scripts/check-template-update.sh` (committed 100755) arrives executable,
+# and files the template does not own are never touched. Verified against
+# copier 9.17.1.
 _tasks:
-  # Always run
-  - "chmod +x scripts/*.sh scripts/*.py 2>/dev/null || true"
   # Run `uv sync` in copier's temp render dirs (`old_copy`/`new_copy`) AND on
   # initial `copy`, but NOT in the real destination during update. Why this
   # inverted guard (`[ ! -d .git ]`) instead of the more obvious "only sync in
