@@ -20,12 +20,12 @@ dev = [
     # Not just for running hooks: tests/test_template.py shells out to
     # `prek util list-builtins` to check the template's builtin ids are real.
     # Without it as a dependency that test silently skips in CI.
-    "prek>=0.4.10",
+    "prek>=0.4.12",
     "python-semantic-release>=10.6",
     "pyyaml>=6.0.3",
     "reuse",
     "ruff",
-    "ty>=0.0.64",
+    "ty>=0.0.66",
     "copier-template-extensions>=0.3.3",
 ]
 

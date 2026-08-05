@@ -129,7 +129,13 @@ class TestCoreFiles:
         )
 
         ci_deps = data["dependency-groups"]["ci"]
-        assert "ruff>=0.16" in ci_deps, f"the ci group should pin the same floor; got {ci_deps!r}"
+        ci_ruff = next((spec for spec in ci_deps if spec.startswith("ruff>=")), None)
+        assert ci_ruff is not None, f"the ci group must floor ruff; got {ci_deps!r}"
+        # The ci floor tracks the tested version and may sit *above* required-version
+        # (which is pinned to the minor whose defaults `extend-select` assumes). It must
+        # never sit below it, or a resolvable install would hard-fail on required-version.
+        parts = tuple(int(p) for p in ci_ruff.removeprefix("ruff>=").split("."))
+        assert parts >= (0, 16), f"the ci floor must not fall below required-version; got {ci_ruff!r}"
 
     def test_ruff_preview_is_disabled(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not opt into ruff's preview rules.
@@ -254,12 +260,44 @@ class TestPreCommitConfig:
     """Test pre-commit configuration."""
 
     def test_prek_version(self, copier_defaults: dict, project_factory) -> None:
-        """Pre-commit config should pin prek to 0.4.10+ (provides the `[update]` tag filters)."""
+        """Pre-commit config should pin prek to the tested floor (>=0.4.10 provides the `[update]` tag filters)."""
         project = project_factory(copier_defaults)
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.4.10"' in content
+        assert 'minimum_prek_version = "0.4.12"' in content
+
+    def test_testmon_hook_pins_coverage_core(self, copier_defaults: dict, project_factory) -> None:
+        """The testmon hook must force the ctrace coverage core.
+
+        coverage picks the sys.monitoring core by default on CPython 3.14+, and that
+        core cannot do dynamic contexts. testmon calls `switch_context()` per test,
+        coverage warns, `filterwarnings = ["error"]` promotes it, and pytest aborts
+        with INTERNALERROR -- so the FIRST commit in a fresh project fails.
+
+        `TestIntegration::test_first_commit_succeeds_with_prek_hooks` covers the same
+        ground end-to-end, but it is marked slow. This is the fast guard.
+
+        Scoped via prek's per-hook `env` rather than `[tool.coverage.run] core`, so
+        pytest-cov keeps the faster default core. Must stay `env` and not an
+        `env VAR=value` prefix on `entry`: prek execs the entry without a shell, and
+        the CI matrix includes Windows.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            data = tomllib.load(f)
+
+        hooks = [h for repo in data["repos"] for h in repo.get("hooks", [])]
+        testmon = next((h for h in hooks if h.get("id") == "pytest-testmon"), None)
+        assert testmon is not None, "the generated prek.toml must define a pytest-testmon hook"
+        assert testmon.get("env", {}).get("COVERAGE_CORE") == "ctrace", (
+            "the testmon hook must set COVERAGE_CORE=ctrace, or the first commit in a "
+            f"freshly scaffolded project dies with a coverage INTERNALERROR. Got {testmon.get('env')!r}"
+        )
+        assert not testmon["entry"].startswith("env "), (
+            f"use prek's `env` key, not an `env VAR=value` entry prefix; got {testmon['entry']!r}"
+        )
 
     def test_has_betterleaks(self, copier_defaults: dict, project_factory) -> None:
         """Pre-commit config should have betterleaks."""
@@ -640,12 +678,12 @@ class TestDependencies:
         assert "tomli" not in content
 
     def test_prek_version_updated(self, copier_defaults: dict, project_factory) -> None:
-        """prek dependency should be >= 0.4.10 (introduces the `[update]` tag filters, DOT-616)."""
+        """prek dependency tracks the tested floor (>=0.4.10 introduced the `[update]` tag filters, DOT-616)."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.4.10"' in content
+        assert '"prek>=0.4.12"' in content
 
     # Floors track the versions the template is actually exercised against, not the
     # oldest release that happens to still work. `uv sync` resolves to the newest
@@ -655,14 +693,14 @@ class TestDependencies:
     EXPECTED_FLOORS: ClassVar[dict[str, dict[str, str]]] = {
         "maintain": {"build": "1.5", "python-semantic-release": "10.6"},
         "ci": {
-            "ruff": "0.16",
+            "ruff": "0.16.1",
             "pytest": "9",
             "pytest-cov": "7",
             "pytest-randomly": "4",
-            "ty": "0.0.64",
+            "ty": "0.0.66",
             "poethepoet": "0.48",
         },
-        "local": {"prek": "0.4.10", "pytest-testmon": "2.2"},
+        "local": {"prek": "0.4.12", "pytest-testmon": "2.2"},
     }
 
     @staticmethod
@@ -890,10 +928,12 @@ class TestCIWorkflows:
     def test_uv_build_has_upper_bound(self, copier_defaults: dict, project_factory) -> None:
         """`build-system.requires` must pin `uv_build` with an upper bound (DOT-589).
 
-        An unbounded `uv_build` makes uv print a noisy warning on every `uv sync`
-        / `uv build` (drowns out real warnings) and risks silent sdist breakage
-        when `uv_build` ships a future major. The template ships with
-        `uv_build>=0.12,<0.13`; bump the window when uv_build crosses it.
+        The bound is uv's own recommendation, not this template's: `uv_build`
+        follows uv's versioning policy, so a minor may change build behaviour,
+        and uv's docs ask for an upper bound for exactly that reason. `uv init`
+        emits `uv_build>=0.12.1,<0.13.0` on uv 0.12.1; the template matches that
+        shape. An unbounded spec also makes uv warn on every `uv sync` / `uv
+        build`, drowning out real warnings. Bump the window when uv does.
         """
         project = project_factory(copier_defaults)
 
@@ -1310,8 +1350,8 @@ class TestTemplateUpdateCheck:
         )
         assert "nightly" in filters.get("exclude_tags", []), f"`nightly` must be in exclude_tags for {repo}; got {filters!r}"
 
-        assert data["minimum_prek_version"] == "0.4.10", (
-            "the [update] tag filters above need prek 0.4.10+. minimum_prek_version is the guard "
+        assert data["minimum_prek_version"] == "0.4.12", (
+            "the [update] tag filters above need prek 0.4.10+, and the floor tracks the tested version. minimum_prek_version is the guard "
             "that reaches updating projects, since the pyproject `prek>=` floor sits inside a "
             f"template-preserve region. Got {data.get('minimum_prek_version')!r}"
         )
@@ -2008,6 +2048,66 @@ class TestMarkedSectionsSync:
         for name in ("dependencies", "project-scripts", "dependency-groups", "tool-uv-index", "extra-poe-tasks"):
             assert f"# template-preserve:{name}:start" in content, f"missing marker: {name}"
             assert f"# template-preserve:{name}:end" in content, f"missing marker: {name}"
+
+    # --- Externally-owned scalars (DOT-620) ------------------------------
+
+    def test_released_version_survives_update(self) -> None:
+        """`project.version` is owned by semantic-release, not the template.
+        The fresh render always carries the seed `0.0.0`; without preservation
+        the update silently rolls a released project back to it, and
+        `allow_zero_version = true` means semantic-release then *accepts*
+        `0.0.0` and computes 0.1.0 instead of the real next version."""
+        module = self._load_module()
+        existing = '[project]\nname = "x"\nversion = "0.18.0"\n'
+        new = '[project]\nname = "x"\nversion = "0.0.0"\n'
+        assert module.sync_text(existing, new) == existing
+
+    def test_tag_format_survives_update(self) -> None:
+        """Worse than the version reset it sits beside: semantic-release
+        derives the current version from tags matching `tag_format`, not from
+        `project.version` — so restoring only the version leaves a repo that
+        looks correct and still computes 0.1.0."""
+        module = self._load_module()
+        existing = '[tool.semantic_release]\ntag_format = "v{version}"\nbranch = "main"\n'
+        new = '[tool.semantic_release]\ntag_format = "{version}"\nbranch = "main"\n'
+        merged = module.sync_text(existing, new)
+        assert 'tag_format = "v{version}"' in merged
+        assert 'branch = "main"' in merged  # everything else still tracks the fresh render
+
+    def test_table_scan_survives_build_command_shell_guards(self) -> None:
+        """`build_command` is a multi-line string whose `set -e` guards start
+        at column 0 with `[ -n "$UV_..." ]`. A naive `^\\[` table-end scan stops
+        there — before `tag_format` — and preservation silently does nothing."""
+        module = self._load_module()
+        body = '[ -n "$UV_CACHE_DIR" ] || unset UV_CACHE_DIR\nuv build\n'
+        existing = f'[tool.semantic_release]\nbuild_command = """\n{body}"""\ntag_format = "v{{version}}"\n'
+        new = f'[tool.semantic_release]\nbuild_command = """\n{body}"""\ntag_format = "{{version}}"\n'
+        assert 'tag_format = "v{version}"' in module.sync_text(existing, new)
+
+    def test_absent_scalar_keeps_fresh_seed(self) -> None:
+        """Newly enabling `use_semantic_release` gives the destination no
+        `[tool.semantic_release]` to snapshot — same rule as an unsnapshotted
+        marker: keep the fresh render's own default rather than blanking it."""
+        module = self._load_module()
+        existing = '[project]\nname = "x"\nversion = "2.0.0"\n'
+        new = '[project]\nname = "x"\nversion = "0.0.0"\n\n[tool.semantic_release]\ntag_format = "{version}"\n'
+        merged = module.sync_text(existing, new)
+        assert 'version = "2.0.0"' in merged
+        assert 'tag_format = "{version}"' in merged
+
+    def test_rendered_pyproject_matches_preservation_shape(self, copier_defaults: dict, project_factory) -> None:
+        """Guard against a future template reformat silently disabling the
+        pass above: preservation is a no-op unless the *rendered* file really
+        holds these keys as single-line strings in the expected tables."""
+        module = self._load_module()
+        rendered = (project_factory(copier_defaults, "app") / "pyproject.toml").read_text()
+        for table, key, sentinel in (
+            ("project", "version", "9.9.9"),
+            ("tool.semantic_release", "tag_format", "vX{version}"),
+        ):
+            assert module.read_scalar(rendered, table, key) is not None, f"{table}.{key} unreadable in render"
+            rewritten = module.replace_scalar(rendered, table, key, sentinel)
+            assert module.read_scalar(rewritten, table, key) == sentinel, f"{table}.{key} not rewritable"
 
     def test_markers_present_in_prek_template(self) -> None:
         content = (REPO_ROOT / "project" / "prek.toml.jinja").read_text()

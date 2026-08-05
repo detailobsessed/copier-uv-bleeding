@@ -2,7 +2,7 @@
 default_stages = ["pre-commit"]
 # Required — an older prek silently ignores the `[update]` block below.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-minimum-version
-minimum_prek_version = "0.4.10"
+minimum_prek_version = "0.4.12"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
@@ -148,6 +148,13 @@ priority = 5
 id = "pytest-testmon"
 name = "pytest affected tests"
 entry = "uv run pytest -q --testmon --no-cov"
+# coverage defaults to the sys.monitoring core on CPython 3.14+, which does not
+# support dynamic contexts. testmon calls `switch_context()` per test, so
+# coverage warns, `filterwarnings = ["error"]` promotes it, and pytest dies with
+# an INTERNALERROR before running anything. Scoped to this hook: the pytest-cov
+# hook uses no dynamic contexts and keeps the faster default.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#testmon-coverage-core
+env = { COVERAGE_CORE = "ctrace" }
 language = "system"
 types = ["python"]
 pass_filenames = false

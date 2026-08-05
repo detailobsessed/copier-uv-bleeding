@@ -13,20 +13,36 @@ something every new project should inherit in its own config.
 ### Why `uv_build` is pinned to a window {#build-backend-pin}
 
 ```toml
-requires = ["uv_build>=0.12,<0.13"]
+requires = ["uv_build>=0.12.1,<0.13"]
 ```
 
-An unbounded `uv_build` makes uv warn on every `uv sync` and `uv build`, and a
-breaking `uv_build` release would silently break sdist builds in every project
-generated from this template at once. The bound is the current minor series
-plus the next major; bump the window when `uv_build` crosses it (DOT-589).
+This is verbatim what `uv init` emits on uv 0.12.1 and what
+[uv's build-backend docs](https://docs.astral.sh/uv/concepts/build-backend/)
+recommend — there is nothing template-specific about it. Since uv 0.12.0,
+`uv init` writes a `[build-system]` block by default, so a generated project
+and a hand-run `uv init --package` now agree on backend, `src/` layout, and
+pin window alike.
+
+**The upper bound is uv's recommendation, not this template's.** `uv_build`
+follows uv's own versioning policy, under which a minor release may change
+build behaviour; uv's docs state that "including an upper bound on the
+`uv_build` version ensures that your package continues to build correctly as
+new versions are released". Dropping it would diverge from uv, not align with
+it.
+
+A *stale* window is never a breakage, which is why bumping it is routine rather
+than urgent. The `uv` executable bundles a copy of the backend and uses it only
+when it satisfies the `requires` specifier; when it doesn't, uv resolves the
+`uv_build` package from PyPI into an isolated build environment instead. So a
+project still pinned to `<0.13` keeps building under uv 0.13 — it just loses
+the bundled fast path and pays a download.
 
 The window moved to the `0.12` series for uv 0.12, which enforces PEP 625:
 source distributions must be `.tar.gz`, and `.tar.bz2` / `.tar.xz` are
 rejected, as are wheels using bzip2/LZMA/XZ compression. `uv_build` already
 emits PEP 625-conforming artifacts, so the move was a no-op for generated
 projects — verified by building an sdist and a wheel from a rendered project
-under `uv_build` 0.12 and installing the result.
+under `uv_build` 0.12 and installing the result (DOT-589).
 
 ## Dependencies
 
@@ -160,7 +176,8 @@ These cover `prek.toml` and `_typos.toml`.
 ### Why `minimum_prek_version` is pinned {#prek-minimum-version}
 
 prek 0.4.10 introduced the `[update]` tag filters used to exclude lychee's
-`nightly` tag. That version floor is the guard that reaches projects updating
+`nightly` tag; the pin tracks the version the template is tested at (0.4.12),
+which is at or above that. That floor is the guard that reaches projects updating
 from an older template: `prek.toml` is regenerated in full by the template's
 [sync step](update.md), but `[dependency-groups]` in `pyproject.toml` sits
 inside a template-preserve region, so the `prek>=` floor there stays at
@@ -291,8 +308,8 @@ same invocation as the `pre-commit` hooks it would otherwise contend with.
 
 **A new hook that writes files needs a priority no other hook writing those same
 files uses.** Since 0.4.11 these can be named via a `[priorities]` alias table
-rather than bare integers, which is worth adopting once the template's
-`minimum_prek_version` floor reaches 0.4.11.
+rather than bare integers. The floor is now 0.4.12, so adopting them is
+unblocked.
 
 ### Why `uv-sync` keeps upstream's `--locked` {#prek-uv-sync-locked}
 
@@ -324,6 +341,50 @@ uv.lock` line in `build_command`), so a release commit now carries a lockfile
 that matches.
 
 If the hook fires for you now, it is reporting real drift. Run `uv lock`.
+
+### Why the testmon hook forces `COVERAGE_CORE=ctrace` {#testmon-coverage-core}
+
+```toml
+entry = "uv run pytest -q --testmon --no-cov"
+env = { COVERAGE_CORE = "ctrace" }
+```
+
+Without this, the **first commit in a freshly scaffolded project fails**, and
+the failure looks nothing like its cause:
+
+```
+INTERNALERROR> coverage.exceptions.CoverageWarning: Dynamic contexts aren't
+supported with core=sysmon; context data may be incomplete (no-sysmon-context)
+============================ no tests ran in 0.03s ====================
+```
+
+Four independent choices have to line up for this to bite, which is why it
+appeared without anything in the template changing:
+
+1. `coverage` selects the `sys.monitoring` core by default on CPython 3.14+
+   (`SYSMON_DEFAULT = CPYTHON and PYVERSION >= (3, 14)`). This template requires
+   3.14, so every generated project gets it.
+2. That core cannot do dynamic contexts. `coverage` knows this and *will* fall
+   back on its own — but only when `dynamic_context` is set in config, which it
+   reads once, up front.
+3. `pytest-testmon` never sets it in config. It calls `switch_context()`
+   imperatively per test, long after coverage has committed to `sysmon`. All
+   coverage can do at that point is warn.
+4. The template sets `filterwarnings = ["error"]`, which promotes that warning
+   to an exception — raised inside a pluggy hook, so pytest aborts with
+   `INTERNALERROR` and exit code 3 rather than a test failure.
+
+Silencing the warning instead would be worse than the crash. testmon uses those
+per-test contexts to decide which tests a change affects; with incomplete
+context data it would keep working and quietly select the wrong tests. Crashing
+is the honest outcome, so the fix restores the contexts rather than the silence.
+
+The variable is scoped to this one hook via prek's per-hook `env` rather than
+set globally in `[tool.coverage.run]`. The `pytest-cov` hook and `poe test-cov`
+use no dynamic contexts, so they keep `sysmon`, which is the faster core on
+3.14. Scoping it through `env` also keeps it working on Windows, which the CI
+matrix covers — an `env VAR=value ...` prefix on `entry` would not, since prek
+execs the entry directly instead of going through a shell.
 
 ### Why copier conflict markers get their own guards {#prek-copier-conflicts}
 

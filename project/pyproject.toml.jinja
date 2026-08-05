@@ -1,8 +1,9 @@
 [build-system]
-# Bounded deliberately — an unbounded uv_build warns on every sync and can
-# break sdist builds. Bump the window when uv_build crosses it.
+# Matches what `uv init` emits and what uv's own docs recommend. The upper
+# bound is uv's recommendation, not ours: uv_build follows uv's versioning
+# policy, so a minor can change build behaviour. Bump the window when uv does.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#build-backend-pin
-requires = ["uv_build>=0.12,<0.13"]
+requires = ["uv_build>=0.12.1,<0.13"]
 build-backend = "uv_build"
 
 [project]
@@ -66,16 +67,16 @@ maintain = [
 # that still works.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#dependency-floors
 ci = [
-    "ruff>=0.16",
+    "ruff>=0.16.1",
     "pytest>=9",
     "pytest-cov>=7",
     "pytest-randomly>=4",
-    "ty>=0.0.64",
+    "ty>=0.0.66",
     "poethepoet>=0.48",
 ]
 dev = []
 local = [
-    "prek>=0.4.10",
+    "prek>=0.4.12",
     "pytest-testmon>=2.2",
 ]
 # template-preserve:dependency-groups:end

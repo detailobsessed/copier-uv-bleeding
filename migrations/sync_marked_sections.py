@@ -44,8 +44,10 @@ this script needs copier's own renderer (which in turn needs
 copier-template-extensions to load this template's `_jinja_extensions`) to
 get an authoritative "what should this file look like now" answer — not
 guaranteed importable in the destination project's own environment. PyYAML
-is available transitively through copier. No TOML library needed at all —
-this works on any text format that supports `#`-style comments.
+is available transitively through copier. The marker mechanism itself needs
+no TOML library — it works on any text format that supports `#`-style
+comments; only the externally-owned-scalar pass below reads `tomllib`
+(stdlib, read-only) to look up two keys by path.
 """
 
 from __future__ import annotations
@@ -54,6 +56,7 @@ import errno
 import re
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -98,6 +101,99 @@ def splice_named_sections(new_text: str, preserved: dict[str, str]) -> str:
         return f"# template-preserve:{name}:start\n{preserved[name]}# template-preserve:{name}:end\n"
 
     return _MARKER_RE.sub(_replace, new_text)
+
+
+# --- Externally-owned scalars -------------------------------------------
+#
+# A third category the marker mechanism has no slot for: keys owned by
+# neither the template nor the user, but by a *tool* that writes them into
+# the destination between updates. python-semantic-release owns both of
+# these — the template's own `[tool.semantic_release]` points it at them via
+# `version_toml`. A fresh render always carries the template's seed values
+# ("0.0.0", the bare tag format), so without this pass every update rolls
+# them back to the seed (DOT-620).
+#
+# The rollback is silent in both directions: there is no `.rej` for the
+# `no-copier-rej-files` hook to catch, and the template's own
+# `allow_zero_version = true` / `major_on_zero = false` mean
+# semantic-release *accepts* a reset `0.0.0` as a legitimate starting point
+# rather than erroring — the next `feat` computes 0.1.0, and the tag
+# collides with or regresses past real history.
+#
+# `tag_format` matters at least as much as `version`, and is the less
+# obvious of the two: semantic-release derives the current version from
+# **tags matching that format**, not from `project.version`. Restoring only
+# the version therefore leaves a repo whose pyproject.toml looks correct and
+# that still computes 0.1.0, because no tag matches the reset format.
+#
+# Wrapping these in `template-preserve` markers instead would not work: a
+# project updating *from* a marker-less version has no marked region to
+# snapshot, so its first update would still reset them — precisely the
+# updates this needs to survive. Snapshotting by key path needs no
+# downstream action at all: every existing project is fixed by its next
+# update.
+_PRESERVED_SCALARS: tuple[tuple[str, str], ...] = (
+    ("project", "version"),
+    ("tool.semantic_release", "tag_format"),
+)
+
+# Whole-line table header, used to find where a table ends. A bare `^\[`
+# is NOT enough: `[tool.semantic_release] build_command` is a multi-line
+# string whose shell guards start at column 0 with `[ -n "$UV_..." ] || ...`,
+# which would end the table scan before `tag_format` ever came into range.
+# Requiring the line to be *only* a bracketed name rules those out.
+_TOML_TABLE_HEADER_RE = re.compile(r"^\[\[?[^\[\]\n]+\]\]?[ \t]*$", re.MULTILINE)
+
+
+def read_scalar(text: str, table: str, key: str) -> str | None:
+    """Current value of `table.key` in `text`; None if absent, non-string, or
+    the file doesn't parse. Read via tomllib rather than a regex on purpose:
+    a destination file that has been hand-reformatted is exactly the case
+    where a silent reset does the most damage, so reading must not depend on
+    the file still matching the template's layout."""
+    try:
+        data: Any = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return None
+    for part in (*table.split("."), key):
+        if not isinstance(data, dict) or part not in data:
+            return None
+        data = data[part]
+    return data if isinstance(data, str) else None
+
+
+def replace_scalar(text: str, table: str, key: str, value: str) -> str:
+    """Rewrite the single-line `key = "..."` assignment inside `[table]` in
+    `text`, leaving everything else byte-identical. Regex rather than a TOML
+    round-trip because tomllib is read-only and any serializer would reflow
+    the file and drop the template's comments.
+
+    `text` here is always a fresh render, so the layout is template-owned and
+    predictable. Anything unexpected (table missing because the feature is
+    off, key rendered as a non-string or across lines) is a no-op, leaving
+    the fresh render as-is."""
+    header = re.compile(rf"^\[{re.escape(table)}\][ \t]*$", re.MULTILINE).search(text)
+    if header is None:
+        return text
+    next_table = _TOML_TABLE_HEADER_RE.search(text, header.end())
+    end = next_table.start() if next_table else len(text)
+    assignment = re.compile(rf'^{re.escape(key)}[ \t]*=[ \t]*"[^"\n]*"[^\n]*$', re.MULTILINE)
+    match = assignment.search(text, header.end(), end)
+    if match is None:
+        return text
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'{text[: match.start()]}{key} = "{escaped}"{text[match.end() :]}'
+
+
+def preserve_scalars(existing_text: str, new_text: str) -> str:
+    """Carry every `_PRESERVED_SCALARS` entry across from `existing_text`.
+    A key absent from `existing_text` (feature newly enabled, first update)
+    keeps the fresh render's seed — same rule as an unsnapshotted marker."""
+    for table, key in _PRESERVED_SCALARS:
+        current = read_scalar(existing_text, table, key)
+        if current is not None:
+            new_text = replace_scalar(new_text, table, key, current)
+    return new_text
 
 
 # --- Legacy bootstrap ---------------------------------------------------
@@ -227,11 +323,13 @@ def _bootstrap_legacy_markers(existing_text: str, fresh_text: str) -> str:
 
 def sync_text(existing_text: str, new_text: str) -> str:
     """Pure merge: `new_text` (a fresh template render) with every marked
-    region in `existing_text` preserved verbatim. Everything outside marked
-    regions always reflects `new_text` — that's the whole point."""
+    region in `existing_text` preserved verbatim, plus the handful of
+    tool-owned scalars in `_PRESERVED_SCALARS`. Everything else always
+    reflects `new_text` — that's the whole point."""
     existing_text = _bootstrap_legacy_markers(existing_text, new_text)
     preserved = extract_named_sections(existing_text)
-    return splice_named_sections(new_text, preserved)
+    merged = splice_named_sections(new_text, preserved)
+    return preserve_scalars(existing_text, merged)
 
 
 def _render_fresh(src_path: str, answers: dict[str, Any], dst: Path) -> None:
