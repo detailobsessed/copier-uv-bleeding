@@ -6,6 +6,7 @@ import os
 import pathlib
 import re
 import shutil
+import stat
 import subprocess
 import tomllib
 from typing import TYPE_CHECKING, ClassVar
@@ -1428,6 +1429,58 @@ class TestTemplateUpdateCheck:
             "copier.yml _tasks has `[ -d .git ]; then uv sync --upgrade` — the naive guard "
             "that lets copier delete the user's uv.lock and .venv on update. Use "
             "`[ ! -d .git ]` instead (see DOT-587 / DOT-588)."
+        )
+
+    def test_tasks_do_not_chmod_downstream_scripts(self) -> None:
+        """`_tasks` must not blanket-chmod `scripts/` (DOT-628).
+
+        The template owns exactly one file under `scripts/`. A downstream project keeps its
+        own one-off scripts in the same directory, and the template has no business changing
+        their modes. `chmod +x scripts/*.sh scripts/*.py` did exactly that: every shebang-less
+        `.py` a project kept there went 644 -> 755 on update, and ruff's `EXE002` turned a
+        lint-clean repo red with no `.rej` file to explain it.
+
+        Nothing replaces the task, because nothing needs to: copier chmods each rendered file
+        to the template's git-index mode itself (`_render_file`), on copy and update alike.
+        See `test_shipped_script_is_rendered_executable` for the other half of this pair.
+        """
+        copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
+        tasks = yaml.safe_load(copier_yml.read_text())["_tasks"]
+
+        # Parse the YAML rather than grepping lines. A copier task is either a bare command
+        # string or a mapping with `command` (plus `when`), and either form can put the
+        # command on a folded continuation line — `- command: >-` with the body indented
+        # underneath. A line-oriented filter sees no `chmod` on the `- ` line and passes
+        # while copier happily runs the task.
+        commands = [task if isinstance(task, str) else task.get("command", "") for task in tasks]
+        offenders = [command for command in commands if "chmod" in command]
+
+        assert not offenders, (
+            "copier.yml _tasks contains a chmod task:\n"
+            + "\n".join(offenders)
+            + "\n\nThe template must not change modes of files it does not own — a glob over "
+            "`scripts/` catches the downstream project's own scripts and breaks ruff EXE002 "
+            "(DOT-628). Copier already propagates the template's exec bits; if a newly "
+            "shipped script needs +x, commit it 100755 instead."
+        )
+
+    def test_shipped_script_is_rendered_executable(self, copier_defaults: dict, project_factory) -> None:
+        """The one script the template ships must arrive executable, with no chmod task.
+
+        This is the load-bearing half of DOT-628's fix: dropping the chmod task is only safe
+        because copier propagates the template's own mode. If `check-template-update.sh` were
+        ever committed 100644, the generated project's `check-shebang-scripts-are-executable`
+        hook would fail on the very first commit — so pin the rendered mode, not the source's.
+        """
+        project = project_factory(copier_defaults)
+
+        script = project / "scripts" / "check-template-update.sh"
+        assert script.stat().st_mode & 0o111, (
+            f"{script.name} rendered non-executable ({stat.filemode(script.stat().st_mode)}). "
+            "It has a shebang, so the generated project's `check-shebang-scripts-are-executable` "
+            "hook will block every commit. Commit `project/scripts/check-template-update.sh` "
+            "with mode 100755 (`git update-index --chmod=+x`) — do not add a chmod task, which "
+            "would re-introduce DOT-628."
         )
 
     def test_update_banner_does_not_claim_deps_synced(self) -> None:
