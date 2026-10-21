@@ -14,6 +14,27 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.42.1 (2026-10-21)
+
+### Bug Fixes
+
+- Drop the deprecated semantic-release changelog_file
+  ([`909da85`](https://github.com/detailobsessed/copier-uv-bleeding/commit/909da85086abdfe76ec918ffb773687e39a2f768))
+
+### Continuous Integration
+
+- Fix the release gate's permissions and run lookup
+  ([`59f9389`](https://github.com/detailobsessed/copier-uv-bleeding/commit/59f9389b99e1e478f5c237aa86aa83b952aa5182))
+
+- Release by hand with poe release
+  ([`2c609e7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/2c609e773b4dbab67f786322468783398120349a))
+
+### Documentation
+
+- Refresh REVIEW.md
+  ([`3530aef`](https://github.com/detailobsessed/copier-uv-bleeding/commit/3530aefa4badc51cf4eb96a4be6df8e0327afca1))
+
+
 ## v0.42.0 (2026-10-21)
 
 
