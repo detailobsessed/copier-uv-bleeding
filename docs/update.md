@@ -114,10 +114,10 @@ The author questions no longer default to your git config. That only matters for
 
 ### Updating from 0.41.x: run copier by hand once
 
-Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej`. In that mode copier moves every hunk it cannot apply cleanly to a `.rej` file, including your unrelated edits next to it, and the file keeps the template's version. Against the Python 3.15 release that takes your released version, dependencies and `[tool.uv]` settings out of `pyproject.toml` and into `pyproject.toml.rej`. Nothing is lost, and the `no-copier-rej-files` hook blocks the commit, but applying `.rej` hunks by hand is tedious. Run the inline update directly instead:
+Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej`. In that mode copier moves every hunk it cannot apply cleanly to a `.rej` file, including your unrelated edits next to it, and the file keeps the template's version. Against the Python 3.15 release that takes your released version, dependencies and `[tool.uv]` settings out of `pyproject.toml` and into `pyproject.toml.rej`. Nothing is lost, and the `no-copier-rej-files` hook blocks the commit, but applying `.rej` hunks by hand is tedious. Run the inline update directly instead, through uvx with the old extension as above:
 
 ```bash
-copier update --trust --skip-answered --defaults --conflict inline
+uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline
 ```
 
 That update brings in the new `poe update-template`, so later updates need nothing special. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
@@ -126,7 +126,7 @@ That update brings in the new `poe update-template`, so later updates need nothi
 
 The template carries no migrations, so an update across older releases leaves a few things to do by hand. Each one shows up in `git status`:
 
-- **`open_source` (0.41.0)** replaced `project_visibility`, `project_audience` and `use_community_health_files`. The update takes its default, `true` on GitHub and `false` elsewhere, so an internal GitHub project gains a LICENSE and community-health files, and a public GitLab one loses them. Discard those changes and re-run with the right answer: `copier update --trust --skip-answered --defaults --conflict inline -d open_source=false`.
+- **`open_source` (0.41.0)** replaced `project_visibility`, `project_audience` and `use_community_health_files`. The update takes its default, `true` on GitHub and `false` elsewhere, so an internal GitHub project gains a LICENSE and community-health files, and a public GitLab one loses them. Discard those changes and re-run with the right answer: `uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline -d open_source=false`.
 - **`scripts/prek-autoupdate.sh` (0.41.4)** is no longer used. Delete it.
 
 ## What happened in 0.41.0 to 0.41.14
