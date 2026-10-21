@@ -26,7 +26,7 @@ exclude = [
 {%- if repository_provider == 'gitlab.com' and use_ci and use_semantic_release %}
     # The release job's credentialed remote in .gitlab-ci.yml
     # ("https://gitlab-ci-token:${GITLAB_TOKEN}@…") reads as https://gitlab-ci-token/.
-    '^https://gitlab-ci-token',
+    '^https://gitlab-ci-token(?:[:/]|$)',
 {%- endif %}
 ]
 

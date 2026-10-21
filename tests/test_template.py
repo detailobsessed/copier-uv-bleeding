@@ -1913,6 +1913,7 @@ class TestOpenSource:
         with (project / ".lychee.toml").open("rb") as f:
             excludes = tomllib.load(f)["exclude"]
         assert any(re.search(pattern, "https://gitlab-ci-token/") for pattern in excludes), excludes
+        assert not any(re.search(pattern, "https://gitlab-ci-token.example.com/") for pattern in excludes), excludes
 
     def test_github_lychee_has_no_gitlab_token_exclude(self, copier_defaults: dict, project_factory) -> None:
         """GitHub projects have no .gitlab-ci.yml, so they carry no exclude for it."""
