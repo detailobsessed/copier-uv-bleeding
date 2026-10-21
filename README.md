@@ -113,7 +113,7 @@ That first run writes `.copier-answers.yml`. From then on, `poe update-template`
 Generated projects include a **post-checkout git hook** that automatically checks for template updates. When a newer version is available, you'll see a notification after `git checkout` / `git pull` / `git rebase`.
 
 - **Manual check:** `poe check-template`
-- **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge)
+- **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge), then `poe upgrade`
 
 ## Available Tasks
 
@@ -134,3 +134,4 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe prek` | Run all pre-commit hooks |
 | `poe check-template` | Check for template updates (manual) |
 | `poe update-template` | Apply template updates via copier |
+| `poe upgrade` | Upgrade dependencies and hook versions |

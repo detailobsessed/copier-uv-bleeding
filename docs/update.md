@@ -44,17 +44,14 @@ repository_namespace: mkdocstrings
 repository_provider: github.com
 ```
 
-Generated projects ship a `poe update-template` task that handles the full update flow:
+Generated projects ship two tasks:
 
 ```bash
-poe update-template
+poe update-template   # copier update --trust . --skip-answered --defaults --conflict inline
+poe upgrade           # uv sync --upgrade && uv run prek update
 ```
 
-This runs:
-
-1. `copier update --trust . --skip-answered --defaults --conflict inline` — pull template changes; previously-answered questions are kept, new questions take their defaults, and conflicts are marked inline
-2. `uv sync --upgrade` — upgrade all dependencies
-3. `uv run prek update` — update hook versions. The lychee `nightly` tag is excluded declaratively in `prek.toml` under `[update.repos]`, so a bare `prek update` is safe to run by hand too
+`update-template` is copier and nothing else: answered questions are kept, new questions take their defaults, and conflicts are marked inline. Review the result, then run `upgrade` to bring dependencies and hook versions up to date. `prek.toml` keeps `prek update` off pre-release tags and lychee's `nightly`, so running it by hand is safe too.
 
 ## Edit any file, including `pyproject.toml` and `prek.toml`
 
@@ -76,11 +73,49 @@ requires = ["uv_build>=0.13.4,<0.14"]
 >>>>>>> after updating
 ```
 
-The top block is yours, the middle one is what the template had before, and the bottom one is what it has now. Keep what you want, delete the markers, and commit. `poe update-template` lists the files that need it, and the `check-merge-conflict` hook refuses to commit while any marker is left.
+The top block is yours, the middle one is what the template had before, and the bottom one is what it has now. Keep what you want, delete the markers, and commit. `git grep -l '^<<<<<<<'` lists the files that need it, and the `check-merge-conflict` hook refuses to commit while any marker is left.
 
 Fields rendered from `.copier-answers.yml` (the `[project.urls]`, `[project.scripts]` and repository paths) are recomputed on every update. If you changed one by hand, change the matching answer in `.copier-answers.yml` instead, or the update moves it back.
 
 Since we use Git, run `git status` and `git diff` after `poe update-template` and review the changes before committing. Use `git checkout -- FILE` to drop unwanted changes, or `git add -p` for partial commits.
+
+### Expected once: the Python 3.15 update
+
+This one update deletes lines right next to ones most projects edited, so expect a few conflicts. Each one is resolved the same way: keep your lines and drop the template's old ones.
+
+- **The old `# template-preserve:*` comments** around `dependencies`, your own poe tasks and your own local hooks. Keep your lines and delete the comments. If you added poe tasks, the template's new `upgrade` task lands in the same conflict: keep it alongside yours.
+- **`requires-python` next to `version`.** `requires-python` moves above `readme`. The new line merges in on its own, but deleting the old one right above `version` conflicts in every project that has released:
+
+```text
+<<<<<<< before updating
+requires-python = ">=3.14"
+version = "0.18.0"
+||||||| last update
+requires-python = ">=3.14"
+version = "0.0.0"
+=======
+version = "0.0.0"
+>>>>>>> after updating
+```
+
+Keep your `version` line and delete the old `requires-python`. Keeping the top block whole leaves two `requires-python` keys, which uv rejects as invalid TOML. After this, `readme` sits between the two lines, and later Python bumps merge without a conflict.
+
+### Updating from 0.41.x: run copier by hand once
+
+Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej`. In that mode copier moves every hunk it cannot apply cleanly to a `.rej` file, including your unrelated edits next to it, and the file keeps the template's version. Against the Python 3.15 release that takes your released version, dependencies and `[tool.uv]` settings out of `pyproject.toml` and into `pyproject.toml.rej`. Nothing is lost, and the `no-copier-rej-files` hook blocks the commit, but applying `.rej` hunks by hand is tedious. Run the inline update directly instead:
+
+```bash
+copier update --trust --skip-answered --defaults --conflict inline
+```
+
+That update brings in the new `poe update-template`, so later updates need nothing special. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
+
+### Updating from before 0.41.4
+
+The template carries no migrations, so an update across older releases leaves a few things to do by hand. Each one shows up in `git status`:
+
+- **`open_source` (0.41.0)** replaced `project_visibility`, `project_audience` and `use_community_health_files`. The update takes its default, `true` on GitHub and `false` elsewhere, so an internal GitHub project gains a LICENSE and community-health files, and a public GitLab one loses them. Discard those changes and re-run with the right answer: `copier update --trust --skip-answered --defaults --conflict inline -d open_source=false`.
+- **`scripts/prek-autoupdate.sh` (0.41.4)** is no longer used. Delete it.
 
 ## What happened in 0.41.0 to 0.41.14
 

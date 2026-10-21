@@ -261,11 +261,10 @@ prek = "prek run --all-files"
 
 # Template utilities
 check-template = { shell = "copier check-update || true" }
-update-template = { shell = "copier update --trust . --skip-answered --defaults --conflict inline && uv sync --upgrade && uv run prek update && echo '  ✓ Dependencies upgraded and hook versions updated' && { git grep -lE '^<{7} before updating' -- . && echo '  ⚠ The update conflicts with your edits in the files above — resolve the <<<<<<< markers before committing.' || true; }{% if use_semantic_release %} && { grep -q 'git add uv.lock CHANGELOG.md' pyproject.toml || echo '  ⚠ WARNING: build_command in pyproject.toml is missing \"git add uv.lock CHANGELOG.md\" — releases will produce stale lockfiles. Add \"git add uv.lock CHANGELOG.md\" to build_command.'; }{% endif %}" }
+update-template = "copier update --trust . --skip-answered --defaults --conflict inline"
 
-# template-preserve:extra-poe-tasks:start
-# Add your own project-specific poe tasks below — preserved across `copier update`.
-# template-preserve:extra-poe-tasks:end
+# Dependencies and hook revisions
+upgrade = { shell = "uv sync --upgrade && uv run prek update" }
 
 {%- if use_semantic_release %}
 

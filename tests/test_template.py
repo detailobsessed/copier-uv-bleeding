@@ -1346,13 +1346,19 @@ class TestTemplateUpdateCheck:
         assert "check-template" in content
 
     def test_update_template_poe_task(self, copier_defaults: dict, project_factory) -> None:
-        """Rendered projects should have update-template poe task that chains uv sync --upgrade and prek update."""
+        """`update-template` is copier and nothing else; upgrading dependencies is `poe upgrade`.
+
+        The task used to chain `uv sync --upgrade`, `prek update`, a conflict-marker
+        grep and a `build_command` check. Each was our logic to maintain on top of
+        tools that already do the job: check-merge-conflict blocks the markers.
+        """
         project = project_factory(copier_defaults)
 
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
-        assert "update-template" in content
-        assert "copier update" in content
+        with (project / "pyproject.toml").open("rb") as f:
+            tasks = tomllib.load(f)["tool"]["poe"]["tasks"]
+        assert tasks["update-template"] == "copier update --trust . --skip-answered --defaults --conflict inline"
+        assert tasks["upgrade"] == {"shell": "uv sync --upgrade && uv run prek update"}
+        content = (project / "pyproject.toml").read_text()
         # update-template must pass both:
         #   --defaults    → don't prompt on newly-added questions; use their defaults.
         #                   Required so the task survives non-TTY contexts (CI, scripted
@@ -1367,11 +1373,6 @@ class TestTemplateUpdateCheck:
         #                    included (DOT-630); check-merge-conflict blocks the markers.
         assert "--defaults" in content
         assert "--conflict inline" in content
-        assert "uv sync --upgrade" in content
-        assert "prek update" in content
-        assert not (project / "scripts" / "prek-autoupdate.sh").exists(), (
-            "the wrapper script was replaced by a declarative `[update.repos]` filter in prek.toml (DOT-616)"
-        )
 
     def test_lychee_rev_is_pinned_not_empty(self, copier_defaults: dict, project_factory) -> None:
         """Lychee should have a pinned rev (not empty) since its 'nightly' tag is mutable."""
@@ -1565,10 +1566,8 @@ class TestTemplateUpdateCheck:
         """The `🎉 Template updated!` banner must not claim "Dependencies synced" (DOT-587 fix follow-up).
 
         With the inverted `uv sync` guard (see test_uv_sync_task_runs_in_copier_temp_render_dirs),
-        copier's _tasks no longer run uv sync in the destination during update. The poe
-        `update-template` chain runs `uv sync --upgrade` after copier returns. So the banner
-        — which fires from copier's _tasks before the poe chain finishes — would be lying
-        if it claimed deps were already synced.
+        copier's _tasks never run uv sync in the destination during update; `poe upgrade`
+        does that once the update has been reviewed.
         """
         copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
         # Pull just the line(s) containing the update banner's printf, so this only
@@ -1579,8 +1578,8 @@ class TestTemplateUpdateCheck:
 
         assert "Dependencies synced" not in banner, (
             f"Update banner claims `Dependencies synced` — but copier's _tasks skip "
-            f"`uv sync` in the destination during update (see DOT-587). The poe "
-            f"`update-template` chain syncs deps AFTER this banner. Drop the line.\n"
+            f"`uv sync` in the destination during update (see DOT-587); `poe upgrade` "
+            f"syncs deps afterwards. Drop the line.\n"
             f"Banner:\n{banner}"
         )
 
@@ -1896,198 +1895,6 @@ class TestOpenSource:
         content = (project / "pyproject.toml").read_text()
         assert "gitlab.company.com" in content
         assert "://gitlab.com/" not in content
-
-
-class TestOpenSourceMigration:
-    """The 0.41.0 `_migrations` step derives `open_source` from the legacy
-    `project_visibility` / `project_audience` answers.
-
-    Without this migration, `copier update --defaults` resolves `open_source`
-    from its own schema default (`repository_provider == 'github.com'`) instead
-    of the project's real history, silently flipping visibility for any project
-    whose history disagrees with that default — e.g. an internal project hosted
-    on GitHub gains a LICENSE and community-health files with no `.rej` warning.
-
-    A full `copier update` end-to-end run can't exercise this migration in this
-    test suite: `_migrations` are gated by PEP 440 version comparison against the
-    *tagged* template version, and an unreleased commit always resolves to a dev
-    version below the next tag (verified manually against a temporary local
-    `0.41.0` tag during development). So this tests the migration script directly.
-    """
-
-    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "0.41.0_open_source.py"
-
-    def test_migration_registered_in_copier_yml(self) -> None:
-        """copier.yml's `_migrations` entry must reference the script that actually exists."""
-        content = (REPO_ROOT / "copier.yml").read_text()
-        assert "migrations/0.41.0_open_source.py" in content
-        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
-
-    def _run(self, tmp_path: pathlib.Path, answers_body: str) -> str:
-        answers_file = tmp_path / ".copier-answers.yml"
-        answers_file.write_text(answers_body)
-        result = subprocess.run(
-            ["python3", str(self.SCRIPT)],
-            cwd=tmp_path,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        assert result.returncode == 0, f"migration script failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-        return answers_file.read_text()
-
-    def test_derives_open_source_true_from_public_visibility(self, tmp_path: Path) -> None:
-        """An internal-on-paper GitHub project isn't affected, but a public project must stay public."""
-        result = self._run(tmp_path, "repository_provider: gitlab.com\nproject_visibility: public\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_derives_open_source_false_from_internal_visibility(self, tmp_path: Path) -> None:
-        """The exact regression this migration exists for: an internal GitHub project must not
-        silently become open-source (schema default is `repository_provider == 'github.com'`)."""
-        result = self._run(tmp_path, "repository_provider: github.com\nproject_visibility: internal\n")
-        assert re.search(r"^open_source:\s*false\s*$", result, re.MULTILINE), result
-
-    def test_falls_back_to_project_audience_when_visibility_absent(self, tmp_path: Path) -> None:
-        """Very old projects (pre-project_visibility) only have project_audience recorded."""
-        result = self._run(tmp_path, "repository_provider: gitlab.com\nproject_audience: public-oss\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_leaves_existing_open_source_answer_untouched(self, tmp_path: Path) -> None:
-        """If `open_source` is already answered, the migration must not override it."""
-        result = self._run(tmp_path, "project_visibility: public\nopen_source: false\n")
-        assert re.search(r"^open_source:\s*false\s*$", result, re.MULTILINE), result
-
-    def test_noop_without_any_legacy_answer(self, tmp_path: Path) -> None:
-        """No legacy keys to derive from — leave the file alone and let the question's own default apply."""
-        original = "repository_provider: gitlab.com\n"
-        result = self._run(tmp_path, original)
-        assert result == original
-
-    def test_falls_back_to_community_health_files_when_visibility_and_audience_absent(self, tmp_path: Path) -> None:
-        """Projects from before project_visibility existed only have use_community_health_files."""
-        result = self._run(tmp_path, "repository_provider: gitlab.com\nuse_community_health_files: true\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_derives_open_source_when_visibility_and_community_health_agree(self, tmp_path: Path) -> None:
-        """The common case: use_community_health_files matches its project_visibility-derived default."""
-        result = self._run(tmp_path, "project_visibility: public\nuse_community_health_files: true\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_abstains_when_visibility_and_community_health_disagree(self, tmp_path: Path) -> None:
-        """A public project with community files explicitly turned off (DOT-599 review finding):
-        no single boolean preserves both axes, so the migration must not guess."""
-        original = "project_visibility: public\nuse_community_health_files: false\n"
-        result = self._run(tmp_path, original)
-        assert result == original
-        assert "open_source" not in result
-
-
-class TestRemovePrekAutoupdateScriptMigration:
-    """The 0.41.4 `_migrations` step deletes the orphaned `scripts/prek-autoupdate.sh`.
-
-    `copier update` never deletes files, so without this the wrapper lingers in
-    every existing project, unreferenced by `poe update-template` or the docs
-    (DOT-616).
-
-    Deleting a user's file is the risk here, so the guard is an exact digest of
-    every version the template shipped rather than a substring match. A substring
-    guard fails in both directions, which is a #336 review finding: it deletes a
-    genuinely edited script as long as the matched line survives, and it flags the
-    pre-0.40.0 script -- which used a `--cooldown-days 7` second pass and contains
-    no `--repo-exclude-tag` at all -- as customised when it is pristine.
-    """
-
-    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "0.41.4_remove_prek_autoupdate_script.py"
-    TARGET: ClassVar[pathlib.Path] = pathlib.Path("scripts") / "prek-autoupdate.sh"
-
-    # Byte-for-byte as shipped. Kept here rather than read from git history so the
-    # test fails if someone edits the digests in the migration to match a new file.
-    SHIPPED_0_38_1: ClassVar[str] = (
-        "#!/usr/bin/env bash\n"
-        "# Wraps `uv run prek autoupdate` with a workaround for lychee marking `nightly` as\n"
-        '# their GitHub "Latest" release (DOT-492). The second pass with --cooldown-days 7\n'
-        "# reverts lychee's `rev` from `nightly` back to the most recent versioned tag.\n"
-        "# Remove once lychee stops marking nightly as Latest (DOT-504).\n"
-        "set -eu\n"
-        'uv run prek autoupdate "$@"\n'
-        'uv run prek autoupdate --repo https://github.com/lycheeverse/lychee --cooldown-days 7 "$@"\n'
-    )
-    SHIPPED_0_40_0: ClassVar[str] = (
-        "#!/usr/bin/env bash\n"
-        "# Wraps `uv run prek autoupdate` with a workaround for lychee tagging `nightly`\n"
-        '# as their GitHub "Latest" release (lycheeverse/lychee#1601). The\n'
-        "# --repo-exclude-tag flag (prek 0.3.11+) keeps lychee on its real latest\n"
-        "# versioned tag instead of flipping to `nightly`. Remove the flag when upstream\n"
-        "# closes lycheeverse/lychee#1601 (DOT-504).\n"
-        "set -eu\n"
-        'uv run prek autoupdate --repo-exclude-tag https://github.com/lycheeverse/lychee=nightly "$@"\n'
-    )
-
-    def test_migration_registered_in_copier_yml(self) -> None:
-        """copier.yml's `_migrations` entry must reference the script that actually exists."""
-        content = (REPO_ROOT / "copier.yml").read_text()
-        assert "migrations/0.41.4_remove_prek_autoupdate_script.py" in content
-        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
-
-    def test_migration_commands_quote_the_script_path(self) -> None:
-        """copier runs string `_migrations` commands with `shell=True`.
-
-        `_copier_conf.src_path` is whatever the user passed to `copier copy`, so an
-        unquoted path containing a space splits into two arguments and python3 fails
-        to open the script (#336 review finding).
-        """
-        content = (REPO_ROOT / "copier.yml").read_text()
-        unquoted = re.findall(r"^\s*command:\s*python3\s+(?!\")\S*\{\{.*$", content, re.MULTILINE)
-        assert not unquoted, f"migration script paths must be quoted for paths with spaces: {unquoted}"
-
-    def _run(self, tmp_path: pathlib.Path, body: str | None) -> tuple[bool, str]:
-        """Run the migration in `tmp_path`; return (file still exists, stdout)."""
-        target = tmp_path / self.TARGET
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if body is not None:
-            target.write_text(body, newline="")
-        result = subprocess.run(["python3", str(self.SCRIPT)], cwd=tmp_path, capture_output=True, text=True, check=False)
-        assert result.returncode == 0, f"migration failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-        return target.exists(), result.stdout
-
-    @pytest.mark.parametrize("shipped", ["SHIPPED_0_38_1", "SHIPPED_0_40_0"])
-    def test_removes_every_version_the_template_shipped(self, tmp_path: Path, shipped: str) -> None:
-        """Both shipped versions are pristine and must go, including the pre-0.40.0 one
-        that predates `--repo-exclude-tag` entirely."""
-        exists, stdout = self._run(tmp_path, getattr(self, shipped))
-        assert not exists, f"pristine {shipped} was left behind: {stdout}"
-        assert "Removed" in stdout
-
-    def test_removes_a_shipped_version_checked_out_with_crlf(self, tmp_path: Path) -> None:
-        """A Windows checkout with `core.autocrlf=true` stores the same bytes with CRLF.
-        That is not a customisation and must not read as one."""
-        exists, _ = self._run(tmp_path, self.SHIPPED_0_40_0.replace("\n", "\r\n"))
-        assert not exists, "CRLF line endings were mistaken for a user customisation"
-
-    def test_keeps_a_customised_script(self, tmp_path: Path) -> None:
-        """The failure mode that matters: never delete work the user did.
-
-        This script keeps the original invocation intact and only appends a line,
-        which is exactly what a substring guard would wave through.
-        """
-        exists, stdout = self._run(tmp_path, self.SHIPPED_0_40_0 + "uv run prek run --all-files\n")
-        assert exists, "a customised script was deleted"
-        assert "leaving it in place" in stdout
-
-    def test_noop_when_the_script_is_absent(self, tmp_path: Path) -> None:
-        """Projects generated after 0.41.4 never had the file; the migration must stay silent."""
-        exists, stdout = self._run(tmp_path, None)
-        assert not exists
-        assert stdout.strip() == "", f"expected no output, got: {stdout!r}"
-
-    def test_digests_match_the_versions_actually_shipped(self) -> None:
-        """Guards against the digests drifting from the file contents they claim to describe."""
-        import hashlib
-
-        content = self.SCRIPT.read_text()
-        for shipped in (self.SHIPPED_0_38_1, self.SHIPPED_0_40_0):
-            digest = hashlib.sha256(shipped.encode()).hexdigest()
-            assert digest in content, f"migration is missing the digest for a shipped version: {digest}"
 
 
 class TestMcpRegistry:
@@ -2409,9 +2216,10 @@ class TestIntegration:
             check=False,
         )
 
-        # Run the update against current HEAD (which must contain the fix).
+        # Run the update against current HEAD (which must contain the fix). Inline, as
+        # `poe update-template` does.
         update = subprocess.run(
-            ["copier", "update", "--trust", "--defaults", "--conflict", "rej", "--vcs-ref", "HEAD"],
+            ["copier", "update", "--trust", "--defaults", "--conflict", "inline", "--vcs-ref", "HEAD"],
             cwd=project,
             capture_output=True,
             text=True,
