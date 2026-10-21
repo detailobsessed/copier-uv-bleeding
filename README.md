@@ -63,7 +63,7 @@ When you run `copier copy`, you'll be asked:
 
 The **Key** column names each answer in `.copier-answers.yml`, and is what `-d key=value` and the `defaults:` in copier's settings file take.
 
-Every project gets CI (GitHub Actions or GitLab CI), with coverage run there rather than as a git hook. On GitHub, copy and update also run `gh repo edit` to enable delete-branch-on-merge and auto-merge, when `gh` is installed and can reach the repository.
+Every project gets CI (GitHub Actions or GitLab CI) and no test hooks on push. GitHub CI also measures coverage (`poe test-cov`); GitLab CI runs `poe test`. On GitHub, copy and update also run `gh repo edit` to enable delete-branch-on-merge and auto-merge, once the project has its own git repository and `gh` can reach it.
 
 ## Quick Start
 

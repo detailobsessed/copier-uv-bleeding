@@ -273,8 +273,10 @@ _tasks:
   # Update only — reinstall hooks (fresh copy has no .git yet)
   - command: "if [ -d .git ]; then uv run prek install; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
-  # GitHub repo settings — idempotent, runs on copy and update
-  - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
+  # GitHub repo settings — idempotent. Only where the project has its own .git:
+  # without one (a fresh copy, copier's temp renders) `gh repo view` walks up to
+  # whatever checkout encloses the directory and would edit that repo instead.
+  - command: "[ -d .git ] && command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
     when: "{{ repository_provider == 'github.com' }}"
   # Copy — setup instructions
   - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && uv run prek update\\n  Create your source files in src/ and tests/\\n'"
