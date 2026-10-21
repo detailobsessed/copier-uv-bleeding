@@ -1892,6 +1892,33 @@ class TestOpenSource:
             data = tomllib.load(f)
         assert "accept" in data
 
+    def test_gitlab_release_remote_excluded_from_lychee(self, copier_defaults: dict, project_factory) -> None:
+        """The GitLab release job's credentialed remote must not fail lychee.
+
+        `https://gitlab-ci-token:${GITLAB_TOKEN}@…` in .gitlab-ci.yml reads to lychee
+        as a link to https://gitlab-ci-token/, which 404s, so every fresh GitLab
+        project failed its first `prek run --all-files` (kop-testing, 0.42.1).
+        """
+        answers = {
+            **copier_defaults,
+            "open_source": False,
+            "repository_provider": "gitlab.com",
+            "repository_host": "gitlab.company.com",
+            "use_ci": True,
+            "use_semantic_release": True,
+        }
+        project = project_factory(answers)
+        assert "https://gitlab-ci-token:" in (project / ".gitlab-ci.yml").read_text()
+
+        with (project / ".lychee.toml").open("rb") as f:
+            excludes = tomllib.load(f)["exclude"]
+        assert any(re.search(pattern, "https://gitlab-ci-token/") for pattern in excludes), excludes
+
+    def test_github_lychee_has_no_gitlab_token_exclude(self, copier_defaults: dict, project_factory) -> None:
+        """GitHub projects have no .gitlab-ci.yml, so they carry no exclude for it."""
+        project = project_factory({**copier_defaults, "repository_provider": "github.com"})
+        assert "gitlab-ci-token" not in (project / ".lychee.toml").read_text()
+
     # -- Self-hosted repository URLs --
 
     def test_selfhosted_pyproject_urls(self, copier_defaults: dict, project_factory) -> None:
