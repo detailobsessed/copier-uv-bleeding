@@ -255,6 +255,32 @@ runs = "gh run list --limit 10"
 checks = "gh pr checks --watch"
 watch = "gh run watch"
 
+# Releases are manual (see release.yml). Lists what origin/main would ship, then
+# dispatches the workflow and follows the run; semantic-release in the run
+# decides the version and skips the release if no commit warrants one.
+[tool.poe.tasks.release]
+help = "Release origin/main via the release workflow and follow the run"
+verbosity = -1  # don't echo the script itself
+shell = """
+set -e
+git fetch --quiet --tags origin main
+last=$(git describe --tags --abbrev=0 origin/main)
+pending=$(git log --oneline --no-merges "$last"..origin/main)
+if [ -z "$pending" ]; then
+  echo "Nothing on origin/main since $last."
+  exit 0
+fi
+printf 'Unreleased on origin/main since %s:\\n%s\\n\\n' "$last" "$pending"
+out=$(gh workflow run release --ref main)
+echo "$out"
+run_id=$(printf '%s\\n' "$out" | sed -n 's|.*/actions/runs/\\([0-9][0-9]*\\).*|\\1|p' | head -n 1)
+if [ -z "$run_id" ]; then
+  echo "No run URL returned; follow it with: poe watch"
+  exit 0
+fi
+gh run watch "$run_id" --exit-status
+"""
+
 [tool.ty.environment]
 python-version = "3.15"
 python = ".venv"
