@@ -270,8 +270,14 @@ _tasks:
   # `old_copy` has. The destination is synced by `poe upgrade`, run after the
   # update has been reviewed.
   - "if [ \"{{ _copier_operation }}\" = \"copy\" ] || [ ! -d .git ]; then uv sync --upgrade; fi"
-  # Update only — reinstall hooks (fresh copy has no .git yet)
-  - command: "if [ -d .git ]; then uv run prek install; fi"
+  # Update only — reinstall hooks (fresh copy has no .git yet).
+  #
+  # `--frozen` whenever there is a lock: copier runs these tasks before it replays
+  # the project's edits, so `pyproject.toml` is still the bare template render
+  # here. A plain `uv run` re-locks against it, dropping every dependency the
+  # project added, and `_skip_if_exists` keeps that lock (DOT-677). Without a lock
+  # there is nothing to lose, and `--frozen` would fail the update.
+  - command: "if [ -d .git ]; then if [ -f uv.lock ]; then uv run --frozen prek install; else uv run prek install; fi; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
   # GitHub repo settings — idempotent. Only where the project has its own .git:
   # without one (a fresh copy, copier's temp renders) `gh repo view` walks up to
