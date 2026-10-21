@@ -14,6 +14,9 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.42.0 (2026-10-21)
+
+
 ## v0.41.15 (2026-10-19)
 
 ### Bug Fixes
