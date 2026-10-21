@@ -270,12 +270,22 @@ if [ -z "$pending" ]; then
   exit 0
 fi
 printf 'Unreleased on origin/main since %s:\\n%s\\n\\n' "$last" "$pending"
+since=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 out=$(gh workflow run release --ref main)
 echo "$out"
 run_id=$(printf '%s\\n' "$out" | sed -n 's|.*/actions/runs/\\([0-9][0-9]*\\).*|\\1|p' | head -n 1)
+# gh prints the run URL only when GitHub answers 200 with run details; it can
+# still answer 204, so fall back to the newest dispatch run created since.
+tries=0
+while [ -z "$run_id" ] && [ "$tries" -lt 10 ]; do
+  sleep 3
+  tries=$((tries + 1))
+  run_id=$(gh run list --workflow release --event workflow_dispatch --limit 1 \\
+    --json databaseId,createdAt --jq ".[] | select(.createdAt >= \\"$since\\") | .databaseId")
+done
 if [ -z "$run_id" ]; then
-  echo "No run URL returned; follow it with: poe watch"
-  exit 0
+  echo "Dispatched, but found no release run created since $since. Check: poe runs" >&2
+  exit 1
 fi
 gh run watch "$run_id" --exit-status
 """

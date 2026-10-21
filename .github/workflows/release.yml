@@ -8,6 +8,7 @@ name: release
 
 permissions:
   contents: write
+  actions: read  # the CI gate below lists runs; unlisted scopes are none
 
 jobs:
   release:
