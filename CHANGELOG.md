@@ -14,6 +14,31 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.41.15 (2026-10-19)
+
+### Bug Fixes
+
+- **template**: Stop chmodding scripts the template does not own
+  ([`567d79d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/567d79d132ff86de446a4c3e5d8ef479327a722e))
+
+- **test**: Bind the cleanup tolerance to the failure that raised it
+  ([`b2cf464`](https://github.com/detailobsessed/copier-uv-bleeding/commit/b2cf46455387674819b957f943cfe27b395d63e8))
+
+- **test**: Retry the cleanup race instead of tolerating a failed exit
+  ([`138e14a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/138e14aa0f8f2947837dc8e750385dd3211fae03))
+
+### Testing
+
+- Parse copier.yml as YAML in the chmod guard
+  ([`15c02ed`](https://github.com/detailobsessed/copier-uv-bleeding/commit/15c02ed3fed4d46b6fee51c513663d52ffeff378))
+
+- Pin the boundary of the temp-clone cleanup tolerance
+  ([`cc625d7`](https://github.com/detailobsessed/copier-uv-bleeding/commit/cc625d78efdc70856897e944dbfb8607dd393cf4))
+
+- Tolerate copier's temp-clone cleanup race on a dirty tree
+  ([`c8bab3c`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c8bab3c3565c58ef484e234bde73dee6e1cc9dbc))
+
+
 ## v0.41.14 (2026-08-05)
 
 ### Bug Fixes
