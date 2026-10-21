@@ -73,7 +73,7 @@ def generate_project(
 
     We use ``--skip-tasks`` to prevent copier's ``_tasks`` (which include ``uv sync
     --upgrade``) from running on every generated project.  Those tasks require Python
-    3.14 and network access; skipping them keeps the test suite fast and portable.
+    3.15 and network access; skipping them keeps the test suite fast and portable.
     The ``TestIntegration`` tests explicitly call ``uv sync`` where needed.
     """
     answers = {**answers, "project_type": project_type}

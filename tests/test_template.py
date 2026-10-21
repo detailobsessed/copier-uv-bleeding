@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import re
@@ -73,7 +74,7 @@ class TestCoreFiles:
         """Ruff config must use `extend-select`, never `select`.
 
         `select` REPLACES ruff's default rule set; `extend-select` layers on
-        top of it. Ruff's defaults are broad (413 rules as of 0.16) and grow
+        top of it. Ruff's defaults are broad (407 rules as of 0.17) and change
         with each release, so a curated `select` list silently switches off
         every default it happens to omit — and nothing warns that it has.
         Before this was fixed the template disabled 81 default rules that way,
@@ -95,23 +96,39 @@ class TestCoreFiles:
         """Prefixes that ruff now enables by default should not be re-listed.
 
         A redundant entry is indistinguishable from a load-bearing one, so they
-        get deleted rather than kept "for documentation". These four are fully
-        covered by stable ruff 0.16's defaults.
+        get deleted rather than kept "for documentation". These three are fully
+        covered by stable ruff 0.17's defaults.
         """
         project = project_factory(copier_defaults)
 
         with (project / "pyproject.toml").open("rb") as f:
             selected = tomllib.load(f)["tool"]["ruff"]["lint"]["extend-select"]
 
-        redundant = sorted({"DTZ", "FA", "FLY", "PIE"} & set(selected))
+        redundant = sorted({"FA", "FLY", "PIE"} & set(selected))
         assert not redundant, f"these prefixes are fully enabled by ruff's defaults; drop them: {redundant!r}"
 
-    def test_ruff_required_version_matches_the_extend_select_premise(self, copier_defaults: dict, project_factory) -> None:
-        """`extend-select` is only safe on ruff >=0.16, so the config must demand it.
+    def test_ruff_selects_rules_its_defaults_dropped(self, copier_defaults: dict, project_factory) -> None:
+        """`DTZ` must be selected explicitly again.
 
-        Ruff 0.14/0.15 enable 59 default rules (E4/E7/E9/F); 0.16 enables 413.
-        The four prefixes deleted as "redundant" are covered by the 413 and not
+        Ruff 0.16 enabled all ten stable flake8-datetimez rules by default, so
+        `DTZ` was deleted from `extend-select` as redundant. 0.17 dropped seven
+        of them (DTZ001/005/006/007/011/012/901) from the defaults, and every
+        project resolving the `ruff>=0.16.1` floor lost them without a warning.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            selected = tomllib.load(f)["tool"]["ruff"]["lint"]["extend-select"]
+
+        assert "DTZ" in selected, "ruff 0.17 no longer enables most DTZ rules by default; select DTZ"
+
+    def test_ruff_required_version_matches_the_extend_select_premise(self, copier_defaults: dict, project_factory) -> None:
+        """`extend-select` is only safe on ruff >=0.17, so the config must demand it.
+
+        Ruff 0.14/0.15 enable 59 default rules (E4/E7/E9/F); 0.17 enables 407.
+        The three prefixes deleted as "redundant" are covered by the 407 and not
         by the 59, so on an older ruff `extend-select` drops them silently.
+        0.17 is also the first ruff whose `py315` target is stable.
 
         `required-version` is the load-bearing guard rather than the `ci`
         dependency floor: a project that edited its dependency groups keeps its
@@ -124,9 +141,9 @@ class TestCoreFiles:
         with (project / "pyproject.toml").open("rb") as f:
             data = tomllib.load(f)
 
-        assert data["tool"]["ruff"].get("required-version") == ">=0.16", (
-            "extend-select assumes ruff 0.16's 413 default rules; without required-version "
-            "an older ruff silently drops DTZ/FA/FLY/PIE instead of failing"
+        assert data["tool"]["ruff"].get("required-version") == ">=0.17", (
+            "extend-select assumes ruff 0.17's 407 default rules and target py315; without "
+            "required-version an older ruff silently drops FA/FLY/PIE instead of failing"
         )
 
         ci_deps = data["dependency-groups"]["ci"]
@@ -136,7 +153,7 @@ class TestCoreFiles:
         # (which is pinned to the minor whose defaults `extend-select` assumes). It must
         # never sit below it, or a resolvable install would hard-fail on required-version.
         parts = tuple(int(p) for p in ci_ruff.removeprefix("ruff>=").split("."))
-        assert parts >= (0, 16), f"the ci floor must not fall below required-version; got {ci_ruff!r}"
+        assert parts >= (0, 17), f"the ci floor must not fall below required-version; got {ci_ruff!r}"
 
     def test_ruff_preview_is_disabled(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not opt into ruff's preview rules.
@@ -146,7 +163,7 @@ class TestCoreFiles:
         someone who adopted this template for a real project — a routine ruff
         upgrade turns into new lint failures they did not ask for.
 
-        Stable ruff 0.16 already enables 413 rules, so preview buys very little
+        Stable ruff 0.17 already enables 407 rules, so preview buys very little
         coverage for the churn it adds.
         """
         project = project_factory(copier_defaults)
@@ -158,6 +175,27 @@ class TestCoreFiles:
             "preview must be explicitly disabled — leaving it on subjects generated "
             "projects to rules that can change or vanish in a patch release."
         )
+
+    def test_ruff_ignores_no_preview_only_rules(self, copier_defaults: dict, project_factory) -> None:
+        """With preview off, ignoring a preview-only rule does nothing.
+
+        Such an entry reads like a deliberate exemption but never runs, the
+        same dead config as a redundant `extend-select` prefix. S404, PLR6301,
+        PLC2701 and PLR0904 sat in the tests ignore list this way until ruff
+        0.17's audit.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            lint = tomllib.load(f)["tool"]["ruff"]["lint"]
+        ignored = set(lint.get("ignore", []))
+        for codes in lint.get("per-file-ignores", {}).values():
+            ignored.update(codes)
+
+        result = subprocess.run(["ruff", "rule", "--all", "--output-format", "json"], capture_output=True, text=True, check=True)
+        preview = {rule["code"] for rule in json.loads(result.stdout) if rule["preview"]}
+        dead = sorted(ignored & preview)
+        assert not dead, f"these ignores name preview-only rules, which never run with preview off: {dead!r}"
 
     def test_ruff_selectors_use_rule_codes(self, copier_defaults: dict, project_factory) -> None:
         """Ignore selectors must use rule codes, not rule names.
@@ -240,21 +278,40 @@ class TestCIConfiguration:
 class TestPythonVersion:
     """Test Python version configuration."""
 
-    def test_requires_python_314(self, copier_defaults: dict, project_factory) -> None:
-        """Generated project should require Python 3.14+."""
+    def test_requires_python_315(self, copier_defaults: dict, project_factory) -> None:
+        """Generated project should require Python 3.15+."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert 'requires-python = ">=3.14"' in content
+        assert 'requires-python = ">=3.15"' in content
 
-    def test_ruff_target_py314(self, copier_defaults: dict, project_factory) -> None:
-        """Ruff should target Python 3.14."""
+    def test_ruff_target_py315(self, copier_defaults: dict, project_factory) -> None:
+        """Ruff should target Python 3.15."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert 'target-version = "py314"' in content
+        assert 'target-version = "py315"' in content
+
+    def test_every_python_version_pin_agrees(self, copier_defaults: dict, project_factory) -> None:
+        """ty, the classifier, CI and the README badge must name the same Python.
+
+        The version is spelled out in a dozen places; bumping it is a
+        find-and-replace that is easy to leave half done.
+        """
+        answers = {**copier_defaults, "publish_to_pypi": True}
+        project = project_factory(answers)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+        assert data["tool"]["ty"]["environment"]["python-version"] == "3.15"
+        assert "Programming Language :: Python :: 3.15" in data["project"]["classifiers"]
+
+        gitlab = project_factory({**copier_defaults, "repository_provider": "gitlab.com"})
+        files = [*(project / ".github" / "workflows").glob("*.yml"), project / "README.md", gitlab / ".gitlab-ci.yml"]
+        stale = [line.strip() for p in files for line in p.read_text().splitlines() if "3.14" in line]
+        assert not stale, f"lines still naming Python 3.14: {stale!r}"
 
 
 class TestPreCommitConfig:
@@ -266,7 +323,7 @@ class TestPreCommitConfig:
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.4.12"' in content
+        assert 'minimum_prek_version = "0.5.7"' in content
 
     def test_testmon_hook_pins_coverage_core(self, copier_defaults: dict, project_factory) -> None:
         """The testmon hook must force the ctrace coverage core.
@@ -684,7 +741,7 @@ class TestDependencies:
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.4.12"' in content
+        assert '"prek>=0.5.7"' in content
 
     # Floors track the versions the template is actually exercised against, not the
     # oldest release that happens to still work. `uv sync` resolves to the newest
@@ -692,16 +749,16 @@ class TestDependencies:
     # the template under -- it advertises support that is not verified. Pinning them
     # here makes widening a range a deliberate, reviewed edit rather than a leftover.
     EXPECTED_FLOORS: ClassVar[dict[str, dict[str, str]]] = {
-        "maintain": {"build": "1.5", "python-semantic-release": "10.6"},
+        "maintain": {"build": "1.6", "python-semantic-release": "10.7"},
         "ci": {
-            "ruff": "0.16.1",
+            "ruff": "0.17.1",
             "pytest": "9",
             "pytest-cov": "7",
-            "pytest-randomly": "4",
-            "ty": "0.0.66",
-            "poethepoet": "0.48",
+            "pytest-randomly": "5",
+            "ty": "0.0.90",
+            "poethepoet": "0.49",
         },
-        "local": {"prek": "0.4.12", "pytest-testmon": "2.2"},
+        "local": {"prek": "0.5.7", "pytest-testmon": "2.2"},
     }
 
     @staticmethod
@@ -933,7 +990,7 @@ class TestCIWorkflows:
         The bound is uv's own recommendation, not this template's: `uv_build`
         follows uv's versioning policy, so a minor may change build behaviour,
         and uv's docs ask for an upper bound for exactly that reason. `uv init`
-        emits `uv_build>=0.12.1,<0.13.0` on uv 0.12.1; the template matches that
+        emits `uv_build>=0.13.4,<0.14.0` on uv 0.13.4; the template matches that
         shape. An unbounded spec also makes uv warn on every `uv sync` / `uv
         build`, drowning out real warnings. Bump the window when uv does.
         """
@@ -953,7 +1010,7 @@ class TestCIWorkflows:
         assert "<" in spec, (
             f"uv_build must have an upper version bound to avoid the uv warning and "
             f"to prevent silent breakage on a future major release. Got {spec!r}; "
-            f"expected something like 'uv_build>=0.12,<0.13'."
+            f"expected something like 'uv_build>=0.13,<0.14'."
         )
 
     def test_pypi_false_excludes_classifiers_and_keywords(self, copier_defaults: dict, project_factory) -> None:
@@ -1289,13 +1346,19 @@ class TestTemplateUpdateCheck:
         assert "check-template" in content
 
     def test_update_template_poe_task(self, copier_defaults: dict, project_factory) -> None:
-        """Rendered projects should have update-template poe task that chains uv sync --upgrade and prek update."""
+        """`update-template` is copier and nothing else; upgrading dependencies is `poe upgrade`.
+
+        The task used to chain `uv sync --upgrade`, `prek update`, a conflict-marker
+        grep and a `build_command` check. Each was our logic to maintain on top of
+        tools that already do the job: check-merge-conflict blocks the markers.
+        """
         project = project_factory(copier_defaults)
 
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
-        assert "update-template" in content
-        assert "copier update" in content
+        with (project / "pyproject.toml").open("rb") as f:
+            tasks = tomllib.load(f)["tool"]["poe"]["tasks"]
+        assert tasks["update-template"] == "copier update --trust . --skip-answered --defaults --conflict inline"
+        assert tasks["upgrade"] == {"shell": "uv sync --upgrade && uv run prek update"}
+        content = (project / "pyproject.toml").read_text()
         # update-template must pass both:
         #   --defaults    → don't prompt on newly-added questions; use their defaults.
         #                   Required so the task survives non-TTY contexts (CI, scripted
@@ -1310,11 +1373,6 @@ class TestTemplateUpdateCheck:
         #                    included (DOT-630); check-merge-conflict blocks the markers.
         assert "--defaults" in content
         assert "--conflict inline" in content
-        assert "uv sync --upgrade" in content
-        assert "prek update" in content
-        assert not (project / "scripts" / "prek-autoupdate.sh").exists(), (
-            "the wrapper script was replaced by a declarative `[update.repos]` filter in prek.toml (DOT-616)"
-        )
 
     def test_lychee_rev_is_pinned_not_empty(self, copier_defaults: dict, project_factory) -> None:
         """Lychee should have a pinned rev (not empty) since its 'nightly' tag is mutable."""
@@ -1327,6 +1385,24 @@ class TestTemplateUpdateCheck:
         rev = lychee_repos[0]["rev"]
         assert rev, "Lychee rev should be pinned, not empty"
         assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
+
+    def test_prek_update_skips_pre_releases(self, copier_defaults: dict, project_factory) -> None:
+        """`prek update` must not move a hook to a pre-release tag, lychee's included.
+
+        prek takes the newest tag with no notion of a pre-release: betterleaks
+        went v1.7.2 -> v2.0.0-rc.4 on a plain `prek update` (2026-10-21). A
+        per-repo `exclude_tags` replaces the project-wide one instead of adding
+        to it, so lychee's entry has to repeat the globs.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            update = tomllib.load(f)["update"]
+
+        pre_release = "*-{alpha,beta,rc}*"
+        assert update.get("exclude_tags") == [pre_release], f"[update] must exclude pre-release tags; got {update!r}"
+        for repo, filters in update.get("repos", {}).items():
+            assert pre_release in filters.get("exclude_tags", []), f"{repo} replaces the default exclude_tags and drops {pre_release!r}"
 
     def test_lychee_nightly_excluded_declaratively(self, copier_defaults: dict, project_factory) -> None:
         """prek.toml must exclude lychee's `nightly` tag from `prek update` (DOT-492, DOT-540, DOT-616).
@@ -1354,7 +1430,7 @@ class TestTemplateUpdateCheck:
         )
         assert "nightly" in filters.get("exclude_tags", []), f"`nightly` must be in exclude_tags for {repo}; got {filters!r}"
 
-        assert data["minimum_prek_version"] == "0.4.12", (
+        assert data["minimum_prek_version"] == "0.5.7", (
             "the [update] tag filters above need prek 0.4.10+, and the floor tracks the tested version. minimum_prek_version is the guard "
             "that reaches updating projects, since a project that edited its dependency groups "
             f"keeps its own pyproject `prek>=` floor. Got {data.get('minimum_prek_version')!r}"
@@ -1490,10 +1566,8 @@ class TestTemplateUpdateCheck:
         """The `🎉 Template updated!` banner must not claim "Dependencies synced" (DOT-587 fix follow-up).
 
         With the inverted `uv sync` guard (see test_uv_sync_task_runs_in_copier_temp_render_dirs),
-        copier's _tasks no longer run uv sync in the destination during update. The poe
-        `update-template` chain runs `uv sync --upgrade` after copier returns. So the banner
-        — which fires from copier's _tasks before the poe chain finishes — would be lying
-        if it claimed deps were already synced.
+        copier's _tasks never run uv sync in the destination during update; `poe upgrade`
+        does that once the update has been reviewed.
         """
         copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
         # Pull just the line(s) containing the update banner's printf, so this only
@@ -1504,8 +1578,8 @@ class TestTemplateUpdateCheck:
 
         assert "Dependencies synced" not in banner, (
             f"Update banner claims `Dependencies synced` — but copier's _tasks skip "
-            f"`uv sync` in the destination during update (see DOT-587). The poe "
-            f"`update-template` chain syncs deps AFTER this banner. Drop the line.\n"
+            f"`uv sync` in the destination during update (see DOT-587); `poe upgrade` "
+            f"syncs deps afterwards. Drop the line.\n"
             f"Banner:\n{banner}"
         )
 
@@ -1821,198 +1895,6 @@ class TestOpenSource:
         content = (project / "pyproject.toml").read_text()
         assert "gitlab.company.com" in content
         assert "://gitlab.com/" not in content
-
-
-class TestOpenSourceMigration:
-    """The 0.41.0 `_migrations` step derives `open_source` from the legacy
-    `project_visibility` / `project_audience` answers.
-
-    Without this migration, `copier update --defaults` resolves `open_source`
-    from its own schema default (`repository_provider == 'github.com'`) instead
-    of the project's real history, silently flipping visibility for any project
-    whose history disagrees with that default — e.g. an internal project hosted
-    on GitHub gains a LICENSE and community-health files with no `.rej` warning.
-
-    A full `copier update` end-to-end run can't exercise this migration in this
-    test suite: `_migrations` are gated by PEP 440 version comparison against the
-    *tagged* template version, and an unreleased commit always resolves to a dev
-    version below the next tag (verified manually against a temporary local
-    `0.41.0` tag during development). So this tests the migration script directly.
-    """
-
-    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "0.41.0_open_source.py"
-
-    def test_migration_registered_in_copier_yml(self) -> None:
-        """copier.yml's `_migrations` entry must reference the script that actually exists."""
-        content = (REPO_ROOT / "copier.yml").read_text()
-        assert "migrations/0.41.0_open_source.py" in content
-        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
-
-    def _run(self, tmp_path: pathlib.Path, answers_body: str) -> str:
-        answers_file = tmp_path / ".copier-answers.yml"
-        answers_file.write_text(answers_body)
-        result = subprocess.run(
-            ["python3", str(self.SCRIPT)],
-            cwd=tmp_path,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        assert result.returncode == 0, f"migration script failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-        return answers_file.read_text()
-
-    def test_derives_open_source_true_from_public_visibility(self, tmp_path: Path) -> None:
-        """An internal-on-paper GitHub project isn't affected, but a public project must stay public."""
-        result = self._run(tmp_path, "repository_provider: gitlab.com\nproject_visibility: public\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_derives_open_source_false_from_internal_visibility(self, tmp_path: Path) -> None:
-        """The exact regression this migration exists for: an internal GitHub project must not
-        silently become open-source (schema default is `repository_provider == 'github.com'`)."""
-        result = self._run(tmp_path, "repository_provider: github.com\nproject_visibility: internal\n")
-        assert re.search(r"^open_source:\s*false\s*$", result, re.MULTILINE), result
-
-    def test_falls_back_to_project_audience_when_visibility_absent(self, tmp_path: Path) -> None:
-        """Very old projects (pre-project_visibility) only have project_audience recorded."""
-        result = self._run(tmp_path, "repository_provider: gitlab.com\nproject_audience: public-oss\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_leaves_existing_open_source_answer_untouched(self, tmp_path: Path) -> None:
-        """If `open_source` is already answered, the migration must not override it."""
-        result = self._run(tmp_path, "project_visibility: public\nopen_source: false\n")
-        assert re.search(r"^open_source:\s*false\s*$", result, re.MULTILINE), result
-
-    def test_noop_without_any_legacy_answer(self, tmp_path: Path) -> None:
-        """No legacy keys to derive from — leave the file alone and let the question's own default apply."""
-        original = "repository_provider: gitlab.com\n"
-        result = self._run(tmp_path, original)
-        assert result == original
-
-    def test_falls_back_to_community_health_files_when_visibility_and_audience_absent(self, tmp_path: Path) -> None:
-        """Projects from before project_visibility existed only have use_community_health_files."""
-        result = self._run(tmp_path, "repository_provider: gitlab.com\nuse_community_health_files: true\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_derives_open_source_when_visibility_and_community_health_agree(self, tmp_path: Path) -> None:
-        """The common case: use_community_health_files matches its project_visibility-derived default."""
-        result = self._run(tmp_path, "project_visibility: public\nuse_community_health_files: true\n")
-        assert re.search(r"^open_source:\s*true\s*$", result, re.MULTILINE), result
-
-    def test_abstains_when_visibility_and_community_health_disagree(self, tmp_path: Path) -> None:
-        """A public project with community files explicitly turned off (DOT-599 review finding):
-        no single boolean preserves both axes, so the migration must not guess."""
-        original = "project_visibility: public\nuse_community_health_files: false\n"
-        result = self._run(tmp_path, original)
-        assert result == original
-        assert "open_source" not in result
-
-
-class TestRemovePrekAutoupdateScriptMigration:
-    """The 0.41.4 `_migrations` step deletes the orphaned `scripts/prek-autoupdate.sh`.
-
-    `copier update` never deletes files, so without this the wrapper lingers in
-    every existing project, unreferenced by `poe update-template` or the docs
-    (DOT-616).
-
-    Deleting a user's file is the risk here, so the guard is an exact digest of
-    every version the template shipped rather than a substring match. A substring
-    guard fails in both directions, which is a #336 review finding: it deletes a
-    genuinely edited script as long as the matched line survives, and it flags the
-    pre-0.40.0 script -- which used a `--cooldown-days 7` second pass and contains
-    no `--repo-exclude-tag` at all -- as customised when it is pristine.
-    """
-
-    SCRIPT: ClassVar[pathlib.Path] = REPO_ROOT / "migrations" / "0.41.4_remove_prek_autoupdate_script.py"
-    TARGET: ClassVar[pathlib.Path] = pathlib.Path("scripts") / "prek-autoupdate.sh"
-
-    # Byte-for-byte as shipped. Kept here rather than read from git history so the
-    # test fails if someone edits the digests in the migration to match a new file.
-    SHIPPED_0_38_1: ClassVar[str] = (
-        "#!/usr/bin/env bash\n"
-        "# Wraps `uv run prek autoupdate` with a workaround for lychee marking `nightly` as\n"
-        '# their GitHub "Latest" release (DOT-492). The second pass with --cooldown-days 7\n'
-        "# reverts lychee's `rev` from `nightly` back to the most recent versioned tag.\n"
-        "# Remove once lychee stops marking nightly as Latest (DOT-504).\n"
-        "set -eu\n"
-        'uv run prek autoupdate "$@"\n'
-        'uv run prek autoupdate --repo https://github.com/lycheeverse/lychee --cooldown-days 7 "$@"\n'
-    )
-    SHIPPED_0_40_0: ClassVar[str] = (
-        "#!/usr/bin/env bash\n"
-        "# Wraps `uv run prek autoupdate` with a workaround for lychee tagging `nightly`\n"
-        '# as their GitHub "Latest" release (lycheeverse/lychee#1601). The\n'
-        "# --repo-exclude-tag flag (prek 0.3.11+) keeps lychee on its real latest\n"
-        "# versioned tag instead of flipping to `nightly`. Remove the flag when upstream\n"
-        "# closes lycheeverse/lychee#1601 (DOT-504).\n"
-        "set -eu\n"
-        'uv run prek autoupdate --repo-exclude-tag https://github.com/lycheeverse/lychee=nightly "$@"\n'
-    )
-
-    def test_migration_registered_in_copier_yml(self) -> None:
-        """copier.yml's `_migrations` entry must reference the script that actually exists."""
-        content = (REPO_ROOT / "copier.yml").read_text()
-        assert "migrations/0.41.4_remove_prek_autoupdate_script.py" in content
-        assert self.SCRIPT.is_file(), f"{self.SCRIPT} referenced in copier.yml but missing"
-
-    def test_migration_commands_quote_the_script_path(self) -> None:
-        """copier runs string `_migrations` commands with `shell=True`.
-
-        `_copier_conf.src_path` is whatever the user passed to `copier copy`, so an
-        unquoted path containing a space splits into two arguments and python3 fails
-        to open the script (#336 review finding).
-        """
-        content = (REPO_ROOT / "copier.yml").read_text()
-        unquoted = re.findall(r"^\s*command:\s*python3\s+(?!\")\S*\{\{.*$", content, re.MULTILINE)
-        assert not unquoted, f"migration script paths must be quoted for paths with spaces: {unquoted}"
-
-    def _run(self, tmp_path: pathlib.Path, body: str | None) -> tuple[bool, str]:
-        """Run the migration in `tmp_path`; return (file still exists, stdout)."""
-        target = tmp_path / self.TARGET
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if body is not None:
-            target.write_text(body, newline="")
-        result = subprocess.run(["python3", str(self.SCRIPT)], cwd=tmp_path, capture_output=True, text=True, check=False)
-        assert result.returncode == 0, f"migration failed:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-        return target.exists(), result.stdout
-
-    @pytest.mark.parametrize("shipped", ["SHIPPED_0_38_1", "SHIPPED_0_40_0"])
-    def test_removes_every_version_the_template_shipped(self, tmp_path: Path, shipped: str) -> None:
-        """Both shipped versions are pristine and must go, including the pre-0.40.0 one
-        that predates `--repo-exclude-tag` entirely."""
-        exists, stdout = self._run(tmp_path, getattr(self, shipped))
-        assert not exists, f"pristine {shipped} was left behind: {stdout}"
-        assert "Removed" in stdout
-
-    def test_removes_a_shipped_version_checked_out_with_crlf(self, tmp_path: Path) -> None:
-        """A Windows checkout with `core.autocrlf=true` stores the same bytes with CRLF.
-        That is not a customisation and must not read as one."""
-        exists, _ = self._run(tmp_path, self.SHIPPED_0_40_0.replace("\n", "\r\n"))
-        assert not exists, "CRLF line endings were mistaken for a user customisation"
-
-    def test_keeps_a_customised_script(self, tmp_path: Path) -> None:
-        """The failure mode that matters: never delete work the user did.
-
-        This script keeps the original invocation intact and only appends a line,
-        which is exactly what a substring guard would wave through.
-        """
-        exists, stdout = self._run(tmp_path, self.SHIPPED_0_40_0 + "uv run prek run --all-files\n")
-        assert exists, "a customised script was deleted"
-        assert "leaving it in place" in stdout
-
-    def test_noop_when_the_script_is_absent(self, tmp_path: Path) -> None:
-        """Projects generated after 0.41.4 never had the file; the migration must stay silent."""
-        exists, stdout = self._run(tmp_path, None)
-        assert not exists
-        assert stdout.strip() == "", f"expected no output, got: {stdout!r}"
-
-    def test_digests_match_the_versions_actually_shipped(self) -> None:
-        """Guards against the digests drifting from the file contents they claim to describe."""
-        import hashlib
-
-        content = self.SCRIPT.read_text()
-        for shipped in (self.SHIPPED_0_38_1, self.SHIPPED_0_40_0):
-            digest = hashlib.sha256(shipped.encode()).hexdigest()
-            assert digest in content, f"migration is missing the digest for a shipped version: {digest}"
 
 
 class TestMcpRegistry:
@@ -2334,9 +2216,10 @@ class TestIntegration:
             check=False,
         )
 
-        # Run the update against current HEAD (which must contain the fix).
+        # Run the update against current HEAD (which must contain the fix). Inline, as
+        # `poe update-template` does.
         update = subprocess.run(
-            ["copier", "update", "--trust", "--defaults", "--conflict", "rej", "--vcs-ref", "HEAD"],
+            ["copier", "update", "--trust", "--defaults", "--conflict", "inline", "--vcs-ref", "HEAD"],
             cwd=project,
             capture_output=True,
             text=True,

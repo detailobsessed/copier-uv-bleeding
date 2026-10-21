@@ -6,7 +6,7 @@
   <a href="https://github.com/detailobsessed/copier-uv-bleeding/actions?query=workflow%3Aci"><img src="https://github.com/detailobsessed/copier-uv-bleeding/workflows/ci/badge.svg" alt="CI"></a>
   <a href="https://github.com/detailobsessed/copier-uv-bleeding/actions?query=workflow%3Arelease"><img src="https://github.com/detailobsessed/copier-uv-bleeding/workflows/release/badge.svg" alt="Release"></a>
   <a href="https://github.com/detailobsessed/copier-uv-bleeding/releases"><img src="https://img.shields.io/github/v/release/detailobsessed/copier-uv-bleeding" alt="GitHub Release"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.14+-blue.svg" alt="Python 3.14+"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.15+-blue.svg" alt="Python 3.15+"></a>
 </p>
 
 This project strives to be the absolute best general-purpose [uv](https://github.com/astral-sh/uv) Python template in the universe. One `copier copy` gives you a fully configured, production-ready project with the latest and greatest Python tooling — no boilerplate, no compromises.
@@ -113,7 +113,7 @@ That first run writes `.copier-answers.yml`. From then on, `poe update-template`
 Generated projects include a **post-checkout git hook** that automatically checks for template updates. When a newer version is available, you'll see a notification after `git checkout` / `git pull` / `git rebase`.
 
 - **Manual check:** `poe check-template`
-- **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge)
+- **Apply updates:** `poe update-template` (runs `copier update` with smart 3-way merge), then `poe upgrade`
 
 ## Available Tasks
 
@@ -134,3 +134,4 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe prek` | Run all pre-commit hooks |
 | `poe check-template` | Check for template updates (manual) |
 | `poe update-template` | Apply template updates via copier |
+| `poe upgrade` | Upgrade dependencies and hook versions |

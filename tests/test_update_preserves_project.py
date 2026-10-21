@@ -13,6 +13,7 @@ customisation on its own so a failure names the loss.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,12 +69,29 @@ GIT_ENV = {
     "GIT_COMMITTER_EMAIL": "t@example.com",
 }
 
-# What `poe update-template` runs, minus `uv sync`/`prek update`, which need network.
+# What `poe update-template` runs.
 UPDATE = ["copier", "update", "--trust", "--skip-answered", "--defaults", "--conflict", "inline", "--vcs-ref", "HEAD"]
 
 # A project's first update past 0.41.14 runs the task it already has, which still
 # passes `--conflict rej`; the switch to inline only lands with that update.
 UPDATE_FROM_0_41 = [arg if arg != "inline" else "rej" for arg in UPDATE]
+
+# The 3.15 release deletes template lines directly beside customisations, a one-time
+# cost (docs/update.md): `requires-python` moved above `readme`, leaving the old line
+# right above every released project's `version`, and the `# template-preserve:*`
+# comments went from around `dependencies`, the project's own poe tasks and its own
+# local hooks. Each entry is one conflict block: lines that must appear in it.
+EXPECTED_CONFLICTS = {
+    "pyproject.toml": [
+        # Both sides moved the window off 0.12; a project that bumped uv first sees this.
+        ('"uv_build>=0.13,<0.14"', '"uv_build>=0.13.4,<0.14"'),
+        ('requires-python = ">=3.14"', 'version = "0.18.0"', 'dependencies = ["httpx>=0.28"]'),
+        ('serve = "python -m test_project.server"', 'upgrade = { shell = "uv sync --upgrade && uv run prek update" }'),
+    ],
+    "prek.toml": [('id = "check-schema"',)],
+}
+# The new `requires-python` line has nothing beside it to collide with.
+EXPECTED_MERGED = 'requires-python = ">=3.15"\nreadme = "README.md"\n<<<<<<< before updating\n'
 
 
 @dataclass(frozen=True)
@@ -301,12 +319,24 @@ def _conflicts(project: Path) -> list[str]:
     return sorted(found)
 
 
-@pytest.fixture(scope="module", params=[UPDATE, UPDATE_FROM_0_41], ids=["inline", "first-update-from-0.41"])
-def updated_project(
-    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
-) -> tuple[Path, subprocess.CompletedProcess[str]]:
+def _conflict_blocks(text: str) -> list[str]:
+    """Each `<<<<<<< ... >>>>>>>` region of a file, markers included."""
+    blocks, current = [], None
+    for line in text.splitlines():
+        if line.startswith("<<<<<<< "):
+            current = [line]
+        elif current is not None:
+            current.append(line)
+            if line.startswith(">>>>>>> "):
+                blocks.append("\n".join(current))
+                current = None
+    return blocks
+
+
+@pytest.fixture(scope="module")
+def updated_project(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, subprocess.CompletedProcess[str]]:
     project = tmp_path_factory.mktemp("downstream") / "proj"
-    return project, _generate_and_update(project, ANSWERS, customise=True, update=request.param)
+    return project, _generate_and_update(project, ANSWERS, customise=True)
 
 
 @pytest.mark.slow
@@ -316,10 +346,41 @@ def test_update_succeeds(updated_project: tuple[Path, subprocess.CompletedProces
 
 
 @pytest.mark.slow
-def test_update_leaves_no_conflicts(updated_project: tuple[Path, subprocess.CompletedProcess[str]]) -> None:
-    """None of the customisations touch a line the template changed since the baseline."""
+def test_update_conflicts_only_where_expected(updated_project: tuple[Path, subprocess.CompletedProcess[str]]) -> None:
+    """Only the documented collisions may conflict; every other customisation merges cleanly."""
     project, _ = updated_project
-    assert not _conflicts(project), f"update could not merge cleanly: {_conflicts(project)}"
+    expected_files = sorted(f"{name} (conflict markers)" for name in EXPECTED_CONFLICTS)
+    assert _conflicts(project) == expected_files, f"unexpected conflicts: {_conflicts(project)}"
+    for name, expected in EXPECTED_CONFLICTS.items():
+        blocks = _conflict_blocks((project / name).read_text())
+        assert len(blocks) == len(expected), f"{name}: expected {len(expected)} conflicts, got:\n\n" + "\n\n".join(blocks)
+        for block, lines in zip(blocks, expected, strict=True):
+            missing = [line for line in lines if line not in block]
+            assert not missing, f"{name}: conflict is not the expected one; missing {missing}:\n{block}"
+    assert EXPECTED_MERGED in (project / "pyproject.toml").read_text(), "the new requires-python should merge in cleanly"
+
+
+@pytest.mark.slow
+def test_update_under_conflict_rej_loses_nothing_silently(tmp_path: Path) -> None:
+    """The 0.41.x `update-template` passes `--conflict rej`; every edit it drops must sit in a `.rej`.
+
+    Under rej, `git apply` sends every hunk whose context changed to a `.rej`
+    while the file keeps the template's side. The template carries no migration
+    to stop that: the `no-copier-rej-files` hook every rej-era project has blocks
+    the commit, and the edits are applied by hand from the `.rej`. This pins the
+    "by hand, not lost" half of that.
+    """
+    project = tmp_path / "proj"
+    update = _generate_and_update(project, ANSWERS, customise=True, update=UPDATE_FROM_0_41)
+    assert update.returncode == 0, f"copier update failed:\nstdout:\n{update.stdout}\nstderr:\n{update.stderr}"
+    silently_lost = []
+    for customisation in CUSTOMISATIONS:
+        target = project / customisation.file
+        rej = target.with_name(target.name + ".rej")
+        kept = target.read_text() + (rej.read_text() if rej.exists() else "")
+        silently_lost += [f"{customisation.id}: {s}" for s in customisation.present if s not in kept]
+    assert not silently_lost, f"edits in neither the file nor a .rej: {silently_lost}"
+    assert any(project.rglob("*.rej")), "this release collides with common edits, so rej must leave .rej files"
 
 
 @pytest.mark.slow
@@ -340,11 +401,15 @@ def test_colliding_template_change_is_marked_not_lost(tmp_path: Path) -> None:
     The template is a clone of HEAD with one extra commit, a fake release that moves
     the `uv_build` window the project also moved. Under `--conflict rej` the project's
     line went to a `.rej` and the file silently took the template's; inline keeps both.
+    The fake window has a shape the template never ships (`<1`), so HEAD's own bumps
+    never match it, yet it resolves: the update's tasks build the project.
     """
     template = tmp_path / "template"
     assert _run(["git", "clone", "-q", str(REPO_ROOT), str(template)], tmp_path).returncode == 0
     jinja = template / "project" / "pyproject.toml.jinja"
-    jinja.write_text(jinja.read_text().replace('"uv_build>=0.12.1,<0.13"', '"uv_build>=0.13.2,<0.14"'))
+    rendered, moved = re.subn(r'"uv_build>=[^"]+"', '"uv_build>=0.13,<1"', jinja.read_text(), count=1)
+    assert moved, "the template no longer pins uv_build in requires"
+    jinja.write_text(rendered)
     release = ["git", "-c", "commit.gpgsign=false", "commit", "-qam", "fake release", "--no-verify"]
     assert _run(release, template).returncode == 0
 
@@ -367,7 +432,7 @@ def test_colliding_template_change_is_marked_not_lost(tmp_path: Path) -> None:
     text = pyproject.read_text()
     assert "<<<<<<< before updating" in text, "the collision must be marked"
     assert '"uv_build>=0.13,<0.14"' in text, "the project's version of the line was lost"
-    assert '"uv_build>=0.13.2,<0.14"' in text, "the template's version of the line was lost"
+    assert '"uv_build>=0.13,<1"' in text, "the template's version of the line was lost"
 
 
 @pytest.mark.slow

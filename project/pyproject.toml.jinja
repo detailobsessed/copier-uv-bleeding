@@ -3,7 +3,7 @@
 # bound is uv's recommendation, not ours: uv_build follows uv's versioning
 # policy, so a minor can change build behaviour. Bump the window when uv does.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#build-backend-pin
-requires = ["uv_build>=0.12.1,<0.13"]
+requires = ["uv_build>=0.13.4,<0.14"]
 build-backend = "uv_build"
 
 [project]
@@ -14,12 +14,10 @@ authors = [{name = "{{ author_fullname | replace('\\', '\\\\') | replace('\"', '
 license = "{{ copyright_license }}"
 license-files = ["LICENSE"]
 {%- endif %}
+requires-python = ">=3.15"
 readme = "README.md"
-requires-python = ">=3.14"
 version = "0.0.0"
-# template-preserve:dependencies:start
 dependencies = []
-# template-preserve:dependencies:end
 {%- if publish_to_pypi %}
 keywords = []
 classifiers = [
@@ -28,7 +26,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Documentation",
     "Topic :: Software Development",
     "Topic :: Utilities",
@@ -48,56 +46,51 @@ Funding = "https://{{ repository_host }}/sponsors/{{ author_username }}"
 {%- endif %}
 
 {% if project_type == 'app' -%}
-# template-preserve:project-scripts:start
 [project.scripts]
 {{ python_package_command_line_name }} = "{{ python_package_import_name }}.cli:main"
-# template-preserve:project-scripts:end
 
 {% endif -%}
 
-# template-preserve:dependency-groups:start
 [dependency-groups]
 {%- if use_semantic_release %}
 maintain = [
-    "build>=1.5",
-    "python-semantic-release>=10.6",
+    "build>=1.6",
+    "python-semantic-release>=10.7",
 ]
 {%- endif %}
 # Floors track the versions this template is tested at, not the oldest release
 # that still works.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#dependency-floors
 ci = [
-    "ruff>=0.16.1",
+    "ruff>=0.17.1",
     "pytest>=9",
     "pytest-cov>=7",
-    "pytest-randomly>=4",
-    "ty>=0.0.66",
-    "poethepoet>=0.48",
+    "pytest-randomly>=5",
+    "ty>=0.0.90",
+    "poethepoet>=0.49",
 ]
 dev = []
 local = [
-    "prek>=0.4.12",
+    "prek>=0.5.7",
     "pytest-testmon>=2.2",
 ]
-# template-preserve:dependency-groups:end
 
 [tool.uv]
 default-groups = [{% if use_semantic_release %}"maintain", {% endif %}"ci", "dev", "local"]
 {%- if custom_pypi_index_url %}
 
-# template-preserve:tool-uv-index:start
 [[tool.uv.index]]
 url = "{{ custom_pypi_index_url }}"
-# template-preserve:tool-uv-index:end
 {%- endif %}
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py315"
 line-length = 140
-# Required — `extend-select` below assumes 0.16's 413 stable defaults. On 0.14
-# and 0.15 it would silently lint far less than this config claims.
+# Required — `extend-select` below assumes 0.17's 407 stable defaults, and
+# `py315` is only stable from 0.17. On 0.14 and 0.15 it would silently lint far
+# less than this config claims.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#ruff-required-version
-required-version = ">=0.16"
+required-version = ">=0.17"
 # Preview rules change behaviour between patch releases, and preview-only
 # suppression syntax cannot be turned off again once adopted.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#ruff-preview
@@ -140,6 +133,7 @@ extend-select = [
 
     # Correctness
     "PTH",  # flake8-use-pathlib — prefer pathlib over os.path
+    "DTZ",  # flake8-datetimez — naive datetimes; ruff 0.17 dropped 7 of 10 from its defaults
 
     # Error messages
     "EM",   # flake8-errmsg — variables in exception constructors (better tracebacks)
@@ -182,15 +176,12 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
-    "S101", "S105", "S404", "S603", "S607",  # Allow assert, hardcoded secrets, and subprocess in tests
+    "S101", "S105", "S603", "S607",  # Allow assert, hardcoded secrets, and subprocess in tests
     "T201",       # Allow print in tests
-    "PLR6301",    # Test methods don't use self (pytest classes)
     "PLR2004",    # Magic values in assertions are fine
     "PLC0415",    # Lazy imports in test functions are idiomatic
-    "PLC2701",    # Private name imports for testing internals
     "ARG002",     # Unused method arguments (fixtures)
     "DTZ005",     # Naive datetime in tests is fine
-    "PLR0904",    # Test classes naturally have many test methods
 ]
 
 [tool.ruff.lint.mccabe]
@@ -242,7 +233,7 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING", "if __name__ == .__main
 output = "htmlcov/coverage.json"
 
 [tool.ty.environment]
-python-version = "3.14"
+python-version = "3.15"
 python = ".venv"
 
 [tool.poe.tasks]
@@ -270,11 +261,10 @@ prek = "prek run --all-files"
 
 # Template utilities
 check-template = { shell = "copier check-update || true" }
-update-template = { shell = "copier update --trust . --skip-answered --defaults --conflict inline && uv sync --upgrade && uv run prek update && echo '  ✓ Dependencies upgraded and hook versions updated' && { git grep -lE '^<{7} before updating' -- . && echo '  ⚠ The update conflicts with your edits in the files above — resolve the <<<<<<< markers before committing.' || true; }{% if use_semantic_release %} && { grep -q 'git add uv.lock CHANGELOG.md' pyproject.toml || echo '  ⚠ WARNING: build_command in pyproject.toml is missing \"git add uv.lock CHANGELOG.md\" — releases will produce stale lockfiles. Add \"git add uv.lock CHANGELOG.md\" to build_command.'; }{% endif %}" }
+update-template = "copier update --trust . --skip-answered --defaults --conflict inline"
 
-# template-preserve:extra-poe-tasks:start
-# Add your own project-specific poe tasks below — preserved across `copier update`.
-# template-preserve:extra-poe-tasks:end
+# Dependencies and hook revisions
+upgrade = { shell = "uv sync --upgrade && uv run prek update" }
 
 {%- if use_semantic_release %}
 
