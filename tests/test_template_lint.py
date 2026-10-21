@@ -14,7 +14,7 @@ import ast
 import json
 import re
 import tomllib
-from datetime import UTC, datetime
+import unicodedata
 from pathlib import Path
 
 import pytest
@@ -22,8 +22,6 @@ import yaml
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-
-from extensions import slugify
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = REPO_ROOT / "project"
@@ -37,8 +35,36 @@ _ENV = Environment(
     autoescape=False,
     keep_trailing_newline=True,
     undefined=StrictUndefined,
+    # Copier loads this into every render; the template's `regex_replace` and
+    # `strftime` come from it.
+    extensions=["jinja2_ansible_filters.AnsibleCoreFiltersExtension"],
 )
-_ENV.filters["slugify"] = slugify
+
+# The four names copier derives from `project_name` (all `when: false`).
+_DERIVED_NAMES = (
+    "repository_name",
+    "python_package_distribution_name",
+    "python_package_import_name",
+    "python_package_command_line_name",
+)
+_COPIER_YML = yaml.safe_load((REPO_ROOT / "copier.yml").read_text(encoding="utf-8"))
+
+
+def _derive_names(project_name: str) -> dict[str, str]:
+    """Render copier.yml's own default expressions for the derived names."""
+    return {key: _ENV.from_string(_COPIER_YML[key]["default"]).render(project_name=project_name) for key in _DERIVED_NAMES}
+
+
+def _extensions_slugify(value: str, separator: str = "-") -> str:
+    """The `slugify` filter extensions.py provided until 0.42.1, kept as the reference.
+
+    Derived names are recomputed on every `copier update`, so the Jinja
+    expressions that replaced it must give the same result, or an update
+    renames an existing project's package.
+    """
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^\w\s-]", "", value.lower())
+    return re.sub(r"[-_\s]+", separator, value).strip("-_")
 
 
 def _build_context(overrides: dict) -> dict:
@@ -68,16 +94,12 @@ def _build_context(overrides: dict) -> dict:
         "configure_repo_settings": False,
         "open_source": True,
         "custom_pypi_index_url": "",
-        "current_year": datetime.now(UTC).year,
     }
     base.update(overrides)
     if "repository_provider" in overrides and "repository_host" not in overrides:
         base["repository_host"] = overrides["repository_provider"]
     if "project_name" in overrides and "repository_name" not in overrides:
-        base["repository_name"] = slugify(overrides["project_name"])
-        base["python_package_distribution_name"] = slugify(overrides["project_name"])
-        base["python_package_import_name"] = slugify(overrides["project_name"], "_")
-        base["python_package_command_line_name"] = slugify(overrides["project_name"])
+        base.update(_derive_names(overrides["project_name"]))
     return base
 
 
@@ -468,3 +490,26 @@ class TestStringFuzzing:
             rendered = _ENV.get_template(str(rel)).render(context)
             error = _validate_yaml(rendered)
             assert error is None, f"{rel}: {error} (description={project_description!r}, author={author_fullname!r})"
+
+
+class TestDerivedNames:
+    """copier.yml's derived names match the old extensions.py slugify (DOT-674)."""
+
+    @given(project_name=st.text(alphabet=st.characters(max_codepoint=127)))
+    @settings(max_examples=500)
+    def test_ascii_names_derive_as_before(self, project_name: str) -> None:
+        derived = _derive_names(project_name)
+        for key, value in derived.items():
+            expected = _extensions_slugify(project_name, "_" if key == "python_package_import_name" else "-")
+            assert value == expected, f"{key} for {project_name!r}: {value!r}, slugify gave {expected!r}"
+
+    def test_non_ascii_letters_are_dropped(self) -> None:
+        """Known difference: slugify transliterated accents, plain Jinja cannot.
+
+        Pinned so a change here is a decision, not an accident. A project whose
+        name has non-ASCII letters gets a new package name on its next update.
+        """
+        derived = _derive_names("Café Zürich")
+        assert derived["python_package_distribution_name"] == "caf-zrich"
+        assert derived["python_package_import_name"] == "caf_zrich"
+        assert _extensions_slugify("Café Zürich") == "cafe-zurich"

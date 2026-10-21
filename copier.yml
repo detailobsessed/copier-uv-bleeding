@@ -6,11 +6,11 @@ _envops:
 _subdirectory: project
 _templates_suffix: .jinja
 _preserve_symlinks: true
-_jinja_extensions:
-- copier_template_extensions.TemplateExtensionLoader
-- extensions.py:CurrentYearExtension
-- extensions.py:GitExtension
-- extensions.py:SlugifyExtension
+# No `_jinja_extensions`: a stock `uv tool install copier` must be enough to
+# copy and update. Copier always loads jinja2-ansible-filters, which provides
+# the `regex_replace` (slugs below) and `strftime` (LICENSE year) used here.
+# Until 0.42.1 the template loaded extensions.py, and every update aborted on
+# a copier installed without copier-template-extensions (DOT-674).
 # Files to skip on update: hand-edited (README/CHANGELOG/source) OR generated (uv.lock).
 #
 # pyproject.toml and prek.toml are deliberately NOT here. Copier's own update
@@ -80,20 +80,20 @@ project_type:
     Application (with CLI entry point — uv init --app): app
     Library (importable package, no CLI — uv init --lib): lib
 
+# No template defaults for the author questions: set them once per machine in
+# copier's settings.yml (`defaults:`), which copier applies to every template.
+# See "Answer defaults per machine" in the README.
 author_fullname:
   type: str
   help: Your full name
-  default: "{{ git_user_name }}"
 
 author_email:
   type: str
   help: Your email
-  default: "{{ git_user_email }}"
 
 author_username:
   type: str
   help: Your username (e.g. on GitHub)
-  default: "{{ git_user_username }}"
 
 repository_provider:
   type: str
@@ -116,7 +116,15 @@ repository_namespace:
 repository_name:
   type: str
   help: Your repository name
-  default: "{{ project_name | slugify }}"
+  # The slug chain below is repeated in the next three questions; keep all four
+  # identical. These answers are `when: false`, so copier never stores them and
+  # recomputes them on every update: a changed result renames an existing
+  # project's package. tests/test_template_lint.py pins them to the old
+  # extensions.py slugify for every ASCII name. Non-ASCII letters are dropped,
+  # where slugify transliterated them (é -> e); Jinja has no NFKD.
+  # `\\s` is doubled because Jinja unescapes string literals, and a bare `\s`
+  # is an invalid escape sequence there.
+  default: '{{ project_name | lower | regex_replace("[^a-z0-9_\\s-]", "") | regex_replace("[-_\\s]+", "-") | regex_replace("^[-_]+|[-_]+$", "") }}'
   when: false
 
 open_source:
@@ -167,19 +175,19 @@ copyright_license:
 python_package_distribution_name:
   type: str
   help: Your Python package distribution name (for `pip install NAME`)
-  default: "{{ project_name | slugify }}"
+  default: '{{ project_name | lower | regex_replace("[^a-z0-9_\\s-]", "") | regex_replace("[-_\\s]+", "-") | regex_replace("^[-_]+|[-_]+$", "") }}'
   when: false
 
 python_package_import_name:
   type: str
   help: Your Python package import name (for `import NAME` in Python code)
-  default: "{{ project_name | slugify('_') }}"
+  default: '{{ project_name | lower | regex_replace("[^a-z0-9_\\s-]", "") | regex_replace("[-_\\s]+", "_") | regex_replace("^[-_]+|[-_]+$", "") }}'
   when: false
 
 python_package_command_line_name:
   type: str
   help: Your CLI name if any (for use in the shell)
-  default: "{{ project_name | slugify }}"
+  default: '{{ project_name | lower | regex_replace("[^a-z0-9_\\s-]", "") | regex_replace("[-_\\s]+", "-") | regex_replace("^[-_]+|[-_]+$", "") }}'
   when: false
 
 use_heavy_hooks:

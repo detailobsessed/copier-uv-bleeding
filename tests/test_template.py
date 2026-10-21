@@ -239,7 +239,7 @@ class TestCoreFiles:
             tests_dir = project / "tests"
             assert tests_dir.is_dir(), f"tests/ missing for {project_type} project"
             assert (tests_dir / "__init__.py").exists(), f"tests/__init__.py missing for {project_type}"
-            # python_package_import_name = "Test Project" | slugify("_") = "test_project"
+            # python_package_import_name for "Test Project" is "test_project"
             placeholder = tests_dir / "test_test_project.py"
             assert placeholder.exists(), f"placeholder test missing for {project_type}"
             content = placeholder.read_text()

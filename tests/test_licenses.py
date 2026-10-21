@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import pytest
@@ -27,7 +28,9 @@ def test_license_matches_reuse(identifier: str, name: str) -> None:
 
 @pytest.mark.parametrize("identifier", LICENSES)
 def test_license_renders(identifier: str) -> None:
-    template = Environment(autoescape=False).from_string((REPO_ROOT / "project" / "LICENSE.jinja").read_text(encoding="utf-8"))
+    # Copier loads jinja2-ansible-filters into every render; the year comes from its `strftime`.
+    env = Environment(autoescape=False, extensions=["jinja2_ansible_filters.AnsibleCoreFiltersExtension"])
+    template = env.from_string((REPO_ROOT / "project" / "LICENSE.jinja").read_text(encoding="utf-8"))
     rendered = template.render(
         project_name="Test Project",
         project_description="Testing this great template",
@@ -35,6 +38,7 @@ def test_license_renders(identifier: str) -> None:
         author_username="janedoe",
         author_email="jane@example.com",
         copyright_license=identifier,
-        current_year="2026",
     )
     assert rendered.strip(), "License is empty!"
+    if "Jane Doe" in rendered:
+        assert time.strftime("%Y") in rendered, "Copyright line lacks the current year"

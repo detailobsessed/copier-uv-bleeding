@@ -24,11 +24,10 @@ This file controls the entire scaffolding behavior.
 - **`_skip_if_exists` vs `_exclude`** — These have very different semantics. `_skip_if_exists` preserves user files during `copier update`. `_exclude` removes files entirely based on answers. Misplacing a file in the wrong list can overwrite user customizations or leave orphaned files.
 - **No migrations, no update-time scripts** — The template relies on copier's own 3-way merge. Flag any new `_migrations` entry, or any `_tasks` entry that rewrites a file during `update`: a script that regenerates a file loses every project edit it does not know about (DOT-630). Projects on old releases fix leftovers by hand, as `docs/update.md` lists.
 
-### 3. Template Extensions (`extensions.py`)
+### 3. Derived Names and Jinja Filters
 
-Custom Jinja filters used during rendering.
-
-- **`slugify`** — Used to derive package names, CLI names, and repository names from `project_name`. Changes here affect every generated file that uses these derived values.
+- **No `_jinja_extensions`** — Flag any new entry. The template must work with a stock `copier`; only filters from `jinja2-ansible-filters` (which copier always loads) are available.
+- **Slug expressions in `copier.yml`** — `repository_name` and the three `python_package_*` names are `when: false`, so copier recomputes them on every update. A changed expression renames an existing project's package. The four must stay identical apart from the separator; `TestDerivedNames` in `tests/test_template_lint.py` pins them.
 
 ### 4. CI Workflows (`.github/workflows/` and `project/.github/workflows/`)
 
