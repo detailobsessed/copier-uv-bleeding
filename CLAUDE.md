@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A **Copier template** that generates production-ready Python 3.14+ projects. The `project/` directory contains Jinja templates rendered by `copier copy`. Changes here don't run directly -- they produce scaffolded projects, so every change must be valid across all combinations of user answers.
+A **Copier template** that generates production-ready Python 3.15+ projects. The `project/` directory contains Jinja templates rendered by `copier copy`. Changes here don't run directly -- they produce scaffolded projects, so every change must be valid across all combinations of user answers.
 
 ## Issue Tracking
 
@@ -57,7 +57,7 @@ pytest tests/test_template.py::TestProjectTypes::test_app_type_has_cli -v
 
 **prek** -- TOML config (`prek.toml`), not YAML. `priority` schedules hooks: ascending order, same value runs concurrently, omitted means sequential-by-order. Per prek's reference, two hooks in one group that mutate the same files have **undefined** results, and a group that modifies files fails as a whole with no attribution to the responsible hook -- so a new fixing hook needs a priority no other hook writing those same files uses. Group 0 is read-only checks; builtin mutators are 1-4; group 5 holds fixers with disjoint file types, with `ruff-format` at 6 after `ruff --fix`. `prek util list-builtins` is the authoritative builtin id list. `[priorities]` alias tables need prek 0.4.11+. `files` accepts glob patterns via `files = { glob = ["docs/**"] }`. Use `prek util identify <file>` to debug type filters. `PREK_QUIET=1` suppresses passing hooks.
 
-**ty** -- Reads `requires-python` from `pyproject.toml` to determine stdlib availability. If set too low, it won't resolve newer stdlib modules. Must be `>=3.14` for this template.
+**ty** -- Reads `requires-python` from `pyproject.toml` to determine stdlib availability. If set too low, it won't resolve newer stdlib modules. Must be `>=3.15` for this template.
 
 **actionlint** -- Cannot validate permissions of cross-repo reusable workflows. If a reusable workflow requests `id-token: write` but the caller only grants `contents: write`, actionlint won't catch it -- GitHub rejects at parse time.
 

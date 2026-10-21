@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import re
@@ -73,7 +74,7 @@ class TestCoreFiles:
         """Ruff config must use `extend-select`, never `select`.
 
         `select` REPLACES ruff's default rule set; `extend-select` layers on
-        top of it. Ruff's defaults are broad (413 rules as of 0.16) and grow
+        top of it. Ruff's defaults are broad (407 rules as of 0.17) and change
         with each release, so a curated `select` list silently switches off
         every default it happens to omit — and nothing warns that it has.
         Before this was fixed the template disabled 81 default rules that way,
@@ -95,23 +96,39 @@ class TestCoreFiles:
         """Prefixes that ruff now enables by default should not be re-listed.
 
         A redundant entry is indistinguishable from a load-bearing one, so they
-        get deleted rather than kept "for documentation". These four are fully
-        covered by stable ruff 0.16's defaults.
+        get deleted rather than kept "for documentation". These three are fully
+        covered by stable ruff 0.17's defaults.
         """
         project = project_factory(copier_defaults)
 
         with (project / "pyproject.toml").open("rb") as f:
             selected = tomllib.load(f)["tool"]["ruff"]["lint"]["extend-select"]
 
-        redundant = sorted({"DTZ", "FA", "FLY", "PIE"} & set(selected))
+        redundant = sorted({"FA", "FLY", "PIE"} & set(selected))
         assert not redundant, f"these prefixes are fully enabled by ruff's defaults; drop them: {redundant!r}"
 
-    def test_ruff_required_version_matches_the_extend_select_premise(self, copier_defaults: dict, project_factory) -> None:
-        """`extend-select` is only safe on ruff >=0.16, so the config must demand it.
+    def test_ruff_selects_rules_its_defaults_dropped(self, copier_defaults: dict, project_factory) -> None:
+        """`DTZ` must be selected explicitly again.
 
-        Ruff 0.14/0.15 enable 59 default rules (E4/E7/E9/F); 0.16 enables 413.
-        The four prefixes deleted as "redundant" are covered by the 413 and not
+        Ruff 0.16 enabled all ten stable flake8-datetimez rules by default, so
+        `DTZ` was deleted from `extend-select` as redundant. 0.17 dropped seven
+        of them (DTZ001/005/006/007/011/012/901) from the defaults, and every
+        project resolving the `ruff>=0.16.1` floor lost them without a warning.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            selected = tomllib.load(f)["tool"]["ruff"]["lint"]["extend-select"]
+
+        assert "DTZ" in selected, "ruff 0.17 no longer enables most DTZ rules by default; select DTZ"
+
+    def test_ruff_required_version_matches_the_extend_select_premise(self, copier_defaults: dict, project_factory) -> None:
+        """`extend-select` is only safe on ruff >=0.17, so the config must demand it.
+
+        Ruff 0.14/0.15 enable 59 default rules (E4/E7/E9/F); 0.17 enables 407.
+        The three prefixes deleted as "redundant" are covered by the 407 and not
         by the 59, so on an older ruff `extend-select` drops them silently.
+        0.17 is also the first ruff whose `py315` target is stable.
 
         `required-version` is the load-bearing guard rather than the `ci`
         dependency floor: a project that edited its dependency groups keeps its
@@ -124,9 +141,9 @@ class TestCoreFiles:
         with (project / "pyproject.toml").open("rb") as f:
             data = tomllib.load(f)
 
-        assert data["tool"]["ruff"].get("required-version") == ">=0.16", (
-            "extend-select assumes ruff 0.16's 413 default rules; without required-version "
-            "an older ruff silently drops DTZ/FA/FLY/PIE instead of failing"
+        assert data["tool"]["ruff"].get("required-version") == ">=0.17", (
+            "extend-select assumes ruff 0.17's 407 default rules and target py315; without "
+            "required-version an older ruff silently drops FA/FLY/PIE instead of failing"
         )
 
         ci_deps = data["dependency-groups"]["ci"]
@@ -136,7 +153,7 @@ class TestCoreFiles:
         # (which is pinned to the minor whose defaults `extend-select` assumes). It must
         # never sit below it, or a resolvable install would hard-fail on required-version.
         parts = tuple(int(p) for p in ci_ruff.removeprefix("ruff>=").split("."))
-        assert parts >= (0, 16), f"the ci floor must not fall below required-version; got {ci_ruff!r}"
+        assert parts >= (0, 17), f"the ci floor must not fall below required-version; got {ci_ruff!r}"
 
     def test_ruff_preview_is_disabled(self, copier_defaults: dict, project_factory) -> None:
         """Generated projects must not opt into ruff's preview rules.
@@ -146,7 +163,7 @@ class TestCoreFiles:
         someone who adopted this template for a real project — a routine ruff
         upgrade turns into new lint failures they did not ask for.
 
-        Stable ruff 0.16 already enables 413 rules, so preview buys very little
+        Stable ruff 0.17 already enables 407 rules, so preview buys very little
         coverage for the churn it adds.
         """
         project = project_factory(copier_defaults)
@@ -158,6 +175,27 @@ class TestCoreFiles:
             "preview must be explicitly disabled — leaving it on subjects generated "
             "projects to rules that can change or vanish in a patch release."
         )
+
+    def test_ruff_ignores_no_preview_only_rules(self, copier_defaults: dict, project_factory) -> None:
+        """With preview off, ignoring a preview-only rule does nothing.
+
+        Such an entry reads like a deliberate exemption but never runs, the
+        same dead config as a redundant `extend-select` prefix. S404, PLR6301,
+        PLC2701 and PLR0904 sat in the tests ignore list this way until ruff
+        0.17's audit.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            lint = tomllib.load(f)["tool"]["ruff"]["lint"]
+        ignored = set(lint.get("ignore", []))
+        for codes in lint.get("per-file-ignores", {}).values():
+            ignored.update(codes)
+
+        result = subprocess.run(["ruff", "rule", "--all", "--output-format", "json"], capture_output=True, text=True, check=True)
+        preview = {rule["code"] for rule in json.loads(result.stdout) if rule["preview"]}
+        dead = sorted(ignored & preview)
+        assert not dead, f"these ignores name preview-only rules, which never run with preview off: {dead!r}"
 
     def test_ruff_selectors_use_rule_codes(self, copier_defaults: dict, project_factory) -> None:
         """Ignore selectors must use rule codes, not rule names.
@@ -240,21 +278,40 @@ class TestCIConfiguration:
 class TestPythonVersion:
     """Test Python version configuration."""
 
-    def test_requires_python_314(self, copier_defaults: dict, project_factory) -> None:
-        """Generated project should require Python 3.14+."""
+    def test_requires_python_315(self, copier_defaults: dict, project_factory) -> None:
+        """Generated project should require Python 3.15+."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert 'requires-python = ">=3.14"' in content
+        assert 'requires-python = ">=3.15"' in content
 
-    def test_ruff_target_py314(self, copier_defaults: dict, project_factory) -> None:
-        """Ruff should target Python 3.14."""
+    def test_ruff_target_py315(self, copier_defaults: dict, project_factory) -> None:
+        """Ruff should target Python 3.15."""
         project = project_factory(copier_defaults)
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert 'target-version = "py314"' in content
+        assert 'target-version = "py315"' in content
+
+    def test_every_python_version_pin_agrees(self, copier_defaults: dict, project_factory) -> None:
+        """ty, the classifier, CI and the README badge must name the same Python.
+
+        The version is spelled out in a dozen places; bumping it is a
+        find-and-replace that is easy to leave half done.
+        """
+        answers = {**copier_defaults, "publish_to_pypi": True}
+        project = project_factory(answers)
+
+        with (project / "pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+        assert data["tool"]["ty"]["environment"]["python-version"] == "3.15"
+        assert "Programming Language :: Python :: 3.15" in data["project"]["classifiers"]
+
+        gitlab = project_factory({**copier_defaults, "repository_provider": "gitlab.com"})
+        files = [*(project / ".github" / "workflows").glob("*.yml"), project / "README.md", gitlab / ".gitlab-ci.yml"]
+        stale = [line.strip() for p in files for line in p.read_text().splitlines() if "3.14" in line]
+        assert not stale, f"lines still naming Python 3.14: {stale!r}"
 
 
 class TestPreCommitConfig:
@@ -694,12 +751,12 @@ class TestDependencies:
     EXPECTED_FLOORS: ClassVar[dict[str, dict[str, str]]] = {
         "maintain": {"build": "1.6", "python-semantic-release": "10.7"},
         "ci": {
-            "ruff": "0.16.1",
+            "ruff": "0.17.1",
             "pytest": "9",
             "pytest-cov": "7",
-            "pytest-randomly": "4",
-            "ty": "0.0.66",
-            "poethepoet": "0.48",
+            "pytest-randomly": "5",
+            "ty": "0.0.90",
+            "poethepoet": "0.49",
         },
         "local": {"prek": "0.5.7", "pytest-testmon": "2.2"},
     }

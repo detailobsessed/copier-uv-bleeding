@@ -64,14 +64,21 @@ than the rest because it is pre-1.0, where any release may change behaviour.
 ### Why `required-version` is set {#ruff-required-version}
 
 ```toml
-required-version = ">=0.16"
+required-version = ">=0.17"
 ```
 
-The `extend-select` list assumes ruff 0.16's broad defaults (413 rules). On
+The `extend-select` list assumes ruff 0.17's broad defaults (407 rules). On
 0.14 and 0.15 the defaults are just 59 rules (E4/E7/E9/F), so extending them
-would silently drop the prefixes deleted from the list as redundant — `DTZ`,
-`FA`, `FLY` and `PIE` — with no warning at all. Failing loudly is the better
-trade.
+would silently drop the prefixes deleted from the list as redundant — `FA`,
+`FLY` and `PIE` — with no warning at all. Failing loudly is the better trade.
+0.17 is also the first release whose `py315` target is stable; 0.16 accepts it
+with a warning that support "is under development and may be unstable".
+
+Defaults shrink too. 0.17 dropped seven `DTZ` rules (naive `datetime.now()`,
+`date.today()`, `strptime` without a zone, …) from the 413 that 0.16 enabled,
+so `DTZ` went back into `extend-select`. Every ruff upgrade that changes the
+default set needs the same check: diff `ruff check --isolated --show-settings`
+between the two versions.
 
 This lives in `[tool.ruff]` rather than only in the `ci` dependency floor because a project that edited its dependency groups keeps its own `ruff>=0.14` through [`copier update`'s merge](update.md) but does receive this section, so the floor alone would not protect it.
 
@@ -95,19 +102,25 @@ be turned off again:
   honour as a suppression at all.
 
 Rule codes and `# noqa:` work in both modes, so they are the portable choice.
-Stable ruff 0.16 already enables 413 rules.
+Stable ruff 0.17 already enables 407 rules.
+
+With preview off, an ignore for a preview-only rule is dead config: the rule
+never runs, so the entry exempts nothing. The ignore lists name stable rules
+only, and a test checks that against `ruff rule --all`.
 
 ### Why `extend-select` and not `select` {#ruff-extend-select}
 
-Ruff's default rule set is broad (413 rules as of 0.16) and grows with each
+Ruff's default rule set is broad (407 rules as of 0.17) and changes with each
 release. `select` **replaces** that set, so a curated list silently switches off
 every default it omits — the list this template used to ship was disabling 81
 of them, including all ten flake8-async rules, blind-except, the leftover-
 debugger check and the flake8-pyi rules, with nothing warning that it was doing
 so.
 
-`extend-select` layers on top of the defaults instead, so future ruff releases
-add coverage rather than quietly losing it.
+`extend-select` layers on top of the defaults instead, so rules ruff adds to its
+defaults arrive on their own. Rules it removes still vanish silently, as `DTZ`
+did in 0.17, which is why `required-version` pins the minor this list was
+checked against.
 
 Only list a prefix in `extend-select` if it is **not** already on by default.
 Entries that become default should be deleted rather than kept "for
@@ -375,7 +388,7 @@ appeared without anything in the template changing:
 
 1. `coverage` selects the `sys.monitoring` core by default on CPython 3.14+
    (`SYSMON_DEFAULT = CPYTHON and PYVERSION >= (3, 14)`). This template requires
-   3.14, so every generated project gets it.
+   3.15, so every generated project gets it.
 2. That core cannot do dynamic contexts. `coverage` knows this and *will* fall
    back on its own — but only when `dynamic_context` is set in config, which it
    reads once, up front.
@@ -394,7 +407,7 @@ is the honest outcome, so the fix restores the contexts rather than the silence.
 The variable is scoped to this one hook via prek's per-hook `env` rather than
 set globally in `[tool.coverage.run]`. The `pytest-cov` hook and `poe test-cov`
 use no dynamic contexts, so they keep `sysmon`, which is the faster core on
-3.14. Scoping it through `env` also keeps it working on Windows, which the CI
+3.14+. Scoping it through `env` also keeps it working on Windows, which the CI
 matrix covers — an `env VAR=value ...` prefix on `entry` would not, since prek
 execs the entry directly instead of going through a shell.
 

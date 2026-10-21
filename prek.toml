@@ -93,7 +93,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.16.1"
+rev = "v0.17.1"
 hooks = [
   # ruff-format must follow ruff --fix, and both rewrite the same .py files.
   { id = "ruff", args = ["--fix"], priority = 5 },

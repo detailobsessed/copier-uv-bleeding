@@ -86,7 +86,7 @@ Since we use Git, run `git status` and `git diff` after `poe update-template` an
 
 Those releases did not use copier's merge for `pyproject.toml` and `prek.toml`. A task regenerated both files from the template on every update and kept only regions wrapped in `# template-preserve:<name>:start` / `:end` comments, plus `project.version` and `tag_format`. Every other customisation was silently lost: extra ruff ignores, pytest markers, poe task changes, hook revs, `[tool.uv]` settings, optional dependencies (DOT-620, DOT-630).
 
-The task is gone, and both files merge like every other file. The `# template-preserve:*` comments are still in the template and in your project, but nothing reads them any more. Delete them if you like. The template keeps them because deleting a line right next to one you edited, like `dependencies`, would be a conflict in nearly every project's next update.
+The task is gone, and both files merge like every other file. The template dropped the `# template-preserve:*` comments with the Python 3.15 release, which is where the one-time conflicts above come from.
 
 If an earlier update lost something, `git log -p pyproject.toml prek.toml` shows what it was. One loss needs care: if an update reset your `tag_format` **and a release ran on the wrong format**, restoring the line is not enough, because semantic-release has no tag it recognizes any more. Tag the last good release commit in the correct format first (`git tag -a v0.9.0 <sha>`), then release normally.
 
