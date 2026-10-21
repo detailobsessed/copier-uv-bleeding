@@ -14,6 +14,27 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.43.0 (2026-10-21)
+
+### Bug Fixes
+
+- End the lychee gitlab-ci-token exclude at the host
+  ([`43e0b43`](https://github.com/detailobsessed/copier-uv-bleeding/commit/43e0b431c6b9dc1a7741c65cadb1627598f09c42))
+
+- Lychee no longer fails on the GitLab release job's remote
+  ([`7e3d058`](https://github.com/detailobsessed/copier-uv-bleeding/commit/7e3d058e7b43146680d57ccb8ed442f8dbf58a8e))
+
+### Documentation
+
+- Run older-release updates through uvx with the old extension
+  ([`1527437`](https://github.com/detailobsessed/copier-uv-bleeding/commit/15274378e85ebddc451f8e6e2fa49ec63dbad72e))
+
+### Features
+
+- Drop the template's Jinja extension so a stock copier works
+  ([`c47f3a5`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c47f3a5d66fee8de251579e4b3590a9f19bc30f0))
+
+
 ## v0.42.1 (2026-10-21)
 
 ### Bug Fixes
