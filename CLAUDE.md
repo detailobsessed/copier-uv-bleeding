@@ -63,6 +63,8 @@ pytest tests/test_template.py::TestProjectTypes::test_app_type_has_cli -v
 
 **uv trusted publishing** -- PyPI OIDC trusted publishing does NOT work from reusable GitHub Actions workflows. The `job_workflow_ref` claim points to the reusable workflow's repo, not the caller's. Always run `uv publish` in the calling workflow.
 
+**`copier update` never overwrites a file it merges -- it renders the new version and replays the project's edits onto it.** Only lines both sides changed conflict, and `--conflict inline` (what `poe update-template` passes) marks just those; `rej` sends the whole hunk, unrelated nearby edits included, to a `.rej` while the file takes the template's side. Deleting a template line right beside a line projects edit (e.g. the inert `# template-preserve:*` comments around `dependencies`) is a conflict in every such project, even if a migration strips it first. Anything that regenerates a file (a `_tasks` script) loses every edit it does not know about: that was DOT-630, found 2026-10-21 by `tests/test_update_preserves_project.py` after an agent had blamed copier's merge. Verify an update claim with a real `copier update`, not by reasoning.
+
 **copier `_skip_if_exists` vs `_exclude`** -- `_skip_if_exists` skips overwriting if the file exists but creates it if missing. `_exclude` permanently prevents generation -- once excluded, `copier update` can never bring it back. Only use `_exclude` for feature-gated files.
 
 ## Commit Convention

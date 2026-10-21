@@ -1,11 +1,13 @@
 """A real `copier update` must never undo what a downstream project changed.
 
 Every customisation below was lost by an actual update of an actual project
-(DOT-620 and its comments). Unit tests on `sync_marked_sections.sync_text`
-covered one key at a time and passed while those updates went out, so this
-test runs the user's flow end to end instead: generate at a released tag,
-customise the way a project does, commit, `copier update` to HEAD with its
-tasks, then check each customisation on its own so a failure names the loss.
+(DOT-620 and its comments): from 0.41.0 to 0.41.14 a task regenerated
+pyproject.toml and prek.toml on every update and kept only marked regions.
+Unit tests on that task covered one key at a time and passed while those
+updates went out, so this test runs the user's flow end to end instead:
+generate at a released tag, customise the way a project does, commit,
+`copier update` to HEAD with its tasks, then check each
+customisation on its own so a failure names the loss.
 """
 
 from __future__ import annotations
@@ -22,9 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # The release the reporting project was on before its last destructive update.
 BASELINE_TAG = "0.41.14"
 
-# `copier_defaults` is function-scoped, so the module fixture below cannot use it.
-# `use_heavy_hooks` puts the pytest-cov hook (and its `--cov-fail-under`) in prek.toml.
-ANSWERS = {
+# `copier_defaults` is function-scoped, so the module fixtures below cannot use it.
+BASE_ANSWERS = {
     "project_name": "Test Project",
     "project_description": "A test project",
     "author_fullname": "Test Author",
@@ -38,8 +39,25 @@ ANSWERS = {
     "publish_to_pypi": False,
     "use_blacksmith_runners": False,
     "configure_repo_settings": False,
-    "use_heavy_hooks": True,
     "project_type": "app",
+}
+
+# `use_heavy_hooks` puts the pytest-cov hook (and its `--cov-fail-under`) in prek.toml.
+ANSWERS = {**BASE_ANSWERS, "use_heavy_hooks": True}
+
+# Answer sets the customised project does not cover: a lib without releases (the
+# `update-template` line and the end of prek.toml render differently), and
+# GitLab with a custom index (`[[tool.uv.index]]` only renders with one).
+PRISTINE_VARIANTS = {
+    "lib-no-release": {**BASE_ANSWERS, "project_type": "lib", "use_ci": False, "use_semantic_release": False},
+    "gitlab-custom-index": {
+        **BASE_ANSWERS,
+        "repository_provider": "gitlab.com",
+        "open_source": False,
+        "use_custom_pypi_index": True,
+        # A reachable index: copier's `uv sync` task runs in its temp renders.
+        "custom_pypi_index_url": "https://pypi.org/simple",
+    },
 }
 
 GIT_ENV = {
@@ -49,6 +67,13 @@ GIT_ENV = {
     "GIT_COMMITTER_NAME": "Test",
     "GIT_COMMITTER_EMAIL": "t@example.com",
 }
+
+# What `poe update-template` runs, minus `uv sync`/`prek update`, which need network.
+UPDATE = ["copier", "update", "--trust", "--skip-answered", "--defaults", "--conflict", "inline", "--vcs-ref", "HEAD"]
+
+# A project's first update past 0.41.14 runs the task it already has, which still
+# passes `--conflict rej`; the switch to inline only lands with that update.
+UPDATE_FROM_0_41 = [arg if arg != "inline" else "rej" for arg in UPDATE]
 
 
 @dataclass(frozen=True)
@@ -102,12 +127,7 @@ CUSTOMISATIONS = (
     Customisation(
         "optional-dependencies",
         "pyproject.toml",
-        (
-            (
-                "# template-preserve:dependencies:end\n",
-                '# template-preserve:dependencies:end\n\n[project.optional-dependencies]\nmcp = ["fastmcp>=2"]\n',
-            ),
-        ),
+        (("\n[project.urls]\n", '\n[project.optional-dependencies]\nmcp = ["fastmcp>=2"]\n\n[project.urls]\n'),),
         present=("[project.optional-dependencies]", 'mcp = ["fastmcp>=2"]'),
     ),
     Customisation(
@@ -153,6 +173,19 @@ CUSTOMISATIONS = (
         present=("test = \"pytest -m 'not slow and not integration'\"",),
     ),
     Customisation(
+        # Inside the inert "extra poe tasks" markers, where 0.41.x told projects
+        # to put them; the update changes `update-template` three lines above.
+        "own-poe-task",
+        "pyproject.toml",
+        (
+            (
+                "# template-preserve:extra-poe-tasks:end\n",
+                'serve = "python -m test_project.server"\n# template-preserve:extra-poe-tasks:end\n',
+            ),
+        ),
+        present=('serve = "python -m test_project.server"',),
+    ),
+    Customisation(
         "ty-rules",
         "pyproject.toml",
         (("[tool.ty.environment]", '[tool.ty.rules]\npossibly-unresolved-reference = "error"\n\n[tool.ty.environment]'),),
@@ -166,7 +199,8 @@ CUSTOMISATIONS = (
     ),
     # --- prek.toml --------------------------------------------------------
     Customisation(
-        # What `prek update` writes; the template ships every rev empty.
+        # What `prek update` writes; the template ships every rev empty and never
+        # touches those lines, so the project's revs replay cleanly.
         "hook-revs",
         "prek.toml",
         (('rev = ""', 'rev = "v1.2.3"'),),
@@ -184,6 +218,25 @@ CUSTOMISATIONS = (
         (('"--verbose",', '"--strict",\n    "--verbose",'),),
         present=('"--strict",',),
     ),
+    Customisation(
+        "own-local-hook",
+        "prek.toml",
+        (
+            (
+                "# template-preserve:extra-local-hooks:end\n",
+                (
+                    "\n[[repos.hooks]]\n"
+                    'id = "check-schema"\n'
+                    'name = "check schema"\n'
+                    'entry = "uv run python scripts/check_schema.py"\n'
+                    'language = "system"\n'
+                    "pass_filenames = false\n"
+                    "# template-preserve:extra-local-hooks:end\n"
+                ),
+            ),
+        ),
+        present=('id = "check-schema"',),
+    ),
     # --- source -----------------------------------------------------------
     Customisation(
         "package-init",
@@ -192,38 +245,6 @@ CUSTOMISATIONS = (
         present=('__all__ = ["main"]',),
     ),
 )
-
-
-# Lost today because pyproject.toml/prek.toml are regenerated by
-# `sync_marked_sections.py` (DOT-630 fixes the class). `strict` turns each entry
-# into a failure the moment it starts passing, so the list cannot go stale.
-KNOWN_LOSSES = frozenset(
-    {
-        "build-backend-window",
-        "project-urls",
-        "optional-dependencies",
-        "default-groups",
-        "uv-settings",
-        "ruff-ignore",
-        "ruff-per-file-ignores",
-        "pytest-marker",
-        "poe-test-filter",
-        "ty-rules",
-        "vulture",
-        "hook-revs",
-        "coverage-floor",
-        "commit-msg-strict",
-    }
-)
-
-
-def _params() -> list[object]:
-    return [
-        pytest.param(c, id=c.id, marks=pytest.mark.xfail(reason="DOT-630", strict=True))
-        if c.id in KNOWN_LOSSES
-        else pytest.param(c, id=c.id)
-        for c in CUSTOMISATIONS
-    ]
 
 
 def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -245,30 +266,47 @@ def _customise(project: Path) -> None:
         path.write_text(text)
 
 
-@pytest.fixture(scope="module")
-def updated_project(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, subprocess.CompletedProcess[str]]:
+def _generate_and_update(project: Path, answers: dict, *, customise: bool, update: list[str] = UPDATE) -> subprocess.CompletedProcess[str]:
     if _run(["git", "rev-parse", "--verify", BASELINE_TAG], REPO_ROOT).returncode != 0:
         pytest.skip(f"{BASELINE_TAG} tag not available in this checkout (shallow clone?)")
 
-    project = tmp_path_factory.mktemp("downstream") / "proj"
     copy = ["copier", "copy", "--trust", "--skip-tasks", "-f", "-r", BASELINE_TAG, str(REPO_ROOT), str(project)]
-    for key, value in ANSWERS.items():
+    for key, value in answers.items():
         copy.extend(["-d", f"{key}={str(value).lower() if isinstance(value, bool) else value}"])
     result = _run(copy, REPO_ROOT)
     assert result.returncode == 0, f"copier copy at {BASELINE_TAG} failed: {result.stderr}"
 
-    _customise(project)
+    if customise:
+        _customise(project)
     for cmd in (
         ["git", "init", "-q", "-b", "main"],
         ["git", "add", "-A"],
-        ["git", "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", "-m", "customised"],
+        ["git", "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", "-m", "baseline"],
     ):
         assert _run(cmd, project).returncode == 0, f"{cmd} failed"
 
-    # The core of `poe update-template`, tasks included: the tasks are where
-    # `sync_marked_sections.py` rewrites pyproject.toml and prek.toml.
-    update = _run(["copier", "update", "--trust", "--skip-answered", "--defaults", "--conflict", "rej", "--vcs-ref", "HEAD"], project)
-    return project, update
+    return _run(update, project)
+
+
+def _conflicts(project: Path) -> list[str]:
+    """Paths holding `.rej` files or inline conflict markers after the update."""
+    found = []
+    for path in project.rglob("*"):
+        if ".venv" in path.parts or ".git" in path.parts or not path.is_file():
+            continue
+        if path.suffix == ".rej":
+            found.append(str(path.relative_to(project)))
+        elif "<<<<<<< before updating" in path.read_text(errors="replace"):
+            found.append(f"{path.relative_to(project)} (conflict markers)")
+    return sorted(found)
+
+
+@pytest.fixture(scope="module", params=[UPDATE, UPDATE_FROM_0_41], ids=["inline", "first-update-from-0.41"])
+def updated_project(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> tuple[Path, subprocess.CompletedProcess[str]]:
+    project = tmp_path_factory.mktemp("downstream") / "proj"
+    return project, _generate_and_update(project, ANSWERS, customise=True, update=request.param)
 
 
 @pytest.mark.slow
@@ -278,18 +316,14 @@ def test_update_succeeds(updated_project: tuple[Path, subprocess.CompletedProces
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(
-    reason="DOT-630: copier replays the edit to src/<pkg>/__init__.py, a _skip_if_exists file, and rejects it",
-    strict=True,
-)
-def test_update_leaves_no_rej_files(updated_project: tuple[Path, subprocess.CompletedProcess[str]]) -> None:
+def test_update_leaves_no_conflicts(updated_project: tuple[Path, subprocess.CompletedProcess[str]]) -> None:
+    """None of the customisations touch a line the template changed since the baseline."""
     project, _ = updated_project
-    rejects = sorted(str(p.relative_to(project)) for p in project.rglob("*.rej") if ".venv" not in p.parts)
-    assert not rejects, f"update could not apply cleanly: {rejects}"
+    assert not _conflicts(project), f"update could not merge cleanly: {_conflicts(project)}"
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("customisation", _params())
+@pytest.mark.parametrize("customisation", CUSTOMISATIONS, ids=lambda c: c.id)
 def test_update_keeps_customisation(updated_project: tuple[Path, subprocess.CompletedProcess[str]], customisation: Customisation) -> None:
     project, _ = updated_project
     text = (project / customisation.file).read_text()
@@ -297,3 +331,62 @@ def test_update_keeps_customisation(updated_project: tuple[Path, subprocess.Comp
     reverted = [s for s in customisation.absent if s in text]
     assert not lost, f"{customisation.file}: update dropped {lost}"
     assert not reverted, f"{customisation.file}: update brought back {reverted}"
+
+
+@pytest.mark.slow
+def test_colliding_template_change_is_marked_not_lost(tmp_path: Path) -> None:
+    """When a release changes the very line a project edited, both versions must reach the user.
+
+    The template is a clone of HEAD with one extra commit, a fake release that moves
+    the `uv_build` window the project also moved. Under `--conflict rej` the project's
+    line went to a `.rej` and the file silently took the template's; inline keeps both.
+    """
+    template = tmp_path / "template"
+    assert _run(["git", "clone", "-q", str(REPO_ROOT), str(template)], tmp_path).returncode == 0
+    jinja = template / "project" / "pyproject.toml.jinja"
+    jinja.write_text(jinja.read_text().replace('"uv_build>=0.12.1,<0.13"', '"uv_build>=0.13.2,<0.14"'))
+    release = ["git", "-c", "commit.gpgsign=false", "commit", "-qam", "fake release", "--no-verify"]
+    assert _run(release, template).returncode == 0
+
+    project = tmp_path / "proj"
+    copy = ["copier", "copy", "--trust", "--skip-tasks", "-f", "-r", BASELINE_TAG, str(template), str(project)]
+    for key, value in ANSWERS.items():
+        copy.extend(["-d", f"{key}={str(value).lower() if isinstance(value, bool) else value}"])
+    assert _run(copy, tmp_path).returncode == 0
+    pyproject = project / "pyproject.toml"
+    pyproject.write_text(pyproject.read_text().replace('"uv_build>=0.12.1,<0.13"', '"uv_build>=0.13,<0.14"'))
+    for cmd in (
+        ["git", "init", "-q", "-b", "main"],
+        ["git", "add", "-A"],
+        ["git", "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", "-m", "baseline"],
+    ):
+        assert _run(cmd, project).returncode == 0, f"{cmd} failed"
+
+    update = _run(UPDATE, project)
+    assert update.returncode == 0, f"copier update failed:\nstdout:\n{update.stdout}\nstderr:\n{update.stderr}"
+    text = pyproject.read_text()
+    assert "<<<<<<< before updating" in text, "the collision must be marked"
+    assert '"uv_build>=0.13,<0.14"' in text, "the project's version of the line was lost"
+    assert '"uv_build>=0.13.2,<0.14"' in text, "the template's version of the line was lost"
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("answers", PRISTINE_VARIANTS.values(), ids=PRISTINE_VARIANTS.keys())
+def test_pristine_update_matches_a_fresh_render(tmp_path: Path, answers: dict) -> None:
+    """An untouched project must come out of the update exactly as HEAD renders it.
+
+    Anything else is a merge artefact the project never asked for, like a conflict
+    or a stray blank line.
+    """
+    project = tmp_path / "proj"
+    update = _generate_and_update(project, answers, customise=False)
+    assert update.returncode == 0, f"copier update failed:\nstdout:\n{update.stdout}\nstderr:\n{update.stderr}"
+    assert not _conflicts(project), f"update could not merge cleanly: {_conflicts(project)}"
+
+    fresh = tmp_path / "fresh"
+    copy = ["copier", "copy", "--trust", "--skip-tasks", "-f", "-r", "HEAD", str(REPO_ROOT), str(fresh)]
+    for key, value in answers.items():
+        copy.extend(["-d", f"{key}={str(value).lower() if isinstance(value, bool) else value}"])
+    assert _run(copy, REPO_ROOT).returncode == 0
+    for name in ("pyproject.toml", "prek.toml"):
+        assert (project / name).read_text() == (fresh / name).read_text(), f"{name} differs from a fresh render at HEAD"

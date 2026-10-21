@@ -125,7 +125,9 @@ hooks = [{ id = "lychee", args = ["--config", ".lychee.toml"], priority = 5, typ
 [[repos]]
 repo = "local"
 
-# Block commits containing .rej files produced by `copier update --conflict rej`.
+# Block commits containing .rej files, which `copier update --conflict rej`
+# leaves where it cannot apply an edit. `poe update-template` uses inline
+# markers instead; check-merge-conflict above catches those.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-copier-conflicts
 [[repos.hooks]]
 id = "no-copier-rej-files"

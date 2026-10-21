@@ -70,10 +70,7 @@ would silently drop the prefixes deleted from the list as redundant — `DTZ`,
 `FA`, `FLY` and `PIE` — with no warning at all. Failing loudly is the better
 trade.
 
-This lives in `[tool.ruff]` rather than only in the `ci` dependency floor
-because that group sits inside a [template-preserve region](update.md): a
-project updating from an older template keeps its own `ruff>=0.14` but does
-receive this section, so the floor alone would not protect it.
+This lives in `[tool.ruff]` rather than only in the `ci` dependency floor because a project that edited its dependency groups keeps its own `ruff>=0.14` through [`copier update`'s merge](update.md) but does receive this section, so the floor alone would not protect it.
 
 ### Why preview rules are off {#ruff-preview}
 
@@ -177,11 +174,7 @@ These cover `prek.toml` and `_typos.toml`.
 
 prek 0.4.10 introduced the `[update]` tag filters used to exclude lychee's
 `nightly` tag; the pin tracks the version the template is tested at (0.4.12),
-which is at or above that. That floor is the guard that reaches projects updating
-from an older template: `prek.toml` is regenerated in full by the template's
-[sync step](update.md), but `[dependency-groups]` in `pyproject.toml` sits
-inside a template-preserve region, so the `prek>=` floor there stays at
-whatever the project already had.
+which is at or above that. That floor is the guard that reaches projects updating from an older template: `prek.toml` keeps the line unless the project edited it, while a project that edited its dependency groups keeps its own `prek>=` floor through [`copier update`'s merge](update.md).
 
 A too-old prek would otherwise ignore the `[update]` block entirely and
 silently reintroduce the lychee bug below. `minimum_prek_version` fails loudly
@@ -391,9 +384,7 @@ execs the entry directly instead of going through a shell.
 Two hooks exist because `copier update` can leave conflict debris that a normal
 commit would otherwise carry into history:
 
-- `check-merge-conflict` runs with `--assume-in-merge`, which catches markers
-  left by `copier update --conflict inline`. Without the flag the hook skips
-  the check, because there is no `.git/MERGE_MSG` outside a real merge.
-- `no-copier-rej-files` blocks commits containing `.rej` files produced by
-  `copier update --conflict rej` (DOT-542). See Copier's
-  [tips and tricks](https://copier.readthedocs.io/en/stable/updating/#tips-and-tricks).
+- `check-merge-conflict` runs with `--assume-in-merge`, which catches markers left by `copier update --conflict inline`, the mode `poe update-template` uses. Without the flag the hook skips the check, because there is no `.git/MERGE_MSG` outside a real merge.
+- `no-copier-rej-files` blocks commits containing `.rej` files, which a raw `copier update --conflict rej` leaves behind (DOT-542). See Copier's [tips and tricks](https://copier.readthedocs.io/en/stable/updating/#tips-and-tricks).
+
+`poe update-template` uses inline markers rather than `.rej` files because `rej` mode works per hunk: one conflicting line sends the whole hunk to the `.rej`, including your unrelated edits a few lines away, and the file takes the template's version of all of them. Inline mode runs a real three-way `git merge-file` and marks only the lines both sides changed (DOT-630).
