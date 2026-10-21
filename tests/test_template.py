@@ -2444,3 +2444,33 @@ jinja2.exceptions.TemplateSyntaxError: unexpected '}'
     def test_rejects_when_nothing_was_rendered(self, tmp_path: Path) -> None:
         """The load-bearing gate: cleanup noise never excuses an empty destination."""
         assert not _is_retryable_cleanup_race(self.CLEANUP_ONLY, tmp_path)
+
+
+class TestReadmePromptTable:
+    """The README's "Scaffold Prompts" table lists exactly the questions copier.yml asks (DOT-618).
+
+    Until 0.41.x the README documented prompts that no longer existed (an audience
+    profile, a docs-site toggle, a `package` project type): rows outlive their
+    questions unless something checks both directions.
+    """
+
+    @staticmethod
+    def _asked_questions() -> set[str]:
+        """Top-level questions, minus `when: false` ones copier computes and never asks."""
+        config = yaml.safe_load((REPO_ROOT / "copier.yml").read_text(encoding="utf-8"))
+        return {key for key, spec in config.items() if not key.startswith("_") and spec.get("when") is not False}
+
+    @staticmethod
+    def _table_keys() -> set[str]:
+        """Answer keys from the table's Key column."""
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        section = readme.split("## Scaffold Prompts", 1)[1].split("\n## ", 1)[0]
+        rows = [line for line in section.splitlines() if line.startswith("| **")]
+        assert rows, "no prompt rows found under ## Scaffold Prompts"
+        return {key for row in rows for key in re.findall(r"`([a-z_]+)`", row.split("|")[2])}
+
+    def test_every_question_has_a_row(self) -> None:
+        assert self._asked_questions() - self._table_keys() == set()
+
+    def test_every_row_has_a_question(self) -> None:
+        assert self._table_keys() - self._asked_questions() == set()

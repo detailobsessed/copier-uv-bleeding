@@ -44,25 +44,27 @@ It is designed to be used as a starting point for new Python projects, providing
 
 When you run `copier copy`, you'll be asked:
 
-| Prompt | Description |
-| ------ | ----------- |
-| **Project name** | Name of your project |
-| **Project description** | One-line description |
-| **Project type** | `app` (CLI entry point, like `uv init --app`) or `lib` (importable package, like `uv init --lib`) |
-| **Author info** | Name, email, username (set defaults once per machine, see below) |
-| **Repository provider** | `github.com` or `gitlab.com` |
-| **Repository host** | Hostname — override for self-hosted GitLab (e.g. `gitlab.company.com`) |
-| **Repository namespace** | GitHub/GitLab username or organization |
-| **Open-source this project?** | Adds a LICENSE plus `CODE_OF_CONDUCT`, `CONTRIBUTING`, `SECURITY`, issue/PR templates and `FUNDING`. Off = internal/private, none of those. Defaults on for GitHub |
-| **License** | Choose from 40+ open source licenses (asked only when open-sourcing) |
-| **Heavy git hooks?** | Run coverage on pre-push (off = fast hooks only; coverage runs in CI) |
-| **Enable CI?** | GitHub Actions or GitLab CI |
-| **Enable semantic-release?** | Automated versioning and changelog |
-| **Publish to PyPI?** | Include PyPI publishing in release workflow |
-| **Publish to MCP Registry?** | Include the MCP Registry publish workflow |
-| **Use a custom PyPI index?** | Point uv at Artifactory, Nexus, etc. |
-| **Use Blacksmith runners?** | 2x faster, 75% cheaper CI runners |
-| **Configure GitHub repo settings?** | Run `gh repo edit` to enable delete-branch-on-merge and auto-merge |
+| Prompt | Key | Description |
+| ------ | --- | ----------- |
+| **Project name** | `project_name` | Name of your project |
+| **Project description** | `project_description` | One-line description |
+| **Project type** | `project_type` | `app` (CLI entry point, like `uv init --app`) or `lib` (importable package, like `uv init --lib`) |
+| **Author info** | `author_fullname`, `author_email`, `author_username` | Name, email, username (set defaults once per machine, see below) |
+| **Repository provider** | `repository_provider` | `github.com` or `gitlab.com` |
+| **Repository host** | `repository_host` | Hostname — override for self-hosted GitLab (e.g. `gitlab.company.com`) |
+| **Repository namespace** | `repository_namespace` | GitHub/GitLab username or organization |
+| **Open-source this project?** | `open_source` | Adds a LICENSE plus `CODE_OF_CONDUCT`, `CONTRIBUTING`, `SECURITY`, issue/PR templates and `FUNDING`. Off = internal/private, none of those. Defaults on for GitHub |
+| **License** | `copyright_license` | Choose from 40+ open source licenses (asked only when open-sourcing) |
+| **Heavy git hooks?** | `use_heavy_hooks` | Run coverage on pre-push (off = fast hooks only; coverage runs in CI) |
+| **Enable CI?** | `use_ci` | GitHub Actions or GitLab CI |
+| **Enable semantic-release?** | `use_semantic_release` | Automated versioning and changelog |
+| **Publish to PyPI?** | `publish_to_pypi` | Include PyPI publishing in release workflow |
+| **Publish to MCP Registry?** | `publish_to_mcp_registry` | Include the MCP Registry publish workflow |
+| **Use a custom PyPI index?** | `use_custom_pypi_index`, `custom_pypi_index_url` | Point uv at Artifactory, Nexus, etc., then give its URL |
+| **Use Blacksmith runners?** | `use_blacksmith_runners` | 2x faster, 75% cheaper CI runners |
+| **Configure GitHub repo settings?** | `configure_repo_settings` | Run `gh repo edit` to enable delete-branch-on-merge and auto-merge |
+
+The **Key** column names each answer in `.copier-answers.yml`, and is what `-d key=value` and the `defaults:` in copier's settings file take.
 
 The booleans cascade: `use_ci` gates `use_semantic_release`, which gates `publish_to_pypi` and `publish_to_mcp_registry`. Answering "no" high up skips everything beneath it.
 
