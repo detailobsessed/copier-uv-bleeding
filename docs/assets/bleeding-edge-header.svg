@@ -35,7 +35,7 @@
     copier-uv-bleeding
   </text>
   <text x="400" y="130" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#8b949e" text-anchor="middle">
-    Python 3.14+ • uv • ruff • ty • prek • poethepoet
+    Python 3.15+ • uv • ruff • ty • prek • poethepoet
   </text>
 
   <!-- Decorative edge line -->

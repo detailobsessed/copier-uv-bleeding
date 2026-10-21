@@ -16,14 +16,7 @@ To update your project, go into its directory,
 and run `copier update`. Your repository must be clean
 (no modified files) when running this command.
 
-Copier will use the previous answers you gave when
-generating the project, to re-generate it in a temporary
-directory, compare the two versions, and apply patches
-to your documents. When it's not sure, or when there's
-a conflict, it will ask you if you want to skip that
-change or force it. Your previous answers are stored
-in the `.copier-answers.yml` file at the root
-of the project directory:
+Copier renders the template version your project was last updated to, using your stored answers, and diffs that against your project to find your edits. It then renders the new template version over your files and replays your edits onto it. Where the template changed the same lines you did, it marks the conflict for you to resolve; it never discards your side. Your previous answers are stored in the `.copier-answers.yml` file at the root of the project directory:
 
 ```
 📁 my-project
@@ -51,107 +44,86 @@ repository_namespace: mkdocstrings
 repository_provider: github.com
 ```
 
-Generated projects ship a `poe update-template` task that handles the full update flow:
+Generated projects ship two tasks:
 
 ```bash
-poe update-template
+poe update-template   # copier update --trust . --skip-answered --defaults --conflict inline
+poe upgrade           # uv sync --upgrade && uv run prek update
 ```
 
-This runs:
+`update-template` is copier and nothing else: answered questions are kept, new questions take their defaults, and conflicts are marked inline. Review the result, then run `upgrade` to bring dependencies and hook versions up to date. `prek.toml` keeps `prek update` off pre-release tags and lychee's `nightly`, so running it by hand is safe too.
 
-1. `copier update --trust . --skip-answered --conflict rej` — pull template changes; previously-answered questions are kept, new questions are surfaced interactively, conflicts produce `.rej` files instead of inline conflict markers
-2. `uv sync --upgrade` — upgrade all dependencies
-3. `uv run prek update` — update hook versions. The lychee `nightly` tag is excluded declaratively in `prek.toml` under `[update.repos]`, so a bare `prek update` is safe to run by hand too
+## Edit any file, including `pyproject.toml` and `prek.toml`
+
+Add dependencies, tables, ignore rules, poe tasks and hooks wherever they belong. Change the template's own values too: a stricter coverage floor, an extra ruff ignore, a different test filter. Copier replays every edit onto the new template version, so an update keeps all of them.
+
+The hook `rev` lines are yours as well. The template ships them empty and never changes those lines, so the revs `prek update` and the `sync-with-uv` hook write survive every update.
 
 ## Handling conflicts
 
-`copier update` may produce two kinds of artefacts you need to handle before committing:
+When a release changes a line you also changed, or one right next to it, copier keeps both versions and marks the spot in the file:
 
-1. **`.rej` files** — wherever the template's diff couldn't be applied cleanly, Copier writes the rejected hunk to `<file>.rej` alongside the original. The original file keeps your working content; the `.rej` file holds the change the template wanted. Review each `.rej`, apply what's useful by hand, then delete it. A pre-commit hook (`no-copier-rej-files`) refuses to commit while `.rej` files exist.
-2. **Re-rendered templated values** — fields rendered from `.copier-answers.yml` (e.g. `[project.urls]`, `[project.scripts]`, repository paths) are recomputed on every update. If you manually edited those without bumping the matching answer, the update will reset them. Fix the answer in `.copier-answers.yml` instead of editing the rendered file.
+```text
+<<<<<<< before updating
+requires = ["uv_build>=0.13,<0.14"]
+||||||| last update
+requires = ["uv_build>=0.12.1,<0.13"]
+=======
+requires = ["uv_build>=0.13.4,<0.14"]
+>>>>>>> after updating
+```
+
+The top block is yours, the middle one is what the template had before, and the bottom one is what it has now. Keep what you want, delete the markers, and commit. `git grep -l '^<<<<<<<'` lists the files that need it, and the `check-merge-conflict` hook refuses to commit while any marker is left.
+
+Fields rendered from `.copier-answers.yml` (the `[project.urls]`, `[project.scripts]` and repository paths) are recomputed on every update. If you changed one by hand, change the matching answer in `.copier-answers.yml` instead, or the update moves it back.
 
 Since we use Git, run `git status` and `git diff` after `poe update-template` and review the changes before committing. Use `git checkout -- FILE` to drop unwanted changes, or `git add -p` for partial commits.
 
-## How `pyproject.toml` and `prek.toml` update (DOT-599)
+### Expected once: the Python 3.15 update
 
-Both files mix template-owned config (most of the file — `[tool.ruff]`, `[tool.pytest.ini_options]`,
-poe tasks, hook definitions, ...) with content you're expected to grow over time (`dependencies`,
-`[project.scripts]`, `[dependency-groups]` contents, `[[tool.uv.index]]`, your own hooks) in one
-file, by design.
+This one update deletes lines right next to ones most projects edited, so expect a few conflicts. Each one is resolved the same way: keep your lines and drop the template's old ones.
 
-Copier's default `copier update` is **not** a true 3-way merge — it replays the diff between the
-old and new template renders as a patch onto your file, using fuzzy context matching. On a
-release that restructures a lot of the file at once, that patch can find *some* plausible anchor
-nearby and silently overwrite a hand-edited section, **without** producing a `.rej` file. That
-bug is exactly what happened in the incident DOT-599 is named after.
+- **The old `# template-preserve:*` comments** around `dependencies`, your own poe tasks and your own local hooks. Keep your lines and delete the comments. If you added poe tasks, the template's new `upgrade` task lands in the same conflict: keep it alongside yours.
+- **`requires-python` next to `version`.** `requires-python` moves above `readme`. The new line merges in on its own, but deleting the old one right above `version` conflicts in every project that has released:
 
-Because of that, both files are listed in `_skip_if_exists`, so Copier's default patcher never
-touches them after first generation. Instead, a `_tasks` step runs
-`migrations/sync_marked_sections.py` on every `copier update`, which **regenerates the whole file
-fresh from the template every time**, except for regions explicitly wrapped in
-`# template-preserve:<name>:start` / `# template-preserve:<name>:end` comments in the `.jinja`
-source (e.g. around `dependencies`, `[project.scripts]`, `[dependency-groups]`,
-`[[tool.uv.index]]`, and a dedicated "extra poe tasks" / "extra local hooks" slot in each file) —
-those are copied byte-for-byte from your previous version. Regions are matched **by name**, not
-by position, so a release that reorders or inserts a marked region can't splice content into the
-wrong slot.
+```text
+<<<<<<< before updating
+requires-python = ">=3.14"
+version = "0.18.0"
+||||||| last update
+requires-python = ">=3.14"
+version = "0.0.0"
+=======
+version = "0.0.0"
+>>>>>>> after updating
+```
 
-**Only marked regions (plus the two tool-owned keys below) survive an update — everything else
-always reflects the template.** If you
-add something the template has no marker for (a brand-new `[tool.x]` table, an extra dependency
-index before you've ever answered the custom-index question, a hand-written poe task outside the
-"extra poe tasks" slot), it will be silently dropped on the next update. This is a real trade-off
-versus the file-level "leave anything unrecognized alone" approach this template used briefly
-before markers: predictable and documented, but stricter. Two things matter in practice:
+Keep your `version` line and delete the old `requires-python`. Keeping the top block whole leaves two `requires-python` keys, which uv rejects as invalid TOML. After this, `readme` sits between the two lines, and later Python bumps merge without a conflict.
 
-- `[[tool.uv.index]]` only gets a marker at all in projects that answered `custom_pypi_index_url`
-  at generation time. If you never answered it and later hand-add a `[[tool.uv.index]]` block, it
-  will not survive the next update — re-run `copier update` after setting the answer instead.
-- For custom poe tasks / local hooks, use the dedicated "extra poe tasks" / "extra local hooks"
-  slots, not an arbitrary spot in the file — anything outside those slots follows the same rule.
+### Updating from 0.41.x: run copier by hand once
 
-### Tool-owned keys preserved without a marker
+Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej`. In that mode copier moves every hunk it cannot apply cleanly to a `.rej` file, including your unrelated edits next to it, and the file keeps the template's version. Against the Python 3.15 release that takes your released version, dependencies and `[tool.uv]` settings out of `pyproject.toml` and into `pyproject.toml.rej`. Nothing is lost, and the `no-copier-rej-files` hook blocks the commit, but applying `.rej` hunks by hand is tedious. Run the inline update directly instead:
 
-Two keys in `pyproject.toml` are owned by neither the template nor you, but by
-**python-semantic-release**, which rewrites them in your repo between updates:
+```bash
+copier update --trust --skip-answered --defaults --conflict inline
+```
 
-| Key | Why it can't just be re-rendered |
-| --- | --- |
-| `project.version` | The template renders the seed `version = "0.0.0"`. Re-rendering it rolls a released project back to zero, and because the template also sets `allow_zero_version = true`, semantic-release *accepts* `0.0.0` as a legitimate starting point — the next `feat` computes `0.1.0` instead of your real next version, and the tag collides with or regresses past real history. |
-| `tool.semantic_release.tag_format` | Worse, and less obvious: semantic-release reads the current version from **tags matching this format**, not from `project.version`. If your project uses `v{version}` and an update resets it to `{version}`, restoring the version line alone does not fix anything — no tag matches, so it still computes `0.1.0` from a `pyproject.toml` that looks correct. |
+That update brings in the new `poe update-template`, so later updates need nothing special. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
 
-`sync_marked_sections.py` snapshots these two by key path from your current file and writes them
-back into the fresh render, alongside the marked regions (DOT-620). Markers would not have worked
-here: a project updating *from* a marker-less version has no marked region to snapshot, so its
-first update — the one that matters — would still reset them. Preserving by key path needs no
-action on your side; the next `copier update` fixes it.
+### Updating from before 0.41.4
 
-If a past update already reset your `tag_format` **and a release ran on the wrong format**,
-restoring the line is not enough on its own: semantic-release has no tag it recognizes any more.
-Tag the last good release commit in the correct format first (`git tag -a v0.9.0 <sha>`), then
-release normally.
+The template carries no migrations, so an update across older releases leaves a few things to do by hand. Each one shows up in `git status`:
 
-Existing projects generated before this mechanism shipped have none of these markers yet. Their
-first update to a marker-aware template version runs a one-time bootstrap
-(`_bootstrap_legacy_markers` in `migrations/sync_marked_sections.py`) that locates the equivalent
-pre-marker content for each of the structural regions above and wraps it in place before syncing,
-and — for the two "extra" slots — moves any task/hook whose name the template doesn't recognize
-into the new slot. It's best-effort text matching, not a TOML parser, so unusual formatting (a
-hand-reformatted multi-line `dependencies` array, for example) may not bootstrap cleanly; always
-`git diff` after the first update past this change.
+- **`open_source` (0.41.0)** replaced `project_visibility`, `project_audience` and `use_community_health_files`. The update takes its default, `true` on GitHub and `false` elsewhere, so an internal GitHub project gains a LICENSE and community-health files, and a public GitLab one loses them. Discard those changes and re-run with the right answer: `copier update --trust --skip-answered --defaults --conflict inline -d open_source=false`.
+- **`scripts/prek-autoupdate.sh` (0.41.4)** is no longer used. Delete it.
 
-This approach is adapted from a small third-party tool called
-[Templator](https://github.com/dariusgm/templator) (not a dependency — its idea, reimplemented
-here in ~70 lines; the marker mechanism itself needs no TOML library, only the tool-owned-key
-pass above reads `tomllib`) with two deliberate fixes over its own
-implementation: it matches by name instead of position, and it never blanks a region that's never
-been snapshotted (Templator's own implementation empties any marked region with no snapshot, even
-on first generation — a footgun for a template that seeds real default content inside a marked
-region, like this template's CLI entry point).
+## What happened in 0.41.0 to 0.41.14
 
-If you want a new spot users can customize without losing it on update, wrap it in
-`# template-preserve:<name>:start` / `:end` in the `.jinja` source — nothing else to register or
-maintain. Anything *not* wrapped always reflects the latest template release.
+Those releases did not use copier's merge for `pyproject.toml` and `prek.toml`. A task regenerated both files from the template on every update and kept only regions wrapped in `# template-preserve:<name>:start` / `:end` comments, plus `project.version` and `tag_format`. Every other customisation was silently lost: extra ruff ignores, pytest markers, poe task changes, hook revs, `[tool.uv]` settings, optional dependencies (DOT-620, DOT-630).
+
+The task is gone, and both files merge like every other file. The template dropped the `# template-preserve:*` comments with the Python 3.15 release, which is where the one-time conflicts above come from.
+
+If an earlier update lost something, `git log -p pyproject.toml prek.toml` shows what it was. One loss needs care: if an update reset your `tag_format` **and a release ran on the wrong format**, restoring the line is not enough, because semantic-release has no tag it recognizes any more. Tag the last good release commit in the correct format first (`git tag -a v0.9.0 <sha>`), then release normally.
 
 ## Never hand-edit `.copier-answers.yml`
 

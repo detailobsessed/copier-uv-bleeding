@@ -3,11 +3,11 @@ name = "copier-uv-bleeding"
 version = "0.41.15"
 description = "Bleeding edge Copier template for Python projects managed by uv"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 
 [dependency-groups]
 dev = [
-    "copier",
+    "copier>=9.19.1",
     "jinja2",
     "markdown-callouts",
     "zensical",
@@ -15,18 +15,18 @@ dev = [
     "hypothesis>=6.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "pytest-randomly>=4",
+    "pytest-randomly>=5",
     "pytest-xdist>=3.5",
     # Not just for running hooks: tests/test_template.py shells out to
     # `prek util list-builtins` to check the template's builtin ids are real.
     # Without it as a dependency that test silently skips in CI.
-    "prek>=0.4.12",
-    "python-semantic-release>=10.6",
+    "prek>=0.5.7",
+    "python-semantic-release>=10.7",
     "pyyaml>=6.0.3",
     "reuse",
-    "ruff",
-    "ty>=0.0.66",
-    "copier-template-extensions>=0.3.3",
+    "ruff>=0.17.1",
+    "ty>=0.0.90",
+    "copier-template-extensions>=0.3.4",
 ]
 
 [tool.uv]
@@ -98,12 +98,13 @@ minor_tags = ["feat"]
 patch_tags = ["fix", "perf", "refactor", "ci", "docs", "chore", "style", "build", "deps"]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py315"
 line-length = 140
-# `extend-select` below assumes ruff 0.16's broad defaults (413 rules). On 0.14
-# and 0.15 the defaults are just 59 rules (E4/E7/E9/F), so extending them would
-# silently drop the prefixes deleted here as redundant — DTZ, FA, FLY, PIE.
-required-version = ">=0.16"
+# `extend-select` below assumes ruff 0.17's broad defaults (407 rules), and
+# `py315` is only stable from 0.17. On 0.14 and 0.15 the defaults are just 59
+# rules (E4/E7/E9/F), so extending them would silently drop the prefixes deleted
+# here as redundant — FA, FLY, PIE.
+required-version = ">=0.17"
 # Preview rules are unstable by definition — they change behaviour and can be
 # removed between patch releases. Turning them on also opts into preview-only
 # config syntax that then cannot be turned off again: `rule-codes-in-selectors`
@@ -111,17 +112,18 @@ required-version = ">=0.16"
 # rejected outside preview ("Selecting rules by name requires preview mode"),
 # and `noqa-comments` demands `# ruff: ignore[...]`, which stable ruff does not
 # honour as a suppression at all. Rule codes and `# noqa:` work in both modes,
-# so they are the portable choice. Stable ruff 0.16 already enables 413 rules.
+# so they are the portable choice. Stable ruff 0.17 already enables 407 rules.
 preview = false
 
 [tool.ruff.lint]
-# `extend-select`, not `select`. Ruff's default rule set is broad (413 rules
-# as of 0.16) and grows with each release. `select` REPLACES that set, so a
+# `extend-select`, not `select`. Ruff's default rule set is broad (407 rules
+# as of 0.17) and changes with each release. `select` REPLACES that set, so a
 # curated list silently switches off every default it omits — this list was
 # disabling 81 of them, including all ten flake8-async rules, blind-except,
 # the leftover-debugger check and the flake8-pyi rules, with nothing warning
 # that it was doing so. `extend-select` layers on top of the defaults instead,
-# so future ruff releases add coverage rather than quietly losing it.
+# so rules ruff adds arrive on their own. Rules it removes still vanish
+# silently (0.17 dropped seven DTZ rules), so diff the default set on upgrade.
 #
 # Only list a prefix here if it is NOT already on by default. Entries that
 # become default should be deleted rather than kept "for documentation": a
@@ -158,6 +160,7 @@ extend-select = [
 
     # Correctness
     "PTH",  # flake8-use-pathlib — prefer pathlib over os.path
+    "DTZ",  # flake8-datetimez — naive datetimes; ruff 0.17 dropped 7 of 10 from its defaults
 
     # Error messages
     "EM",   # flake8-errmsg — variables in exception constructors (better tracebacks)
@@ -198,22 +201,14 @@ known-first-party = ["tests"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
-    "S101", "S404", "S603", "S607", "S701",  # Allow assert, subprocess, jinja2 in tests
+    "S101", "S603", "S607", "S701",  # Allow assert, subprocess, jinja2 in tests
     "T201",       # Allow print in tests
-    "PLR6301",    # Test methods don't use self (pytest classes)
     "PLR2004",    # Magic values in assertions are fine
     "PLC0415",    # Lazy imports in test functions are idiomatic
-    "PLC2701",    # Private name imports for testing internals
     "ARG002",     # Unused method arguments (fixtures)
     "DTZ005",     # Naive datetime in tests is fine
-    "PLR0904",    # Test classes naturally have many test methods
 ]
-"extensions.py" = ["S404", "S602", "S605", "S607"]  # Template extensions use subprocess for git commands
-# Migrations run as bare `python3` scripts in the destination project during
-# `copier update`, where the repo's logging setup does not exist and stdout is
-# the only channel to the user. A migration that mutates files silently is
-# worse than one that prints.
-"migrations/**" = ["T201"]
+"extensions.py" = ["S602", "S605", "S607"]  # Template extensions use subprocess for git commands
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
@@ -261,7 +256,7 @@ checks = "gh pr checks --watch"
 watch = "gh run watch"
 
 [tool.ty.environment]
-python-version = "3.14"
+python-version = "3.15"
 python = ".venv"
 
 [tool.coverage.run]
@@ -270,6 +265,8 @@ parallel = true
 source = ["tests/"]
 
 [tool.coverage.report]
+# CI's "Test template" step runs with --cov, so this gate is enforced there.
+fail_under = 90
 precision = 2
 omit = ["tests/__init__.py"]
 exclude_lines = [
