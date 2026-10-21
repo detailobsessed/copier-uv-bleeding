@@ -23,6 +23,7 @@ poe check          # lint + typecheck in parallel
 poe fix            # auto-fix lint issues and format
 poe prek           # run all pre-commit hooks
 poe docs           # serve docs locally
+poe release        # release origin/main (manual, see Commit Convention)
 
 # Single test
 pytest tests/test_template.py::TestProjectTypes::test_app_type_has_cli -v
@@ -74,3 +75,5 @@ pytest tests/test_template.py::TestProjectTypes::test_app_type_has_cli -v
 ## Commit Convention
 
 Conventional commits enforced by prek hook. Allowed types: `feat`, `fix`, `perf`, `build`, `chore`, `ci`, `docs`, `style`, `refactor`, `test`. `feat` = minor bump, most others = patch bump (aggressive, so template users get improvements via `copier update`).
+
+**Releases are manual: `poe release` after the last merge, once CI on `main` is green.** It lists what `origin/main` would ship, dispatches the workflow and follows the run. Merging to `main` releases nothing. The release workflow used to run after every green CI on `main`, so a stack merged bottom-up cut one release per PR (decided 2026-10-21). The workflow refuses to run unless CI succeeded on the `main` commit it would release.

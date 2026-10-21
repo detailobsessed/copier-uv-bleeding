@@ -87,7 +87,6 @@ allow_zero_version = true
 major_on_zero = false
 
 [tool.semantic_release.changelog]
-changelog_file = "CHANGELOG.md"
 mode = "update"
 
 [tool.semantic_release.commit_parser_options]
@@ -254,6 +253,42 @@ tags = "sh -c 'git fetch --tags && git tag --sort=-version:refname'"
 runs = "gh run list --limit 10"
 checks = "gh pr checks --watch"
 watch = "gh run watch"
+
+# Releases are manual (see release.yml). Lists what origin/main would ship, then
+# dispatches the workflow and follows the run; semantic-release in the run
+# decides the version and skips the release if no commit warrants one.
+[tool.poe.tasks.release]
+help = "Release origin/main via the release workflow and follow the run"
+verbosity = -1  # don't echo the script itself
+shell = """
+set -e
+git fetch --quiet --tags origin main
+last=$(git describe --tags --abbrev=0 origin/main)
+pending=$(git log --oneline --no-merges "$last"..origin/main)
+if [ -z "$pending" ]; then
+  echo "Nothing on origin/main since $last."
+  exit 0
+fi
+printf 'Unreleased on origin/main since %s:\\n%s\\n\\n' "$last" "$pending"
+since=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+out=$(gh workflow run release --ref main)
+echo "$out"
+run_id=$(printf '%s\\n' "$out" | sed -n 's|.*/actions/runs/\\([0-9][0-9]*\\).*|\\1|p' | head -n 1)
+# gh prints the run URL only when GitHub answers 200 with run details; it can
+# still answer 204, so fall back to the newest dispatch run created since.
+tries=0
+while [ -z "$run_id" ] && [ "$tries" -lt 10 ]; do
+  sleep 3
+  tries=$((tries + 1))
+  run_id=$(gh run list --workflow release --event workflow_dispatch --limit 1 \\
+    --json databaseId,createdAt --jq ".[] | select(.createdAt >= \\"$since\\") | .databaseId")
+done
+if [ -z "$run_id" ]; then
+  echo "Dispatched, but found no release run created since $since. Check: poe runs" >&2
+  exit 1
+fi
+gh run watch "$run_id" --exit-status
+"""
 
 [tool.ty.environment]
 python-version = "3.15"

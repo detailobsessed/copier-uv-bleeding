@@ -1216,14 +1216,25 @@ class TestCascadingBooleanDefaults:
         assert "python-semantic-release" not in content
         assert "maintain" not in content
 
-    def test_changelog_file_under_changelog_not_default_templates(self, copier_defaults: dict, project_factory) -> None:
-        """changelog_file should be under [tool.semantic_release.changelog], not default_templates (#261)."""
+    def test_changelog_config_resolves_without_deprecated_key(self, copier_defaults: dict, project_factory) -> None:
+        """The changelog config should resolve to CHANGELOG.md through PSR's own model.
+
+        `changelog.changelog_file` is deprecated in PSR 10 (moved to
+        `default_templates.changelog_file`) and logs a warning on every run. Both
+        default to CHANGELOG.md, so the template sets neither.
+        """
+        import tomllib
+
+        from semantic_release.cli.config import ChangelogConfig
+
         answers = {**copier_defaults, "use_semantic_release": True}
         project = project_factory(answers)
 
-        content = (project / "pyproject.toml").read_text()
-        assert 'changelog_file = "CHANGELOG.md"' in content
-        assert "[tool.semantic_release.changelog.default_templates]" not in content
+        config = tomllib.loads((project / "pyproject.toml").read_text())
+        changelog = ChangelogConfig.model_validate(config["tool"]["semantic_release"]["changelog"])
+        assert changelog.changelog_file == ""  # the deprecated key is unset
+        assert changelog.default_templates.changelog_file == "CHANGELOG.md"
+        assert changelog.mode.value == "update"
 
     def test_use_semantic_release_true_has_config(self, copier_defaults: dict, project_factory) -> None:
         """When use_semantic_release=true, semantic_release config and maintain group should appear."""

@@ -1,18 +1,17 @@
 name: release
 
+# Manual only. Releasing after every green CI run on main cut one release per
+# merged PR, so merging a stack bottom-up shipped its intermediate states as
+# releases. Run it once the merges are done: `poe release`.
 "on":
-  workflow_run:
-    workflows: [ci]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: read  # the CI gate below lists runs; unlisted scopes are none
 
 jobs:
   release:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: blacksmith-4vcpu-ubuntu-2404
     concurrency: release
     outputs:
@@ -27,6 +26,26 @@ jobs:
         ref: main
         fetch-depth: 0
         fetch-tags: true
+
+    # The workflow_run trigger used to guarantee this; a manual run has to check.
+    - name: Require green CI on main
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # The release commit is pushed with GITHUB_TOKEN, which triggers no CI.
+        # It is also the tagged commit, and with nothing after it there is
+        # nothing to release; semantic-release below says so.
+        if tag=$(git describe --exact-match --tags HEAD 2>/dev/null); then
+          echo "main is at release $tag, nothing new to gate"
+          exit 0
+        fi
+        sha=$(git rev-parse HEAD)
+        conclusion=$(gh run list --workflow ci --branch main --commit "$sha" --event push \
+          --limit 1 --json conclusion --jq '.[0].conclusion // "none"')
+        if [ "$conclusion" != "success" ]; then
+          echo "::error::CI on main@$sha is '$conclusion', not 'success'. Wait for it or fix main first."
+          exit 1
+        fi
 
     - name: Setup uv
       uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
