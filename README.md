@@ -55,18 +55,15 @@ When you run `copier copy`, you'll be asked:
 | **Repository namespace** | `repository_namespace` | GitHub/GitLab username or organization |
 | **Open-source this project?** | `open_source` | Adds a LICENSE plus `CODE_OF_CONDUCT`, `CONTRIBUTING`, `SECURITY`, issue/PR templates and `FUNDING`. Off = internal/private, none of those. Defaults on for GitHub |
 | **License** | `copyright_license` | Choose from 40+ open source licenses (asked only when open-sourcing) |
-| **Heavy git hooks?** | `use_heavy_hooks` | Run coverage on pre-push (off = fast hooks only; coverage runs in CI) |
-| **Enable CI?** | `use_ci` | GitHub Actions or GitLab CI |
 | **Enable semantic-release?** | `use_semantic_release` | Automated versioning and changelog |
-| **Publish to PyPI?** | `publish_to_pypi` | Include PyPI publishing in release workflow |
-| **Publish to MCP Registry?** | `publish_to_mcp_registry` | Include the MCP Registry publish workflow |
-| **Use a custom PyPI index?** | `use_custom_pypi_index`, `custom_pypi_index_url` | Point uv at Artifactory, Nexus, etc., then give its URL |
-| **Use Blacksmith runners?** | `use_blacksmith_runners` | 2x faster, 75% cheaper CI runners |
-| **Configure GitHub repo settings?** | `configure_repo_settings` | Run `gh repo edit` to enable delete-branch-on-merge and auto-merge |
+| **Publish to PyPI?** | `publish_to_pypi` | Include PyPI publishing in release workflow (asked only with semantic-release) |
+| **Publish to MCP Registry?** | `publish_to_mcp_registry` | Include the MCP Registry publish workflow (asked only when publishing to PyPI) |
+| **Package index URL** | `custom_pypi_index_url` | Artifactory, Nexus, etc. Blank = PyPI |
+| **Use Blacksmith runners?** | `use_blacksmith_runners` | 2x faster, 75% cheaper CI runners (GitHub only) |
 
 The **Key** column names each answer in `.copier-answers.yml`, and is what `-d key=value` and the `defaults:` in copier's settings file take.
 
-The booleans cascade: `use_ci` gates `use_semantic_release`, which gates `publish_to_pypi` and `publish_to_mcp_registry`. Answering "no" high up skips everything beneath it.
+Every project gets CI (GitHub Actions or GitLab CI), with coverage run there rather than as a git hook. On GitHub, copy and update also run `gh repo edit` to enable delete-branch-on-merge and auto-merge, when `gh` is installed and can reach the repository.
 
 ## Quick Start
 

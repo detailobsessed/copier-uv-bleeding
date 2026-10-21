@@ -61,6 +61,9 @@ PRISTINE_VARIANTS = {
     },
 }
 
+# Asked at BASELINE_TAG, gone at HEAD (DOT-676).
+REMOVED_QUESTIONS = {"use_ci", "use_heavy_hooks", "configure_repo_settings", "use_custom_pypi_index"}
+
 GIT_ENV = {
     **os.environ,
     "GIT_AUTHOR_NAME": "Test",
@@ -88,7 +91,12 @@ EXPECTED_CONFLICTS = {
         ('requires-python = ">=3.14"', 'version = "0.18.0"', 'dependencies = ["httpx>=0.28"]'),
         ('serve = "python -m test_project.server"', 'upgrade = { shell = "uv sync --upgrade && uv run prek update" }'),
     ],
-    "prek.toml": [('id = "check-schema"',)],
+    "prek.toml": [
+        # The pytest-cov hook went with `use_heavy_hooks` (DOT-676); a project that tuned
+        # it keeps its version beside the deletion and decides.
+        ('id = "pytest-cov"', "--cov-fail-under=90"),
+        ('id = "check-schema"',),
+    ],
 }
 # The new `requires-python` line has nothing beside it to collide with.
 EXPECTED_MERGED = 'requires-python = ">=3.15"\nreadme = "README.md"\n<<<<<<< before updating\n'
@@ -450,8 +458,28 @@ def test_pristine_update_matches_a_fresh_render(tmp_path: Path, answers: dict) -
 
     fresh = tmp_path / "fresh"
     copy = ["copier", "copy", "--trust", "--skip-tasks", "-f", "-r", "HEAD", str(REPO_ROOT), str(fresh)]
+    answers = {key: value for key, value in answers.items() if key not in REMOVED_QUESTIONS}
     for key, value in answers.items():
         copy.extend(["-d", f"{key}={str(value).lower() if isinstance(value, bool) else value}"])
     assert _run(copy, REPO_ROOT).returncode == 0
     for name in ("pyproject.toml", "prek.toml"):
         assert (project / name).read_text() == (fresh / name).read_text(), f"{name} differs from a fresh render at HEAD"
+
+
+@pytest.mark.slow
+def test_project_without_ci_gains_ci_but_not_releases(tmp_path: Path) -> None:
+    """`use_ci: false` maps onto the questions it used to hide (DOT-676).
+
+    Such a project never stored `use_semantic_release` or `use_blacksmith_runners`,
+    so `--defaults` would turn on semantic-release, PyPI publishing and runners it
+    never set up. CI itself is always on now, so that part arrives.
+    """
+    project = tmp_path / "proj"
+    update = _generate_and_update(project, PRISTINE_VARIANTS["lib-no-release"], customise=False)
+    assert update.returncode == 0, f"copier update failed:\nstdout:\n{update.stdout}\nstderr:\n{update.stderr}"
+    stored = (project / ".copier-answers.yml").read_text()
+    assert "use_semantic_release: false" in stored
+    assert "use_blacksmith_runners: false" in stored
+    assert "use_ci" not in stored, "copier drops a removed question's answer"
+    assert (project / ".github" / "workflows" / "ci.yml").exists()
+    assert not (project / ".github" / "workflows" / "release.yml").exists()

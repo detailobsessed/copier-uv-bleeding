@@ -13,14 +13,14 @@ This is a **Copier template** that generates Python projects. Changes here don't
 Templates under `project/` are rendered with user-supplied strings. This is the most fragile surface area.
 
 - **String escaping** — User inputs (project name, description, author name) are interpolated into TOML, YAML, Markdown, and Python files. Verify that quotes, backslashes, and special characters are properly escaped. See `pyproject.toml.jinja` lines using `replace('\\', '\\\\') | replace('\"', '\\\"')` for the pattern.
-- **Conditional blocks** — `{% if %}` / `{% endif %}` guards control which sections appear based on boolean answers (`use_ci`, `use_semantic_release`, `publish_to_pypi`, `open_source`, etc.). Verify that every branch produces valid output and that no stray blank lines or missing newlines break structured formats.
+- **Conditional blocks** — `{% if %}` / `{% endif %}` guards control which sections appear based on boolean answers (`use_semantic_release`, `publish_to_pypi`, `open_source`, etc.). Verify that every branch produces valid output and that no stray blank lines or missing newlines break structured formats.
 - **TOML/YAML validity** — A misplaced Jinja block can produce syntactically invalid TOML or YAML. The test suite catches this, but eyeball the rendered output mentally for each conditional path.
 
 ### 2. Copier Configuration (`copier.yml`)
 
 This file controls the entire scaffolding behavior.
 
-- **Boolean cascading** — Questions like `use_semantic_release` depend on `use_ci` via `when` clauses. Changing defaults or conditions can silently break downstream answers. Trace the full dependency chain: `use_ci` -> `use_semantic_release` -> `publish_to_pypi` -> `use_blacksmith_runners`.
+- **Boolean cascading** — Questions like `publish_to_pypi` depend on `use_semantic_release` via `when` clauses. Changing defaults or conditions can silently break downstream answers. Trace the full dependency chain: `use_semantic_release` -> `publish_to_pypi` -> `publish_to_mcp_registry`. Removing a question changes what existing projects get on update, so docs/update.md must say what happens to its old answers.
 - **`_skip_if_exists` vs `_exclude`** — These have very different semantics. `_skip_if_exists` preserves user files during `copier update`. `_exclude` removes files entirely based on answers. Misplacing a file in the wrong list can overwrite user customizations or leave orphaned files.
 - **No migrations, no update-time scripts** — The template relies on copier's own 3-way merge. Flag any new `_migrations` entry, or any `_tasks` entry that rewrites a file during `update`: a script that regenerates a file loses every project edit it does not know about (DOT-630). Projects on old releases fix leftovers by hand, as `docs/update.md` lists.
 

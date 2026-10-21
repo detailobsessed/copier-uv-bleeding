@@ -100,6 +100,15 @@ version = "0.0.0"
 
 Keep your `version` line and delete the old `requires-python`. Keeping the top block whole leaves two `requires-python` keys, which uv rejects as invalid TOML. After this, `readme` sits between the two lines, and later Python bumps merge without a conflict.
 
+### Updating from 0.43.x and earlier: four questions are gone
+
+The template no longer asks `use_ci`, `use_heavy_hooks`, `configure_repo_settings` or `use_custom_pypi_index`. Copier drops their answers from `.copier-answers.yml` during the update. What each one meant for your project:
+
+- **`use_ci: false`.** Every project now gets CI, so the update adds `.github/workflows/ci.yml` (or `.gitlab-ci.yml`). Releases stay off: the update maps your old answer onto `use_semantic_release: false` and `use_blacksmith_runners: false`. If you don't want CI, delete the file and commit; later updates keep it deleted.
+- **`use_heavy_hooks: true`.** The `pytest-cov` pre-push hook is gone from `prek.toml`; tests run in CI. If you had tuned that hook, the update marks it as a conflict: delete the block. Then run `uv run prek uninstall --hook-type pre-push`. Without that, the leftover git hook runs every commit hook again on each push.
+- **`configure_repo_settings: false`.** On GitHub, copy and update now always run `gh repo edit --delete-branch-on-merge --enable-auto-merge`, provided `gh` is installed and can see the repo.
+- **`use_custom_pypi_index`.** The index URL is asked on its own now, blank meaning PyPI. A stored `custom_pypi_index_url` carries over unchanged.
+
 ### Updating from 0.42.1 and earlier: once with the old extension
 
 Releases up to 0.42.1 loaded a Jinja extension from `copier-template-extensions`; later ones need only a stock copier. An update renders your project's old template version too, so leaving 0.42.1 or earlier still needs the extension, one last time. With a stock copier the update aborts before writing anything, with `No module named 'copier_template_extensions'`. Run that one update through uvx:

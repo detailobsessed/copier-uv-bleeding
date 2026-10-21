@@ -250,27 +250,20 @@ class TestCoreFiles:
 class TestCIConfiguration:
     """Test CI configuration options."""
 
-    def test_ci_enabled_creates_workflow(self, copier_defaults: dict, project_factory) -> None:
-        """CI enabled should create workflow file."""
-        answers = {**copier_defaults, "use_ci": True}
-        project = project_factory(answers)
+    def test_ci_always_creates_workflow(self, copier_defaults: dict, project_factory) -> None:
+        """CI is always on (DOT-676), even without semantic-release."""
+        project = project_factory({**copier_defaults, "use_semantic_release": False})
         assert (project / ".github" / "workflows" / "ci.yml").exists()
-
-    def test_ci_disabled_no_workflow(self, copier_defaults: dict, project_factory) -> None:
-        """CI disabled should not create workflow file."""
-        answers = {**copier_defaults, "use_ci": False}
-        project = project_factory(answers)
-        assert not (project / ".github" / "workflows" / "ci.yml").exists()
 
     def test_semantic_release_creates_workflow(self, copier_defaults: dict, project_factory) -> None:
         """Semantic release enabled should create release workflow."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
+        answers = {**copier_defaults, "use_semantic_release": True}
         project = project_factory(answers)
         assert (project / ".github" / "workflows" / "release.yml").exists()
 
     def test_semantic_release_disabled_no_workflow(self, copier_defaults: dict, project_factory) -> None:
         """Semantic release disabled should not create release workflow."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": False}
+        answers = {**copier_defaults, "use_semantic_release": False}
         project = project_factory(answers)
         assert not (project / ".github" / "workflows" / "release.yml").exists()
 
@@ -680,7 +673,7 @@ class TestSemanticReleaseBuildCommand:
 
 
 class TestHookProfiles:
-    """use_heavy_hooks gates slow git hooks; fast hooks stay always-on."""
+    """Git hooks stay fast; coverage runs in CI only (DOT-676 dropped use_heavy_hooks)."""
 
     @staticmethod
     def _hook_ids(project: Path) -> list[str]:
@@ -688,17 +681,15 @@ class TestHookProfiles:
             data = tomllib.load(f)
         return [hook["id"] for repo in data["repos"] for hook in repo.get("hooks", [])]
 
-    def test_heavy_hooks_include_coverage(self, copier_defaults: dict, project_factory) -> None:
-        """use_heavy_hooks=true runs coverage as a git hook."""
-        ids = self._hook_ids(project_factory({**copier_defaults, "use_heavy_hooks": True}))
-        assert "pytest-cov" in ids
-
-    def test_light_hooks_are_the_default(self, copier_defaults: dict, project_factory) -> None:
-        """The default profile (heavy hooks off) drops coverage but keeps the fast hooks."""
-        ids = self._hook_ids(project_factory(copier_defaults))
+    def test_fast_hooks_only(self, copier_defaults: dict, project_factory) -> None:
+        """Coverage is not a git hook, and nothing installs a pre-push hook for it."""
+        project = project_factory(copier_defaults)
+        ids = self._hook_ids(project)
         assert "pytest-cov" not in ids
         for fast in ("ruff", "ty", "complexipy", "pytest-testmon"):
             assert fast in ids, f"{fast} should stay always-on"
+        with (project / "prek.toml").open("rb") as f:
+            assert "pre-push" not in tomllib.load(f)["default_install_hook_types"]
 
     def test_conventional_commit_gated_on_semantic_release(self, copier_defaults: dict, project_factory) -> None:
         """conventional-pre-commit ships only with semantic-release, and without --strict."""
@@ -706,13 +697,7 @@ class TestHookProfiles:
         assert "conventional-pre-commit" in self._hook_ids(with_release)
         assert "--strict" not in (with_release / "prek.toml").read_text()
 
-        without_release = project_factory(
-            {
-                **copier_defaults,
-                "use_ci": False,
-                "use_semantic_release": False,
-            }
-        )
+        without_release = project_factory({**copier_defaults, "use_semantic_release": False})
         assert "conventional-pre-commit" not in self._hook_ids(without_release)
 
 
@@ -846,7 +831,7 @@ class TestCIWorkflows:
         The `push` trigger is intentionally left alone; scoping that one to main
         is correct.
         """
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         ci_yml = project / ".github" / "workflows" / "ci.yml"
@@ -864,7 +849,7 @@ class TestCIWorkflows:
 
     def test_ci_has_setup_uv(self, copier_defaults: dict, project_factory) -> None:
         """CI workflow should use setup-uv action."""
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         ci_yml = project / ".github" / "workflows" / "ci.yml"
@@ -875,7 +860,7 @@ class TestCIWorkflows:
         """All poe tasks referenced in CI workflow should exist in pyproject.toml."""
         import re
 
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         ci_yml = project / ".github" / "workflows" / "ci.yml"
@@ -897,7 +882,7 @@ class TestCIWorkflows:
 
     def test_release_has_semantic_release(self, copier_defaults: dict, project_factory) -> None:
         """Release workflow should use semantic-release."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
+        answers = {**copier_defaults, "use_semantic_release": True}
         project = project_factory(answers)
 
         release_yml = project / ".github" / "workflows" / "release.yml"
@@ -906,7 +891,7 @@ class TestCIWorkflows:
 
     def test_release_checks_out_main(self, copier_defaults: dict, project_factory) -> None:
         """Release workflow should checkout main explicitly (workflow_run defaults to PR branch)."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
+        answers = {**copier_defaults, "use_semantic_release": True}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "release.yml").read_text()
@@ -914,7 +899,7 @@ class TestCIWorkflows:
 
     def test_release_has_uv_publish(self, copier_defaults: dict, project_factory) -> None:
         """Release workflow should use uv publish in separate pypi-publish job."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
+        answers = {**copier_defaults, "use_semantic_release": True, "publish_to_pypi": True}
         project = project_factory(answers)
 
         release_yml = project / ".github" / "workflows" / "release.yml"
@@ -923,7 +908,7 @@ class TestCIWorkflows:
 
     def test_release_setup_uv_has_github_token(self, copier_defaults: dict, project_factory) -> None:
         """Release workflow setup-uv steps should have github-token to avoid rate limiting (#237)."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
+        answers = {**copier_defaults, "use_semantic_release": True, "publish_to_pypi": True}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "release.yml").read_text()
@@ -931,7 +916,7 @@ class TestCIWorkflows:
 
     def test_release_setup_uv_has_github_token_no_pypi(self, copier_defaults: dict, project_factory) -> None:
         """Release workflow release job setup-uv should have github-token even without pypi-publish job (#237)."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": False}
+        answers = {**copier_defaults, "use_semantic_release": True, "publish_to_pypi": False}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "release.yml").read_text()
@@ -939,7 +924,7 @@ class TestCIWorkflows:
 
     def test_ci_setup_uv_has_github_token(self, copier_defaults: dict, project_factory) -> None:
         """CI workflow setup-uv steps should have github-token to avoid rate limiting (#237)."""
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
@@ -947,7 +932,7 @@ class TestCIWorkflows:
 
     def test_ci_has_prek_action(self, copier_defaults: dict, project_factory) -> None:
         """CI workflow should use prek-action for comprehensive quality checks."""
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
@@ -955,7 +940,7 @@ class TestCIWorkflows:
 
     def test_ci_prek_skips_redundant_hooks(self, copier_defaults: dict, project_factory) -> None:
         """CI prek job should skip hooks redundant with dedicated CI jobs."""
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
@@ -968,7 +953,7 @@ class TestCIWorkflows:
 
     def test_ci_prek_refreshes_lockfile(self, copier_defaults: dict, project_factory) -> None:
         """CI prek job should refresh the lockfile before running hooks."""
-        answers = {**copier_defaults, "use_ci": True}
+        answers = {**copier_defaults}
         project = project_factory(answers)
 
         content = (project / ".github" / "workflows" / "ci.yml").read_text()
@@ -1036,7 +1021,7 @@ class TestCIWorkflows:
 
     def test_pypi_true_has_environment(self, copier_defaults: dict, project_factory) -> None:
         """When publish_to_pypi is true, release workflow should have environment: pypi."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": True}
+        answers = {**copier_defaults, "use_semantic_release": True, "publish_to_pypi": True}
         project = project_factory(answers)
 
         release_yml = project / ".github" / "workflows" / "release.yml"
@@ -1045,7 +1030,7 @@ class TestCIWorkflows:
 
     def test_pypi_false_no_environment(self, copier_defaults: dict, project_factory) -> None:
         """When publish_to_pypi is false, release workflow should not have environment: pypi."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True, "publish_to_pypi": False}
+        answers = {**copier_defaults, "use_semantic_release": True, "publish_to_pypi": False}
         project = project_factory(answers)
 
         release_yml = project / ".github" / "workflows" / "release.yml"
@@ -1075,76 +1060,25 @@ class TestCascadingBooleanDefaults:
     """Test that boolean question defaults cascade correctly when parent questions are disabled.
 
     Regression tests for https://github.com/detailobsessed/copier-uv-bleeding/issues/45
-    When use_ci=false, downstream questions (use_semantic_release, publish_to_pypi,
-    use_blacksmith_runners) should all default to false since their 'when' conditions
-    prevent them from being asked.
+    When use_semantic_release=false, publish_to_pypi and publish_to_mcp_registry are
+    never asked and must default to false.
     """
 
-    def test_use_ci_false_no_classifiers(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=false (without explicit publish_to_pypi), classifiers should not appear."""
-        answers = {
-            **copier_defaults,
-            "use_ci": False,
-        }
-        # Remove keys that should cascade from use_ci
-        answers.pop("use_semantic_release", None)
+    def test_no_release_skips_pypi_and_mcp(self, copier_defaults: dict, project_factory) -> None:
+        """Without semantic-release, nothing publishes: no release workflow, no MCP workflow."""
+        answers = {**copier_defaults, "use_semantic_release": False}
         answers.pop("publish_to_pypi", None)
-        answers.pop("use_blacksmith_runners", None)
         project = project_factory(answers)
-
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
-        assert "classifiers" not in content
-        assert "keywords" not in content
-
-    def test_use_ci_false_no_release_workflow(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=false, release.yml should not be created."""
-        answers = {
-            **copier_defaults,
-            "use_ci": False,
-        }
-        answers.pop("use_semantic_release", None)
-        answers.pop("publish_to_pypi", None)
-        answers.pop("use_blacksmith_runners", None)
-        project = project_factory(answers)
-
         assert not (project / ".github" / "workflows" / "release.yml").exists()
-        assert not (project / ".github" / "workflows" / "ci.yml").exists()
+        assert not (project / ".github" / "workflows" / "mcp-registry-publish.yml").exists()
+        assert "classifiers" not in (project / "pyproject.toml").read_text()
 
-    def test_use_ci_false_no_pypi_environment(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=false, no PyPI-related config should appear in release workflow."""
+    def test_defaults_include_classifiers(self, copier_defaults: dict, project_factory) -> None:
+        """With every release question left to its default, classifiers appear (positive case)."""
         answers = {
             **copier_defaults,
-            "use_ci": False,
         }
-        answers.pop("use_semantic_release", None)
-        answers.pop("publish_to_pypi", None)
-        answers.pop("use_blacksmith_runners", None)
-        project = project_factory(answers)
-
-        # No release workflow at all
-        assert not (project / ".github" / "workflows" / "release.yml").exists()
-
-    def test_use_ci_false_no_matrix_in_nonexistent_ci(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=false, CI workflow should not exist (no matrix testing)."""
-        answers = {
-            **copier_defaults,
-            "use_ci": False,
-        }
-        answers.pop("use_semantic_release", None)
-        answers.pop("publish_to_pypi", None)
-        answers.pop("use_blacksmith_runners", None)
-        project = project_factory(answers)
-
-        assert not (project / ".github" / "workflows" / "ci.yml").exists()
-
-    def test_use_ci_true_defaults_include_classifiers(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=true with defaults, classifiers should appear (positive case)."""
-        answers = {
-            **copier_defaults,
-            "use_ci": True,
-        }
-        # Remove to let them cascade from use_ci=true → default true
+        # Remove to let them cascade from use_semantic_release's default (true)
         answers.pop("use_semantic_release", None)
         answers.pop("publish_to_pypi", None)
         answers.pop("use_blacksmith_runners", None)
@@ -1155,11 +1089,10 @@ class TestCascadingBooleanDefaults:
         assert "classifiers" in content
         assert "keywords" in content
 
-    def test_use_ci_true_defaults_create_all_workflows(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=true with defaults, both CI and release workflows should exist."""
+    def test_defaults_create_all_workflows(self, copier_defaults: dict, project_factory) -> None:
+        """With release questions left to their defaults, both CI and release workflows exist."""
         answers = {
             **copier_defaults,
-            "use_ci": True,
         }
         answers.pop("use_semantic_release", None)
         answers.pop("publish_to_pypi", None)
@@ -1173,7 +1106,6 @@ class TestCascadingBooleanDefaults:
         """When use_semantic_release=false, publish_to_pypi should cascade to false."""
         answers = {
             **copier_defaults,
-            "use_ci": True,
             "use_semantic_release": False,
         }
         answers.pop("publish_to_pypi", None)
@@ -1184,28 +1116,10 @@ class TestCascadingBooleanDefaults:
         assert "classifiers" not in content
         assert "keywords" not in content
 
-    def test_use_ci_false_no_semantic_release_config(self, copier_defaults: dict, project_factory) -> None:
-        """When use_ci=false, semantic_release config and maintain group should not appear."""
-        answers = {
-            **copier_defaults,
-            "use_ci": False,
-        }
-        answers.pop("use_semantic_release", None)
-        answers.pop("publish_to_pypi", None)
-        answers.pop("use_blacksmith_runners", None)
-        project = project_factory(answers)
-
-        pyproject = project / "pyproject.toml"
-        content = pyproject.read_text()
-        assert "[tool.semantic_release]" not in content
-        assert "python-semantic-release" not in content
-        assert "maintain" not in content
-
     def test_use_semantic_release_false_no_semantic_release_config(self, copier_defaults: dict, project_factory) -> None:
         """When use_semantic_release=false explicitly, semantic_release config should not appear."""
         answers = {
             **copier_defaults,
-            "use_ci": True,
             "use_semantic_release": False,
         }
         answers.pop("publish_to_pypi", None)
@@ -1241,7 +1155,6 @@ class TestCascadingBooleanDefaults:
         """When use_semantic_release=true, semantic_release config and maintain group should appear."""
         answers = {
             **copier_defaults,
-            "use_ci": True,
             "use_semantic_release": True,
         }
         project = project_factory(answers)
@@ -1660,8 +1573,8 @@ class TestGitLabSupport:
         assert not (project / ".github").exists()
 
     def test_gitlab_has_gitlab_ci(self, copier_defaults: dict, project_factory) -> None:
-        """GitLab projects with CI should have .gitlab-ci.yml."""
-        answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_ci": True}
+        """GitLab projects should have .gitlab-ci.yml."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
         project = project_factory(answers)
 
         assert (project / ".gitlab-ci.yml").exists()
@@ -1669,19 +1582,14 @@ class TestGitLabSupport:
         assert "quality" in content
         assert "test" in content
 
-    def test_gitlab_no_ci_no_gitlab_ci(self, copier_defaults: dict, project_factory) -> None:
-        """GitLab projects without CI should not have .gitlab-ci.yml."""
-        answers = {
-            **copier_defaults,
-            "repository_provider": "gitlab.com",
-            "use_ci": False,
-        }
-        answers.pop("use_semantic_release", None)
-        answers.pop("publish_to_pypi", None)
-        answers.pop("use_blacksmith_runners", None)
+    def test_gitlab_no_release_keeps_ci(self, copier_defaults: dict, project_factory) -> None:
+        """GitLab projects without releases still get CI, minus the release stage."""
+        answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_semantic_release": False}
         project = project_factory(answers)
 
-        assert not (project / ".gitlab-ci.yml").exists()
+        content = (project / ".gitlab-ci.yml").read_text()
+        assert "test" in content
+        assert "semantic-release" not in content
         assert not (project / ".github").exists()
 
     def test_gitlab_no_actionlint_in_precommit(self, copier_defaults: dict, project_factory) -> None:
@@ -1734,7 +1642,7 @@ class TestGitLabSupport:
 
     def test_gitlab_semantic_release_remote(self, copier_defaults: dict, project_factory) -> None:
         """GitLab projects should have [tool.semantic_release.remote] with type=gitlab (#236)."""
-        answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_ci": True, "use_semantic_release": True}
+        answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_semantic_release": True}
         project = project_factory(answers)
 
         content = (project / "pyproject.toml").read_text()
@@ -1748,7 +1656,6 @@ class TestGitLabSupport:
             **copier_defaults,
             "repository_provider": "gitlab.com",
             "repository_host": "gitlab.company.com",
-            "use_ci": True,
             "use_semantic_release": True,
         }
         project = project_factory(answers)
@@ -1760,7 +1667,7 @@ class TestGitLabSupport:
 
     def test_github_no_semantic_release_remote(self, copier_defaults: dict, project_factory) -> None:
         """GitHub projects should NOT have [tool.semantic_release.remote] section."""
-        answers = {**copier_defaults, "use_ci": True, "use_semantic_release": True}
+        answers = {**copier_defaults, "use_semantic_release": True}
         project = project_factory(answers)
 
         content = (project / "pyproject.toml").read_text()
@@ -1905,7 +1812,6 @@ class TestOpenSource:
             "open_source": False,
             "repository_provider": "gitlab.com",
             "repository_host": "gitlab.company.com",
-            "use_ci": True,
             "use_semantic_release": True,
         }
         project = project_factory(answers)

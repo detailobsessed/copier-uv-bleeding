@@ -84,14 +84,10 @@ def _build_context(overrides: dict) -> dict:
         "python_package_distribution_name": "my-test-project",
         "python_package_import_name": "my_test_project",
         "python_package_command_line_name": "my-test-project",
-        "use_heavy_hooks": True,
-        "use_ci": True,
         "use_semantic_release": True,
         "publish_to_pypi": True,
         "publish_to_mcp_registry": False,
-        "use_custom_pypi_index": False,
         "use_blacksmith_runners": False,
-        "configure_repo_settings": False,
         "open_source": True,
         "custom_pypi_index_url": "",
     }
@@ -207,7 +203,6 @@ def _should_skip(rel_str: str, context: dict) -> bool:
     skip_rules = (
         (rel_str.startswith(".github") and provider != "github.com"),
         ("gitlab-ci" in rel_str and provider != "gitlab.com"),
-        (not context.get("use_ci") and any(x in rel_str for x in ("ci.yml", "gitlab-ci"))),
         (not context.get("use_semantic_release") and "release.yml" in rel_str),
         (not context.get("publish_to_mcp_registry") and "mcp-registry-publish.yml" in rel_str),
         (not context.get("open_source", True) and any(x in rel_str for x in _COMMUNITY_HEALTH_FILES)),
@@ -243,24 +238,15 @@ CONTEXT_VARIANTS: dict[str, dict] = {
             "repository_provider": "gitlab.com",
         }
     ),
-    "gitlab-no-ci": _build_context(
+    "gitlab-no-release": _build_context(
         {
             "repository_provider": "gitlab.com",
-            "use_ci": False,
             "use_semantic_release": False,
             "publish_to_pypi": False,
             "use_blacksmith_runners": False,
         }
     ),
-    # CI toggling
-    "github-no-ci": _build_context(
-        {
-            "use_ci": False,
-            "use_semantic_release": False,
-            "publish_to_pypi": False,
-            "use_blacksmith_runners": False,
-        }
-    ),
+    # Release toggling
     "ci-no-release": _build_context(
         {
             "use_semantic_release": False,
@@ -273,17 +259,10 @@ CONTEXT_VARIANTS: dict[str, dict] = {
             "publish_to_pypi": False,
         }
     ),
-    # Lightweight hooks — pytest-cov dropped from git hooks (runs in CI instead)
-    "lightweight-hooks": _build_context(
-        {
-            "use_heavy_hooks": False,
-        }
-    ),
-    # Internal solo project, no CI — the lightest path
-    "internal-no-ci": _build_context(
+    # Internal solo project, no release — the lightest path
+    "internal-no-release": _build_context(
         {
             "open_source": False,
-            "use_ci": False,
             "use_semantic_release": False,
             "publish_to_pypi": False,
             "use_blacksmith_runners": False,
@@ -338,7 +317,6 @@ CONTEXT_VARIANTS: dict[str, dict] = {
     "custom-pypi-index": _build_context(
         {
             "open_source": False,
-            "use_custom_pypi_index": True,
             "custom_pypi_index_url": "https://artifactory.company.com/api/pypi/python-virtual/simple",
             "publish_to_pypi": False,
         }
