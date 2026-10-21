@@ -13,10 +13,10 @@ something every new project should inherit in its own config.
 ### Why `uv_build` is pinned to a window {#build-backend-pin}
 
 ```toml
-requires = ["uv_build>=0.12.1,<0.13"]
+requires = ["uv_build>=0.13.4,<0.14"]
 ```
 
-This is verbatim what `uv init` emits on uv 0.12.1 and what
+This is what `uv init` emits on uv 0.13.4 (which writes `<0.14.0`) and what
 [uv's build-backend docs](https://docs.astral.sh/uv/concepts/build-backend/)
 recommend — there is nothing template-specific about it. Since uv 0.12.0,
 `uv init` writes a `[build-system]` block by default, so a generated project
@@ -34,8 +34,11 @@ A *stale* window is never a breakage, which is why bumping it is routine rather
 than urgent. The `uv` executable bundles a copy of the backend and uses it only
 when it satisfies the `requires` specifier; when it doesn't, uv resolves the
 `uv_build` package from PyPI into an isolated build environment instead. So a
-project still pinned to `<0.13` keeps building under uv 0.13 — it just loses
+project still pinned to `<0.14` keeps building under uv 0.14 — it just loses
 the bundled fast path and pays a download.
+
+The window moved to the `0.13` series with uv 0.13, whose release notes list no
+build-backend changes and ask projects to bump the bound.
 
 The window moved to the `0.12` series for uv 0.12, which enforces PEP 625:
 source distributions must be `.tar.gz`, and `.tar.bz2` / `.tar.xz` are
@@ -173,18 +176,34 @@ These cover `prek.toml` and `_typos.toml`.
 ### Why `minimum_prek_version` is pinned {#prek-minimum-version}
 
 prek 0.4.10 introduced the `[update]` tag filters used to exclude lychee's
-`nightly` tag; the pin tracks the version the template is tested at (0.4.12),
-which is at or above that. That floor is the guard that reaches projects updating from an older template: `prek.toml` keeps the line unless the project edited it, while a project that edited its dependency groups keeps its own `prek>=` floor through [`copier update`'s merge](update.md).
+`nightly` tag and pre-release tags; the pin tracks the version the template is
+tested at (0.5.7), which is at or above that. That floor is the guard that reaches projects updating from an older template: `prek.toml` keeps the line unless the project edited it, while a project that edited its dependency groups keeps its own `prek>=` floor through [`copier update`'s merge](update.md).
 
 A too-old prek would otherwise ignore the `[update]` block entirely and
-silently reintroduce the lychee bug below. `minimum_prek_version` fails loudly
+silently reintroduce both bugs below. `minimum_prek_version` fails loudly
 instead. DOT-616.
+
+### Why pre-release tags are excluded from updates {#prek-pre-release-tags}
+
+```toml
+[update]
+exclude_tags = ["*-{alpha,beta,rc}*"]
+```
+
+`prek update` takes the newest tag and has no notion of a pre-release. On
+2026-10-21 it moved betterleaks from v1.7.2 to v2.0.0-rc.4. The globs match
+the `-alpha`, `-beta` and `-rc` suffixes hook repos use, and nothing in a
+stable tag such as `v0.11.0.1-1`.
+
+A per-repo `exclude_tags` **replaces** this default rather than adding to it,
+so the lychee entry below repeats the globs. Any per-repo entry you add needs
+them too.
 
 ### Why lychee's `nightly` tag is excluded from updates {#prek-lychee-nightly}
 
 ```toml
 [update.repos."https://github.com/lycheeverse/lychee"]
-exclude_tags = ["nightly"]
+exclude_tags = ["nightly", "*-{alpha,beta,rc}*"]
 ```
 
 lychee tags `nightly` as their GitHub "Latest" release, so `prek update`
@@ -301,7 +320,7 @@ same invocation as the `pre-commit` hooks it would otherwise contend with.
 
 **A new hook that writes files needs a priority no other hook writing those same
 files uses.** Since 0.4.11 these can be named via a `[priorities]` alias table
-rather than bare integers. The floor is now 0.4.12, so adopting them is
+rather than bare integers. The floor is now 0.5.7, so adopting them is
 unblocked.
 
 ### Why `uv-sync` keeps upstream's `--locked` {#prek-uv-sync-locked}

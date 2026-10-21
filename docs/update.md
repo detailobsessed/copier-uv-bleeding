@@ -72,7 +72,7 @@ requires = ["uv_build>=0.13,<0.14"]
 ||||||| last update
 requires = ["uv_build>=0.12.1,<0.13"]
 =======
-requires = ["uv_build>=0.13.2,<0.14"]
+requires = ["uv_build>=0.13.4,<0.14"]
 >>>>>>> after updating
 ```
 

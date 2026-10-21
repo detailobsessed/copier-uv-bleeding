@@ -7,7 +7,7 @@ requires-python = ">=3.14"
 
 [dependency-groups]
 dev = [
-    "copier",
+    "copier>=9.19.1",
     "jinja2",
     "markdown-callouts",
     "zensical",
@@ -15,13 +15,13 @@ dev = [
     "hypothesis>=6.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "pytest-randomly>=4",
+    "pytest-randomly>=5",
     "pytest-xdist>=3.5",
     # Not just for running hooks: tests/test_template.py shells out to
     # `prek util list-builtins` to check the template's builtin ids are real.
     # Without it as a dependency that test silently skips in CI.
-    "prek>=0.4.12",
-    "python-semantic-release>=10.6",
+    "prek>=0.5.7",
+    "python-semantic-release>=10.7",
     "pyyaml>=6.0.3",
     "reuse",
     "ruff",

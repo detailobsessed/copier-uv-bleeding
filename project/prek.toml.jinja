@@ -2,7 +2,7 @@
 default_stages = ["pre-commit"]
 # Required — an older prek silently ignores the `[update]` block below.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-minimum-version
-minimum_prek_version = "0.4.12"
+minimum_prek_version = "0.5.7"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
 default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
 
@@ -10,7 +10,13 @@ default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post
 # lychee's own hook then rejects. Remove once lycheeverse/lychee#1601 is fixed.
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-lychee-nightly
 [update.repos."https://github.com/lycheeverse/lychee"]
-exclude_tags = ["nightly"]
+exclude_tags = ["nightly", "*-{alpha,beta,rc}*"]
+
+# `prek update` takes the newest tag, pre-releases included. Lychee's entry
+# above replaces this default, so it repeats the globs.
+# https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-pre-release-tags
+[update]
+exclude_tags = ["*-{alpha,beta,rc}*"]
 
 # Empty `rev` values are filled by `prek update` and kept in step with uv.lock
 # by the sync-with-uv hook. NEVER put a trailing comment on a `rev` line — it

@@ -266,7 +266,7 @@ class TestPreCommitConfig:
 
         config = project / "prek.toml"
         content = config.read_text()
-        assert 'minimum_prek_version = "0.4.12"' in content
+        assert 'minimum_prek_version = "0.5.7"' in content
 
     def test_testmon_hook_pins_coverage_core(self, copier_defaults: dict, project_factory) -> None:
         """The testmon hook must force the ctrace coverage core.
@@ -684,7 +684,7 @@ class TestDependencies:
 
         pyproject = project / "pyproject.toml"
         content = pyproject.read_text()
-        assert '"prek>=0.4.12"' in content
+        assert '"prek>=0.5.7"' in content
 
     # Floors track the versions the template is actually exercised against, not the
     # oldest release that happens to still work. `uv sync` resolves to the newest
@@ -692,7 +692,7 @@ class TestDependencies:
     # the template under -- it advertises support that is not verified. Pinning them
     # here makes widening a range a deliberate, reviewed edit rather than a leftover.
     EXPECTED_FLOORS: ClassVar[dict[str, dict[str, str]]] = {
-        "maintain": {"build": "1.5", "python-semantic-release": "10.6"},
+        "maintain": {"build": "1.6", "python-semantic-release": "10.7"},
         "ci": {
             "ruff": "0.16.1",
             "pytest": "9",
@@ -701,7 +701,7 @@ class TestDependencies:
             "ty": "0.0.66",
             "poethepoet": "0.48",
         },
-        "local": {"prek": "0.4.12", "pytest-testmon": "2.2"},
+        "local": {"prek": "0.5.7", "pytest-testmon": "2.2"},
     }
 
     @staticmethod
@@ -933,7 +933,7 @@ class TestCIWorkflows:
         The bound is uv's own recommendation, not this template's: `uv_build`
         follows uv's versioning policy, so a minor may change build behaviour,
         and uv's docs ask for an upper bound for exactly that reason. `uv init`
-        emits `uv_build>=0.12.1,<0.13.0` on uv 0.12.1; the template matches that
+        emits `uv_build>=0.13.4,<0.14.0` on uv 0.13.4; the template matches that
         shape. An unbounded spec also makes uv warn on every `uv sync` / `uv
         build`, drowning out real warnings. Bump the window when uv does.
         """
@@ -953,7 +953,7 @@ class TestCIWorkflows:
         assert "<" in spec, (
             f"uv_build must have an upper version bound to avoid the uv warning and "
             f"to prevent silent breakage on a future major release. Got {spec!r}; "
-            f"expected something like 'uv_build>=0.12,<0.13'."
+            f"expected something like 'uv_build>=0.13,<0.14'."
         )
 
     def test_pypi_false_excludes_classifiers_and_keywords(self, copier_defaults: dict, project_factory) -> None:
@@ -1328,6 +1328,24 @@ class TestTemplateUpdateCheck:
         assert rev, "Lychee rev should be pinned, not empty"
         assert rev.startswith("lychee-v"), f"Lychee rev should be a versioned tag, got: {rev}"
 
+    def test_prek_update_skips_pre_releases(self, copier_defaults: dict, project_factory) -> None:
+        """`prek update` must not move a hook to a pre-release tag, lychee's included.
+
+        prek takes the newest tag with no notion of a pre-release: betterleaks
+        went v1.7.2 -> v2.0.0-rc.4 on a plain `prek update` (2026-10-21). A
+        per-repo `exclude_tags` replaces the project-wide one instead of adding
+        to it, so lychee's entry has to repeat the globs.
+        """
+        project = project_factory(copier_defaults)
+
+        with (project / "prek.toml").open("rb") as f:
+            update = tomllib.load(f)["update"]
+
+        pre_release = "*-{alpha,beta,rc}*"
+        assert update.get("exclude_tags") == [pre_release], f"[update] must exclude pre-release tags; got {update!r}"
+        for repo, filters in update.get("repos", {}).items():
+            assert pre_release in filters.get("exclude_tags", []), f"{repo} replaces the default exclude_tags and drops {pre_release!r}"
+
     def test_lychee_nightly_excluded_declaratively(self, copier_defaults: dict, project_factory) -> None:
         """prek.toml must exclude lychee's `nightly` tag from `prek update` (DOT-492, DOT-540, DOT-616).
 
@@ -1354,7 +1372,7 @@ class TestTemplateUpdateCheck:
         )
         assert "nightly" in filters.get("exclude_tags", []), f"`nightly` must be in exclude_tags for {repo}; got {filters!r}"
 
-        assert data["minimum_prek_version"] == "0.4.12", (
+        assert data["minimum_prek_version"] == "0.5.7", (
             "the [update] tag filters above need prek 0.4.10+, and the floor tracks the tested version. minimum_prek_version is the guard "
             "that reaches updating projects, since a project that edited its dependency groups "
             f"keeps its own pyproject `prek>=` floor. Got {data.get('minimum_prek_version')!r}"
