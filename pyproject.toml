@@ -265,6 +265,8 @@ parallel = true
 source = ["tests/"]
 
 [tool.coverage.report]
+# CI's "Test template" step runs with --cov, so this gate is enforced there.
+fail_under = 90
 precision = 2
 omit = ["tests/__init__.py"]
 exclude_lines = [
