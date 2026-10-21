@@ -48,7 +48,7 @@ When you run `copier copy`, you'll be asked:
 | **Project name** | Name of your project |
 | **Project description** | One-line description |
 | **Project type** | `app` (CLI entry point, like `uv init --app`) or `lib` (importable package, like `uv init --lib`) |
-| **Author info** | Name, email, username (auto-detected from git) |
+| **Author info** | Name, email, username (set defaults once per machine, see below) |
 | **Repository provider** | `github.com` or `gitlab.com` |
 | **Repository host** | Hostname — override for self-hosted GitLab (e.g. `gitlab.company.com`) |
 | **Repository namespace** | GitHub/GitLab username or organization |
@@ -70,9 +70,23 @@ The booleans cascade: `use_ci` gates `use_semantic_release`, which gates `publis
 ### Install copier (one-time)
 
 ```bash
-# Install copier with required Jinja extensions
-uv tool install copier --with copier-template-extensions
+uv tool install copier
 ```
+
+The template needs no Jinja extensions, so a stock copier is enough.
+
+### Answer defaults per machine (optional)
+
+Copier reads defaults for any template's questions from its user settings file: `~/Library/Application Support/copier/settings.yml` on macOS, `~/.config/copier/settings.yml` on Linux, or the path in `COPIER_SETTINGS_PATH`. Set your author details once and every prompt defaults to them:
+
+```yaml
+defaults:
+  author_fullname: Jane Doe
+  author_email: jane@example.com
+  author_username: janedoe
+```
+
+A work machine can default `repository_host`, `repository_namespace` or `open_source: false` the same way, without the template knowing any internal hostname.
 
 ### Create a new project
 
@@ -83,8 +97,7 @@ copier copy --trust "gh:detailobsessed/copier-uv-bleeding" /path/to/your/new/pro
 ### Or use uvx for zero-install one-shot runs
 
 ```bash
-uvx --with copier-template-extensions \
-  copier copy --trust https://github.com/detailobsessed/copier-uv-bleeding.git my-project
+uvx copier copy --trust https://github.com/detailobsessed/copier-uv-bleeding.git my-project
 ```
 
 The template automatically runs `uv sync --upgrade` and `prek install` after scaffolding.

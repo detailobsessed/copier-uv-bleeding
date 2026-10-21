@@ -26,6 +26,12 @@ dev = [
     "reuse",
     "ruff>=0.17.1",
     "ty>=0.0.90",
+    # Copier loads it into every render; tests/test_template_lint.py does too,
+    # so the template's `regex_replace` and `strftime` render there as in copier.
+    "jinja2-ansible-filters",
+    # The template itself no longer needs it (DOT-674). tests/test_update_preserves_project.py
+    # copies at 0.41.14 and updates from there, and copier renders that old
+    # version with its own `_jinja_extensions`. Drop once BASELINE_TAG is past 0.42.1.
     "copier-template-extensions>=0.3.4",
 ]
 
@@ -207,7 +213,6 @@ known-first-party = ["tests"]
     "ARG002",     # Unused method arguments (fixtures)
     "DTZ005",     # Naive datetime in tests is fine
 ]
-"extensions.py" = ["S602", "S605", "S607"]  # Template extensions use subprocess for git commands
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

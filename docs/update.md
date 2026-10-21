@@ -100,12 +100,24 @@ version = "0.0.0"
 
 Keep your `version` line and delete the old `requires-python`. Keeping the top block whole leaves two `requires-python` keys, which uv rejects as invalid TOML. After this, `readme` sits between the two lines, and later Python bumps merge without a conflict.
 
-### Updating from 0.41.x: run copier by hand once
+### Updating from 0.42.1 and earlier: once with the old extension
 
-Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej`. In that mode copier moves every hunk it cannot apply cleanly to a `.rej` file, including your unrelated edits next to it, and the file keeps the template's version. Against the Python 3.15 release that takes your released version, dependencies and `[tool.uv]` settings out of `pyproject.toml` and into `pyproject.toml.rej`. Nothing is lost, and the `no-copier-rej-files` hook blocks the commit, but applying `.rej` hunks by hand is tedious. Run the inline update directly instead:
+Releases up to 0.42.1 loaded a Jinja extension from `copier-template-extensions`; later ones need only a stock copier. An update renders your project's old template version too, so leaving 0.42.1 or earlier still needs the extension, one last time. With a stock copier the update aborts before writing anything, with `No module named 'copier_template_extensions'`. Run that one update through uvx:
 
 ```bash
-copier update --trust --skip-answered --defaults --conflict inline
+uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline
+```
+
+Every later update works with `poe update-template` and any copier, so a `copier` tool installed `--with copier-template-extensions` can be reinstalled plain afterwards.
+
+The author questions no longer default to your git config. That only matters for new projects, since existing ones keep their answers; set defaults once in copier's `settings.yml` instead, as the README describes.
+
+### Updating from 0.41.x: run copier by hand once
+
+Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej`. In that mode copier moves every hunk it cannot apply cleanly to a `.rej` file, including your unrelated edits next to it, and the file keeps the template's version. Against the Python 3.15 release that takes your released version, dependencies and `[tool.uv]` settings out of `pyproject.toml` and into `pyproject.toml.rej`. Nothing is lost, and the `no-copier-rej-files` hook blocks the commit, but applying `.rej` hunks by hand is tedious. Run the inline update directly instead, through uvx with the old extension as above:
+
+```bash
+uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline
 ```
 
 That update brings in the new `poe update-template`, so later updates need nothing special. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
@@ -114,7 +126,7 @@ That update brings in the new `poe update-template`, so later updates need nothi
 
 The template carries no migrations, so an update across older releases leaves a few things to do by hand. Each one shows up in `git status`:
 
-- **`open_source` (0.41.0)** replaced `project_visibility`, `project_audience` and `use_community_health_files`. The update takes its default, `true` on GitHub and `false` elsewhere, so an internal GitHub project gains a LICENSE and community-health files, and a public GitLab one loses them. Discard those changes and re-run with the right answer: `copier update --trust --skip-answered --defaults --conflict inline -d open_source=false`.
+- **`open_source` (0.41.0)** replaced `project_visibility`, `project_audience` and `use_community_health_files`. The update takes its default, `true` on GitHub and `false` elsewhere, so an internal GitHub project gains a LICENSE and community-health files, and a public GitLab one loses them. Discard those changes and re-run with the right answer: `uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline -d open_source=false`.
 - **`scripts/prek-autoupdate.sh` (0.41.4)** is no longer used. Delete it.
 
 ## What happened in 0.41.0 to 0.41.14
