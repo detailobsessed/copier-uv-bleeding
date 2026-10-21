@@ -19,7 +19,7 @@ poe setup          # uv sync
 poe test           # fast tests (skip slow markers)
 poe test-all       # all tests including slow
 poe test-cov       # tests with coverage (90% threshold)
-poe check          # lint + typecheck in parallel
+poe check          # lint + typecheck + complexity (complexipy) in parallel
 poe fix            # auto-fix lint issues and format
 poe prek           # run all pre-commit hooks
 poe docs           # serve docs locally

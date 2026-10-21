@@ -28,6 +28,7 @@ It is designed to be used as a starting point for new Python projects, providing
 - **[uv](https://github.com/astral-sh/uv)** — the fastest Python package manager, used for everything (deps, venvs, builds, lockfiles)
 - **[ruff](https://github.com/astral-sh/ruff)** — 25+ rule categories for linting, formatting, security scanning, and dead code detection
 - **[ty](https://github.com/astral-sh/ty)** — next-gen type checker from Astral (fast, modern, replaces mypy)
+- **[complexipy](https://github.com/rohaquinlop/complexipy)** — cognitive complexity check per function, on every commit and in `poe check`
 - **[prek](https://github.com/j178/prek)** — Rust-powered pre-commit hook runner (replaces pre-commit)
 - **[poethepoet](https://github.com/nat-n/poethepoet)** — task runner with pre-configured tasks for every workflow
 - **[pytest](https://github.com/pytest-dev/pytest)** — testing with coverage and randomization
@@ -138,7 +139,8 @@ All projects come with pre-configured [poethepoet](https://github.com/nat-n/poet
 | `poe lint` | Check code with ruff |
 | `poe format` | Format code with ruff |
 | `poe typecheck` | Type check with ty |
-| `poe check` | Run lint + typecheck (parallel) |
+| `poe complexity` | Check cognitive complexity with complexipy |
+| `poe check` | Run lint + typecheck + complexity (parallel) |
 | `poe fix` | Auto-fix lint issues and format |
 | `poe test` | Run fast tests (skip slow) |
 | `poe test-affected` | Run only tests affected by changes ([testmon](https://github.com/tarpas/pytest-testmon)) |

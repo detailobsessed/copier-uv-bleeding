@@ -126,6 +126,24 @@ wheels = [
 ]
 
 [[package]]
+name = "complexipy"
+version = "8.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/14/30/b1d5ca6b5a3470d94e6f39ce0c6a865e03142f8493e453eee27231c5b596/complexipy-8.1.0.tar.gz", hash = "sha256:0e52ec185e93ed3e246be71a9dfc5bf67837bca2877639945acc8403d6f8880a", size = 157524, upload-time = "2026-10-19T02:43:14.273Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/6f/f708aa2e905b30ab3516d851e946d4b0d0994c258b0d23c9093c340e0272/complexipy-8.1.0-cp315-cp315-macosx_10_12_x86_64.whl", hash = "sha256:b7b48e35226d5241002662c80e70f7bae230e1f3132ad549bc492553b741859a", size = 4025085, upload-time = "2026-10-19T02:42:04.062Z" },
+    { url = "https://files.pythonhosted.org/packages/30/83/58f63a5dab055fc30b913a4c9abe73a45e6d2a4a387334112f01392f5db0/complexipy-8.1.0-cp315-cp315-macosx_11_0_arm64.whl", hash = "sha256:bba617732069efbdc798a8571ba72a96c7114f2478df180b30070da849b69174", size = 3948906, upload-time = "2026-10-19T02:42:05.665Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/93/96ac1f67f4f9aa94f3e0e9a4367bcdaa8df54bd568ba85c587e2a9afb7c9/complexipy-8.1.0-cp315-cp315-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:409c671dba09a267e52fbf9d83ba6d641067ac696af478a063788936194d28c7", size = 4621518, upload-time = "2026-10-19T02:42:07.448Z" },
+    { url = "https://files.pythonhosted.org/packages/99/e1/40bab1de0c6eeeb59ff7e2db8c3521165bd439411c433bd2d9272178b186/complexipy-8.1.0-cp315-cp315-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:86b87558d2c2187cd32e33331d17cbcba87c17570972092940f1766ed7e24ea4", size = 4296984, upload-time = "2026-10-19T02:42:08.909Z" },
+    { url = "https://files.pythonhosted.org/packages/70/9b/9aa01aa73b5ae7b8108e152ead620f5ec09cd9dd8c11e43737ba3ef8bf3b/complexipy-8.1.0-cp315-cp315-win32.whl", hash = "sha256:a4cdd8f28a60b0a3359a92aa2505a5fffcfe24ec35ad58e6ffff04238e97d3c7", size = 3557775, upload-time = "2026-10-19T02:42:10.428Z" },
+    { url = "https://files.pythonhosted.org/packages/48/c7/adaf53ebcdda436671cb6dde804f10302c6439c0400acfec535e598a8738/complexipy-8.1.0-cp315-cp315-win_amd64.whl", hash = "sha256:323ed6fa40b64588bb51b9f99fc0a71efcca0126b50d35f69f453d2638a0170c", size = 3825594, upload-time = "2026-10-19T02:42:11.99Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/8a/9300efe31e8a25d0fbfdd6c16ca59091cb8c87ebd0024dd7d1e23a8c9d73/complexipy-8.1.0-cp315-cp315t-macosx_10_12_x86_64.whl", hash = "sha256:0921d48964f331eb6e3a481c4df19811c3d9f8fa9a09829dd2fe1b82018a6a9c", size = 4023789, upload-time = "2026-10-19T02:42:13.46Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/27/4696482fa801b81e8e098e78b327713f6710d4f0524a55f52eb78bbf2e3f/complexipy-8.1.0-cp315-cp315t-macosx_11_0_arm64.whl", hash = "sha256:6b52466806109a60504033cfb35543fb94412b3dd610f40b365acee443f9cbfe", size = 3946035, upload-time = "2026-10-19T02:42:15.068Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/df/a484fdd7632843a0359eb42fc6cd42e390de3150972105dec18c455a7b56/complexipy-8.1.0-cp315-cp315t-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:416da710dbc528ac28afcf5f3dce056bd6e0b39c1999a6528932daaa921403e8", size = 4617510, upload-time = "2026-10-19T02:42:16.523Z" },
+    { url = "https://files.pythonhosted.org/packages/10/8e/20b38bdf5652c2ad2060581c3c3d9a2a6c211365be82b76c669c07f9d1cc/complexipy-8.1.0-cp315-cp315t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d53ad9592da97ac8e59f8df590e0a3eb68f4d9ca0cea501f88df614d0fa96e7d", size = 4296519, upload-time = "2026-10-19T02:42:18.214Z" },
+]
+
+[[package]]
 name = "copier"
 version = "9.19.1"
 source = { registry = "https://pypi.org/simple" }
@@ -168,6 +186,7 @@ source = { virtual = "." }
 
 [package.dev-dependencies]
 dev = [
+    { name = "complexipy" },
     { name = "copier" },
     { name = "copier-template-extensions" },
     { name = "hypothesis" },
@@ -192,6 +211,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "complexipy", specifier = ">=8.1" },
     { name = "copier", specifier = ">=9.19.1" },
     { name = "copier-template-extensions", specifier = ">=0.3.4" },
     { name = "hypothesis", specifier = ">=6.0" },
