@@ -4,7 +4,7 @@ default_stages = ["pre-commit"]
 # https://detailobsessed.github.io/copier-uv-bleeding/generated-config/#prek-minimum-version
 minimum_prek_version = "0.5.7"
 # All available: commit-msg, post-checkout, post-commit, post-merge, post-rewrite, pre-commit, pre-merge-commit, pre-push, pre-rebase, prepare-commit-msg
-default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit", "pre-push"]
+default_install_hook_types = ["commit-msg", "post-checkout", "post-merge", "post-rewrite", "pre-commit"]
 
 # Without this, `prek update` pins lychee to a mutable `nightly` tag that
 # lychee's own hook then rejects. Remove once lycheeverse/lychee#1601 is fixed.
@@ -177,20 +177,6 @@ pass_filenames = false
 verbose = true
 stages = ["pre-commit"]
 priority = 5
-
-{%- if use_heavy_hooks %}
-
-[[repos.hooks]]
-id = "pytest-cov"
-name = "pytest with coverage"
-entry = "uv run pytest -q --cov --cov-fail-under=0 --cov-report=term-missing:skip-covered"
-language = "system"
-types = ["python"]
-pass_filenames = false
-verbose = true
-stages = ["pre-push"]
-priority = 5
-{%- endif %}
 
 [[repos.hooks]]
 id = "check-template-update"

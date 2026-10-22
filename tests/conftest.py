@@ -49,11 +49,9 @@ def copier_defaults() -> dict:
         "repository_namespace": "testuser",
         "copyright_license": "MIT",
         "open_source": True,
-        "use_ci": True,
         "use_semantic_release": True,
         "publish_to_pypi": False,
         "use_blacksmith_runners": False,
-        "configure_repo_settings": False,
     }
 
 

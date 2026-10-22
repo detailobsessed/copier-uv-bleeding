@@ -46,8 +46,6 @@ _skip_if_exists:
 _exclude:
 - "{% if repository_provider != 'github.com' %}.github{% endif %}"
 - "{% if repository_provider != 'gitlab.com' %}.gitlab-ci.yml{% endif %}"
-- "{% if not use_ci %}.github/workflows/ci.yml{% endif %}"
-- "{% if not use_ci %}.gitlab-ci.yml{% endif %}"
 - "{% if not use_semantic_release %}.github/workflows/release.yml{% endif %}"
 - "{% if not publish_to_mcp_registry %}.github/workflows/mcp-registry-publish.yml{% endif %}"
 - "{% if not use_blacksmith_runners %}.github/actionlint.yaml{% endif %}"
@@ -190,21 +188,22 @@ python_package_command_line_name:
   default: '{{ project_name | lower | regex_replace("[^a-z0-9_\\s-]", "") | regex_replace("[-_\\s]+", "-") | regex_replace("^[-_]+|[-_]+$", "") }}'
   when: false
 
-use_heavy_hooks:
-  type: bool
-  help: "Run slow checks as git hooks? (coverage on pre-push). Off = fast hooks only; coverage runs in CI."
-  default: false
-
-use_ci:
-  type: bool
-  help: "Enable CI workflow? (testing, linting, type checking)"
-  default: true
-
+# Questions removed in DOT-676, and what an update does with their old answers,
+# are listed in docs/update.md. CI is always on, coverage runs in CI rather than
+# as a pre-push hook, and the GitHub repo-settings task always runs where `gh`
+# can reach the repo.
+#
+# `use_ci | default(true)` below maps the removed question's old answer. A
+# project made with `use_ci: false` never stored this answer or Blacksmith's
+# (both were asked only with CI), so `--defaults` would turn on semantic-release,
+# PyPI publishing and Blacksmith runners it never set up. Copier still exposes
+# the old answer while it renders that one update, then drops it from
+# .copier-answers.yml; a new project has none and gets `true`. Remove once no
+# project predating 0.44.0 is left to update.
 use_semantic_release:
   type: bool
   help: "Enable semantic-release workflow? (automated versioning, changelog, releases)"
-  default: "{{ use_ci }}"
-  when: "{{ use_ci }}"
+  default: "{{ use_ci | default(true) }}"
 
 publish_to_pypi:
   type: bool
@@ -216,29 +215,20 @@ publish_to_mcp_registry:
   type: bool
   help: Will you publish this server to the MCP Registry?
   default: false
-  when: "{{ use_semantic_release }}"
+  # The registry entry points at the PyPI package.
+  when: "{{ publish_to_pypi }}"
 
-use_custom_pypi_index:
-  type: bool
-  help: "Use a custom/private PyPI index? (Artifactory, Nexus, etc.)"
-  default: false
-
+# One question where there were two: up to 0.43.0 `use_custom_pypi_index`
+# gated this one. Same key, so a stored URL carries over on update.
 custom_pypi_index_url:
   type: str
-  help: "Custom PyPI index URL"
+  help: "Package index URL, e.g. Artifactory or Nexus (blank = PyPI)"
   default: ""
-  when: "{{ use_custom_pypi_index }}"
 
 use_blacksmith_runners:
   type: bool
   help: Use Blacksmith.sh runners? (2x faster, 75% more cost-efficient than GitHub-hosted)
-  default: "{{ use_ci and repository_provider == 'github.com' }}"
-  when: "{{ use_ci and repository_provider == 'github.com' }}"
-
-configure_repo_settings:
-  type: bool
-  help: "Configure GitHub repo settings on copy/update? (delete-branch-on-merge, enable-auto-merge — runs `gh repo edit`)"
-  default: true
+  default: "{{ repository_provider == 'github.com' and use_ci | default(true) }}"
   when: "{{ repository_provider == 'github.com' }}"
 
 
@@ -283,9 +273,12 @@ _tasks:
   # Update only — reinstall hooks (fresh copy has no .git yet)
   - command: "if [ -d .git ]; then uv run prek install; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
-  # GitHub repo settings — idempotent, runs on copy and update
-  - command: "command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
-    when: "{{ configure_repo_settings | default(false) }}"
+  # GitHub repo settings — idempotent. Only where the project has its own .git:
+  # without one (a fresh copy, copier's temp renders) `gh repo view` walks up to
+  # whatever checkout encloses the directory and would edit that repo instead.
+  # `-e`, not `-d`: in a git worktree `.git` is a file.
+  - command: "[ -e .git ] && command -v gh >/dev/null && gh repo view --json nameWithOwner -q .nameWithOwner >/dev/null 2>&1 && gh repo edit --delete-branch-on-merge --enable-auto-merge && echo '✓ Enabled delete-branch-on-merge and auto-merge' || true"
+    when: "{{ repository_provider == 'github.com' }}"
   # Copy — setup instructions
   - command: "printf '\\n🎉 Project created!\\n\\n  ✓ Dependencies installed\\n\\nTo finish setup:\\n  git init && uv run prek install && uv run prek update\\n  Create your source files in src/ and tests/\\n'"
     when: "{{ _copier_operation == 'copy' }}"
