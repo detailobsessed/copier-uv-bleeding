@@ -133,7 +133,7 @@ Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej
 uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline
 ```
 
-That update brings in the new `poe update-template`, so later updates need nothing special. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
+That update brings in the new `poe update-template`, so later updates need nothing special. Its config needs prek 0.5.7, and a project that still locks an older prek warns about it and installs only the `pre-commit` hook. Run `poe upgrade`, then `uv run prek install` to install the rest, `commit-msg` included. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
 
 ### Updating from before 0.41.4
 
