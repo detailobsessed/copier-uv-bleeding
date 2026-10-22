@@ -14,6 +14,44 @@ See the original repository for historical changes before version 2.0.0.
 
 <!-- version list -->
 
+## v0.44.0 (2026-10-22)
+
+### Bug Fixes
+
+- Check for .git with -e so worktree projects get the GitHub settings
+  ([`606b54e`](https://github.com/detailobsessed/copier-uv-bleeding/commit/606b54ef8f5e7b497a9b242a88512d789a4769a1))
+
+- Keep the project's uv.lock through copier update
+  ([`d5faa8e`](https://github.com/detailobsessed/copier-uv-bleeding/commit/d5faa8e82f83d92b21cad1941c88324f07316a71))
+
+- Run gh repo edit only in a project with its own git repo
+  ([`c43a13a`](https://github.com/detailobsessed/copier-uv-bleeding/commit/c43a13a36132e53ed5ba1a483dfbf77bd65aee75))
+
+- Run the whole suite with coverage on GitLab, as on GitHub
+  ([`701ce8f`](https://github.com/detailobsessed/copier-uv-bleeding/commit/701ce8f3b4f6a7b345092cb121f97e21474763a7))
+
+- Treat a git worktree's .git file as a repo in the update tasks
+  ([`a21ec25`](https://github.com/detailobsessed/copier-uv-bleeding/commit/a21ec25174cf0cba108ba8ffb55a5a7afed705f4))
+
+### Documentation
+
+- Tell 0.41.x projects to reinstall hooks after upgrading prek
+  ([`0084a80`](https://github.com/detailobsessed/copier-uv-bleeding/commit/0084a807b47808bec110d5c2edfbdab3e26a97cf))
+
+### Features
+
+- Ask fewer questions: CI always on, one package index question
+  ([`14d815d`](https://github.com/detailobsessed/copier-uv-bleeding/commit/14d815df87f9e0719e963fd7628e65660d74697b))
+
+- Check cognitive complexity with complexipy
+  ([`d73b424`](https://github.com/detailobsessed/copier-uv-bleeding/commit/d73b4245365f072953c9879389329f85af6b501c))
+
+### Testing
+
+- Pin the README prompt table to copier.yml's questions
+  ([`5f0c947`](https://github.com/detailobsessed/copier-uv-bleeding/commit/5f0c9476a1646af6823728279f022e5cca1a8d5f))
+
+
 ## v0.43.0 (2026-10-21)
 
 ### Bug Fixes
