@@ -697,7 +697,7 @@ class TestHookProfiles:
         """The default profile (heavy hooks off) drops coverage but keeps the fast hooks."""
         ids = self._hook_ids(project_factory(copier_defaults))
         assert "pytest-cov" not in ids
-        for fast in ("ruff", "ty", "pytest-testmon"):
+        for fast in ("ruff", "ty", "complexipy", "pytest-testmon"):
             assert fast in ids, f"{fast} should stay always-on"
 
     def test_conventional_commit_gated_on_semantic_release(self, copier_defaults: dict, project_factory) -> None:
@@ -756,6 +756,7 @@ class TestDependencies:
             "pytest-cov": "7",
             "pytest-randomly": "5",
             "ty": "0.0.90",
+            "complexipy": "8.1",
             "poethepoet": "0.49",
         },
         "local": {"prek": "0.5.7", "pytest-testmon": "2.2"},
@@ -2062,7 +2063,7 @@ class TestIntegration:
         sync = subprocess.run(["uv", "sync"], cwd=project, capture_output=True, text=True, check=False, env=env)
         assert sync.returncode == 0, f"uv sync at declared floors failed: {sync.stderr}"
 
-        for task in ("lint", "typecheck", "test"):
+        for task in ("lint", "typecheck", "complexity", "test"):
             result = subprocess.run(["uv", "run", "poe", task], cwd=project, capture_output=True, text=True, check=False, env=env)
             assert result.returncode == 0, f"`poe {task}` failed at the declared dependency floors:\n{result.stdout}\n{result.stderr}"
 

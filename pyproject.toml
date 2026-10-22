@@ -26,6 +26,7 @@ dev = [
     "reuse",
     "ruff>=0.17.1",
     "ty>=0.0.90",
+    "complexipy>=8.1",
     # Copier loads it into every render; tests/test_template_lint.py does too,
     # so the template's `regex_replace` and `strftime` render there as in copier.
     "jinja2-ansible-filters",
@@ -233,7 +234,8 @@ setup = "uv sync"
 format = "ruff format ."
 lint = "ruff check ."
 typecheck = "ty check ."
-check.parallel = ["lint", "typecheck"]
+complexity = "complexipy ."
+check.parallel = ["lint", "typecheck", "complexity"]
 check.ignore_fail = "return_non_zero"
 fix = ["lint --fix", "format"]
 
@@ -298,6 +300,12 @@ gh run watch "$run_id" --exit-status
 [tool.ty.environment]
 python-version = "3.15"
 python = ".venv"
+
+# Cognitive complexity per function, at complexipy's default limit of 15. ruff's
+# C9 counts branches; this also weighs nesting. `failed` only trims the report to
+# the functions over the limit (the default lists every function).
+[tool.complexipy]
+failed = true
 
 [tool.coverage.run]
 branch = true
