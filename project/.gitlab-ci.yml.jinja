@@ -35,7 +35,9 @@ tests:
     - quality
   <<: *uv-setup
   script:
-    - uv run poe test
+    - uv run poe test-cov
+  # GitLab reads the total from the job log and shows it on merge requests.
+  coverage: '/TOTAL\s.*?(\d+(?:\.\d+)?)%$/'
   cache:
     key: uv-cache
     paths:

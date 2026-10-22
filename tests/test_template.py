@@ -1582,6 +1582,22 @@ class TestGitLabSupport:
         assert "quality" in content
         assert "test" in content
 
+    def test_gitlab_ci_measures_coverage(self, copier_defaults: dict, project_factory) -> None:
+        """GitLab CI runs `poe test-cov` like GitHub CI, and its regex reads the total.
+
+        Without the pre-push coverage hook (DOT-676), CI is the only place coverage runs.
+        """
+        answers = {**copier_defaults, "repository_provider": "gitlab.com"}
+        project = project_factory(answers)
+
+        tests_job = yaml.safe_load((project / ".gitlab-ci.yml").read_text())["tests"]
+        assert tests_job["script"] == ["uv run poe test-cov"]
+        pattern = tests_job["coverage"].strip("/")
+        total = "TOTAL                                    12      1      4      1    87.50%"
+        match = re.search(pattern, f"src/x.py    12    1    87.50%\n{total}\n", re.MULTILINE)
+        assert match, pattern
+        assert match.group(1) == "87.50"
+
     def test_gitlab_no_release_keeps_ci(self, copier_defaults: dict, project_factory) -> None:
         """GitLab projects without releases still get CI, minus the release stage."""
         answers = {**copier_defaults, "repository_provider": "gitlab.com", "use_semantic_release": False}
