@@ -252,7 +252,7 @@ use_blacksmith_runners:
 _tasks:
   # Run `uv sync` in copier's temp render dirs (`old_copy`/`new_copy`) AND on
   # initial `copy`, but NOT in the real destination during update. Why this
-  # inverted guard (`[ ! -d .git ]`) instead of the more obvious "only sync in
+  # inverted guard (`[ ! -e .git ]`) instead of the more obvious "only sync in
   # destination":
   #
   # On update, copier renders OLD then NEW into two temp dirs, then deletes
@@ -269,7 +269,11 @@ _tasks:
   # dropping it would make this release's `new_copy` lack what every older
   # `old_copy` has. The destination is synced by `poe upgrade`, run after the
   # update has been reviewed.
-  - "if [ \"{{ _copier_operation }}\" = \"copy\" ] || [ ! -d .git ]; then uv sync --upgrade; fi"
+  #
+  # Every `.git` test here is `-e`, not `-d`: in a git worktree `.git` is a file,
+  # and `-d` mistook such a project for a temp dir, so `uv sync --upgrade` re-locked
+  # the real project against the bare template render (DOT-677).
+  - "if [ \"{{ _copier_operation }}\" = \"copy\" ] || [ ! -e .git ]; then uv sync --upgrade; fi"
   # Update only — reinstall hooks (fresh copy has no .git yet).
   #
   # `--frozen` whenever there is a lock: copier runs these tasks before it replays
@@ -277,7 +281,7 @@ _tasks:
   # here. A plain `uv run` re-locks against it, dropping every dependency the
   # project added, and `_skip_if_exists` keeps that lock (DOT-677). Without a lock
   # there is nothing to lose, and `--frozen` would fail the update.
-  - command: "if [ -d .git ]; then if [ -f uv.lock ]; then uv run --frozen prek install; else uv run prek install; fi; fi"
+  - command: "if [ -e .git ]; then if [ -f uv.lock ]; then uv run --frozen prek install; else uv run prek install; fi; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
   # GitHub repo settings — idempotent. Only where the project has its own .git:
   # without one (a fresh copy, copier's temp renders) `gh repo view` walks up to
@@ -290,5 +294,5 @@ _tasks:
     when: "{{ _copier_operation == 'copy' }}"
   # Update — confirms what copier itself did and names the next steps. Same .git
   # guard as above: only fire in the destination, never in the temp render dirs.
-  - command: "if [ -d .git ]; then printf '\\n🎉 Template updated!\\n\\n  ✓ Git hooks reinstalled\\n\\nNext:\\n  Review git diff and resolve any <<<<<<< markers\\n  poe upgrade  (uv sync --upgrade, prek update)\\n'; fi"
+  - command: "if [ -e .git ]; then printf '\\n🎉 Template updated!\\n\\n  ✓ Git hooks reinstalled\\n\\nNext:\\n  Review git diff and resolve any <<<<<<< markers\\n  poe upgrade  (uv sync --upgrade, prek update)\\n'; fi"
     when: "{{ _copier_operation in ('update', 'recopy') }}"
