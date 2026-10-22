@@ -17,8 +17,12 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -292,7 +296,14 @@ def _customise(project: Path) -> None:
         path.write_text(text)
 
 
-def _generate_and_update(project: Path, answers: dict, *, customise: bool, update: list[str] = UPDATE) -> subprocess.CompletedProcess[str]:
+def _generate_and_update(
+    project: Path,
+    answers: dict,
+    *,
+    customise: bool,
+    update: list[str] = UPDATE,
+    before_commit: Callable[[Path], None] | None = None,
+) -> subprocess.CompletedProcess[str]:
     if _run(["git", "rev-parse", "--verify", BASELINE_TAG], REPO_ROOT).returncode != 0:
         pytest.skip(f"{BASELINE_TAG} tag not available in this checkout (shallow clone?)")
 
@@ -304,6 +315,8 @@ def _generate_and_update(project: Path, answers: dict, *, customise: bool, updat
 
     if customise:
         _customise(project)
+    if before_commit is not None:
+        before_commit(project)
     for cmd in (
         ["git", "init", "-q", "-b", "main"],
         ["git", "add", "-A"],
@@ -483,3 +496,24 @@ def test_project_without_ci_gains_ci_but_not_releases(tmp_path: Path) -> None:
     assert "use_ci" not in stored, "copier drops a removed question's answer"
     assert (project / ".github" / "workflows" / "ci.yml").exists()
     assert not (project / ".github" / "workflows" / "release.yml").exists()
+
+
+def _add_dependency(project: Path) -> None:
+    result = _run(["uv", "add", "--no-sync", "attrs"], project)
+    assert result.returncode == 0, f"uv add failed: {result.stderr}"
+
+
+@pytest.mark.slow
+def test_update_leaves_the_project_lock_alone(tmp_path: Path) -> None:
+    """`uv.lock` belongs to the project: an update must not re-lock it (DOT-677).
+
+    Copier runs `_tasks` in the destination before it replays the project's edits, so
+    `pyproject.toml` is still the bare template render at that point. A task that may
+    lock (`uv run` without `--frozen`) drops every dependency the project added, and
+    `_skip_if_exists` then keeps that lock instead of the project's.
+    """
+    project = tmp_path / "proj"
+    result = _generate_and_update(project, BASE_ANSWERS, customise=False, before_commit=_add_dependency)
+    assert result.returncode == 0, result.stderr
+    assert 'name = "attrs"' in (project / "uv.lock").read_text()
+    assert _run(["git", "diff", "--exit-code", "--", "uv.lock"], project).returncode == 0, "the update changed uv.lock"

@@ -109,6 +109,10 @@ The template no longer asks `use_ci`, `use_heavy_hooks`, `configure_repo_setting
 - **`configure_repo_settings: false`.** On GitHub, every update now runs `gh repo edit --delete-branch-on-merge --enable-auto-merge`, provided `gh` is installed and can see the repo.
 - **`use_custom_pypi_index`.** The index URL is asked on its own now, blank meaning PyPI. A stored `custom_pypi_index_url` carries over unchanged.
 
+### Updates to 0.43.0 and earlier dropped dependencies from `uv.lock`
+
+Those updates re-locked `uv.lock` against the template's own dependency list, so every dependency you had added vanished from the lock, with no conflict and no message. `pyproject.toml` kept them, which is why `uv lock --check` and the `uv-sync` hook then fail. If you committed such an update, `uv lock` rebuilds the lock from `pyproject.toml`. Later updates, including the one away from 0.43.0, leave the lock alone.
+
 ### Updating from 0.42.1 and earlier: once with the old extension
 
 Releases up to 0.42.1 loaded a Jinja extension from `copier-template-extensions`; later ones need only a stock copier. An update renders your project's old template version too, so leaving 0.42.1 or earlier still needs the extension, one last time. With a stock copier the update aborts before writing anything, with `No module named 'copier_template_extensions'`. Run that one update through uvx:
@@ -129,7 +133,7 @@ Projects from 0.41.14 and earlier run `poe update-template` with `--conflict rej
 uvx --with copier-template-extensions copier update --trust --skip-answered --defaults --conflict inline
 ```
 
-That update brings in the new `poe update-template`, so later updates need nothing special. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
+That update brings in the new `poe update-template`, so later updates need nothing special. Its config needs prek 0.5.7, and a project that still locks an older prek warns about it and installs only the `pre-commit` hook. Run `poe upgrade`, then `uv run prek install` to install the rest, `commit-msg` included. If you already ran the old task, `git checkout -- .` and `git clean -f '*.rej'` put the project back to where it was.
 
 ### Updating from before 0.41.4
 

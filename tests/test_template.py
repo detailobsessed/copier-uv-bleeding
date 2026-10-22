@@ -1415,12 +1415,20 @@ class TestTemplateUpdateCheck:
         The fix is the inverted guard: run in temp dirs and on `copy`, skip in destination
         during update (`poe update-template` handles destination explicitly). This test pins
         the guard so it cannot regress back to `[ -d .git ]` without an explicit decision.
+
+        The test is `-e`, not `-d`: in a git worktree `.git` is a file, so `[ ! -d .git ]`
+        took a worktree project for a temp dir and re-locked it on every update (DOT-677).
         """
         copier_yml = pathlib.Path(__file__).resolve().parent.parent / "copier.yml"
         content = copier_yml.read_text()
 
+        assert "[ ! -d .git ]" not in content, (
+            "`[ ! -d .git ]` is true in a git worktree, where `.git` is a file: "
+            "`uv sync --upgrade` then re-locks the project on update. Use `[ ! -e .git ]` (DOT-677)."
+        )
+
         # The uv sync task must use the inverted guard: skip destination, run in temp dirs.
-        assert "[ ! -d .git ]; then uv sync --upgrade" in content, (
+        assert "[ ! -e .git ]; then uv sync --upgrade" in content, (
             "copier.yml _tasks must run `uv sync --upgrade` in copier's temp render dirs "
             "(no .git) AND on `copy`, but skip the destination during update. "
             "Reverting to `[ -d .git ]` would re-introduce DOT-587 (deleted uv.lock) and "
@@ -1429,10 +1437,10 @@ class TestTemplateUpdateCheck:
 
         # The opposite — `[ -d .git ]; then uv sync` — must NOT be present. (Substring match
         # is intentional; rules out the naive guard even if other text wraps it.)
-        assert "[ -d .git ]; then uv sync --upgrade" not in content, (
-            "copier.yml _tasks has `[ -d .git ]; then uv sync --upgrade` — the naive guard "
+        assert "[ -e .git ]; then uv sync --upgrade" not in content, (
+            "copier.yml _tasks has `[ -e .git ]; then uv sync --upgrade` — the naive guard "
             "that lets copier delete the user's uv.lock and .venv on update. Use "
-            "`[ ! -d .git ]` instead (see DOT-587 / DOT-588)."
+            "`[ ! -e .git ]` instead (see DOT-587 / DOT-588)."
         )
 
     def test_tasks_do_not_chmod_downstream_scripts(self) -> None:
