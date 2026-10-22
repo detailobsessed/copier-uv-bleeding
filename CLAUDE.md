@@ -50,7 +50,7 @@ pytest tests/test_template.py::TestProjectTypes::test_app_type_has_cli -v
 
 **Dual configs** -- `prek.toml` (this repo) and `project/prek.toml.jinja` (generated projects) must both be updated for hook changes. Same for `pyproject.toml` vs `project/pyproject.toml.jinja` for semantic-release config.
 
-**Adding a new copier question** requires updating: `copier.yml`, `CONTEXT_VARIANTS` in `test_template_lint.py`, and `copier_defaults` in `conftest.py`.
+**Adding a new copier question** requires updating: `copier.yml`, `CONTEXT_VARIANTS` in `test_template_lint.py`, `copier_defaults` in `conftest.py`, and the README's "Scaffold Prompts" table (its Key column; `TestReadmePromptTable` fails otherwise, and on a row whose question is gone).
 
 **`_skip_if_exists` vs `_exclude`** -- `_skip_if_exists` preserves user files during `copier update`. `_exclude` removes files based on answers. Misplacing a file in the wrong list can overwrite user customizations.
 
