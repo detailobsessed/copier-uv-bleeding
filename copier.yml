@@ -227,8 +227,8 @@ custom_pypi_index_url:
 
 use_blacksmith_runners:
   type: bool
-  help: Use Blacksmith.sh runners? (2x faster, 75% more cost-efficient than GitHub-hosted)
-  default: "{{ repository_provider == 'github.com' and use_ci | default(true) }}"
+  help: Use Blacksmith.sh runners? Organization repos only; on a personal account the jobs never start. (2x faster, 75% more cost-efficient than GitHub-hosted)
+  default: false
   when: "{{ repository_provider == 'github.com' }}"
 
 

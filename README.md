@@ -59,7 +59,7 @@ When you run `copier copy`, you'll be asked:
 | **Publish to PyPI?** | `publish_to_pypi` | Include PyPI publishing in release workflow (asked only with semantic-release) |
 | **Publish to MCP Registry?** | `publish_to_mcp_registry` | Include the MCP Registry publish workflow (asked only when publishing to PyPI) |
 | **Package index URL** | `custom_pypi_index_url` | Artifactory, Nexus, etc. Blank = PyPI |
-| **Use Blacksmith runners?** | `use_blacksmith_runners` | 2x faster, 75% cheaper CI runners (GitHub only) |
+| **Use Blacksmith runners?** | `use_blacksmith_runners` | 2x faster, 75% cheaper CI runners (GitHub organizations only, off by default) |
 
 The **Key** column names each answer in `.copier-answers.yml`, and is what `-d key=value` and the `defaults:` in copier's settings file take.
 
@@ -103,7 +103,7 @@ uvx copier copy --trust https://github.com/detailobsessed/copier-uv-bleeding.git
 The template automatically runs `uv sync --upgrade` and `prek install` after scaffolding.
 Create your source files in `src/<package_name>/` and tests in `tests/`.
 
-> **⚠️ Workflow permissions:** If semantic-release fails with 401 Unauthorized, your org or repo likely defaults `GITHUB_TOKEN` to read-only. See [Workflow Permissions](https://github.com/detailobsessed/ci-components#workflow-permissions) in ci-components for the fix.
+> **⚠️ Workflow permissions:** If semantic-release fails with 401 Unauthorized, your org or repo likely defaults `GITHUB_TOKEN` to read-only. See [Workflow Permissions](https://github.com/ichoosetoaccept/ci-components#workflow-permissions) in ci-components for the fix.
 
 ## Adopting in an Existing Project
 
