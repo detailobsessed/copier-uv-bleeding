@@ -33,7 +33,7 @@ This file controls the entire scaffolding behavior.
 
 Two distinct sets of workflows exist:
 
-- **Template repo CI** (`.github/workflows/`) — Runs tests on this repository itself. Uses Blacksmith runners, path filtering, and pinned action SHAs.
+- **Template repo CI** (`.github/workflows/`) — Runs tests on this repository itself. Uses GitHub-hosted runners, path filtering, and pinned action SHAs.
 - **Generated project CI** (`project/.github/workflows/*.jinja`) — Templates for the CI that generated projects will use. These are Jinja templates and must be reviewed with the same rigor as any other template file.
 
 For both:
