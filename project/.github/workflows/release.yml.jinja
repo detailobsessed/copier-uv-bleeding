@@ -110,7 +110,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: detailobsessed/ci-components/.github/workflows/mcp-registry-publish.yml@main
+    uses: ichoosetoaccept/ci-components/.github/workflows/mcp-registry-publish.yml@main
     with:
       runner: "{{ 'blacksmith-4vcpu-ubuntu-2404' if use_blacksmith_runners else 'ubuntu-latest' }}"
 {%- endif %}
